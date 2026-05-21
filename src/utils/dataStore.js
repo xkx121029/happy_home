@@ -1,4 +1,3 @@
-// 本地数据存储管理
 const STORAGE_KEYS = {
   POSTS: 'happyhome_posts',
   PAGES: 'happyhome_pages',
@@ -8,7 +7,6 @@ const STORAGE_KEYS = {
   TUTORIAL: 'happyhome_tutorial',
 };
 
-// 默认初始数据
 const defaultPosts = [
   {
     id: 1,
@@ -106,19 +104,19 @@ const defaultTutorial = {
   },
 };
 
-// 数据存储类
 class DataStore {
-  static get(key) {
+  static safeGet(key, defaultValue = null) {
     try {
       const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : null;
+      if (!data) return defaultValue;
+      return JSON.parse(data);
     } catch (error) {
       console.error('Error reading from localStorage:', error);
-      return null;
+      return defaultValue;
     }
   }
 
-  static set(key, value) {
+  static safeSet(key, value) {
     try {
       localStorage.setItem(key, JSON.stringify(value));
       return true;
@@ -128,7 +126,7 @@ class DataStore {
     }
   }
 
-  static remove(key) {
+  static safeRemove(key) {
     try {
       localStorage.removeItem(key);
       return true;
@@ -138,53 +136,61 @@ class DataStore {
     }
   }
 
-  // 初始化数据（如果不存在）
   static initialize() {
-    if (!this.get(STORAGE_KEYS.POSTS)) {
-      this.set(STORAGE_KEYS.POSTS, defaultPosts);
+    if (!this.safeGet(STORAGE_KEYS.POSTS)) {
+      this.safeSet(STORAGE_KEYS.POSTS, defaultPosts);
     }
-    if (!this.get(STORAGE_KEYS.PAGES)) {
-      this.set(STORAGE_KEYS.PAGES, defaultPages);
+    if (!this.safeGet(STORAGE_KEYS.PAGES)) {
+      this.safeSet(STORAGE_KEYS.PAGES, defaultPages);
     }
-    if (!this.get(STORAGE_KEYS.USERS)) {
-      this.set(STORAGE_KEYS.USERS, defaultUsers);
+    if (!this.safeGet(STORAGE_KEYS.USERS)) {
+      this.safeSet(STORAGE_KEYS.USERS, defaultUsers);
     }
-    if (!this.get(STORAGE_KEYS.MEDIA)) {
-      this.set(STORAGE_KEYS.MEDIA, defaultMedia);
+    if (!this.safeGet(STORAGE_KEYS.MEDIA)) {
+      this.safeSet(STORAGE_KEYS.MEDIA, defaultMedia);
     }
-    if (!this.get(STORAGE_KEYS.SETTINGS)) {
-      this.set(STORAGE_KEYS.SETTINGS, defaultSettings);
+    if (!this.safeGet(STORAGE_KEYS.SETTINGS)) {
+      this.safeSet(STORAGE_KEYS.SETTINGS, defaultSettings);
     }
-    if (!this.get(STORAGE_KEYS.TUTORIAL)) {
-      this.set(STORAGE_KEYS.TUTORIAL, defaultTutorial);
+    if (!this.safeGet(STORAGE_KEYS.TUTORIAL)) {
+      this.safeSet(STORAGE_KEYS.TUTORIAL, defaultTutorial);
     }
   }
 
-  // 重置所有数据
   static reset() {
-    this.set(STORAGE_KEYS.POSTS, defaultPosts);
-    this.set(STORAGE_KEYS.PAGES, defaultPages);
-    this.set(STORAGE_KEYS.USERS, defaultUsers);
-    this.set(STORAGE_KEYS.MEDIA, defaultMedia);
-    this.set(STORAGE_KEYS.SETTINGS, defaultSettings);
-    this.set(STORAGE_KEYS.TUTORIAL, defaultTutorial);
+    this.safeSet(STORAGE_KEYS.POSTS, defaultPosts);
+    this.safeSet(STORAGE_KEYS.PAGES, defaultPages);
+    this.safeSet(STORAGE_KEYS.USERS, defaultUsers);
+    this.safeSet(STORAGE_KEYS.MEDIA, defaultMedia);
+    this.safeSet(STORAGE_KEYS.SETTINGS, defaultSettings);
+    this.safeSet(STORAGE_KEYS.TUTORIAL, defaultTutorial);
+  }
+
+  static clearAll() {
+    this.safeRemove(STORAGE_KEYS.POSTS);
+    this.safeRemove(STORAGE_KEYS.PAGES);
+    this.safeRemove(STORAGE_KEYS.USERS);
+    this.safeRemove(STORAGE_KEYS.MEDIA);
+    this.safeRemove(STORAGE_KEYS.SETTINGS);
+    this.safeRemove(STORAGE_KEYS.TUTORIAL);
   }
 }
 
-// 导出存储键常量
 export { STORAGE_KEYS };
 
-// 导出posts操作
 export const postsAPI = {
-  getAll: () => DataStore.get(STORAGE_KEYS.POSTS) || [],
+  getAll: () => {
+    const posts = DataStore.safeGet(STORAGE_KEYS.POSTS, []);
+    return Array.isArray(posts) ? posts : [];
+  },
   
   getById: (id) => {
-    const posts = DataStore.get(STORAGE_KEYS.POSTS) || [];
+    const posts = postsAPI.getAll();
     return posts.find(p => p.id === id);
   },
   
   create: (post) => {
-    const posts = DataStore.get(STORAGE_KEYS.POSTS) || [];
+    const posts = postsAPI.getAll();
     const newPost = {
       ...post,
       id: Date.now(),
@@ -193,40 +199,42 @@ export const postsAPI = {
       views: 0,
     };
     posts.unshift(newPost);
-    DataStore.set(STORAGE_KEYS.POSTS, posts);
+    DataStore.safeSet(STORAGE_KEYS.POSTS, posts);
     return newPost;
   },
   
   update: (id, updates) => {
-    const posts = DataStore.get(STORAGE_KEYS.POSTS) || [];
+    const posts = postsAPI.getAll();
     const index = posts.findIndex(p => p.id === id);
     if (index !== -1) {
       posts[index] = { ...posts[index], ...updates, updatedAt: new Date().toISOString().split('T')[0] };
-      DataStore.set(STORAGE_KEYS.POSTS, posts);
+      DataStore.safeSet(STORAGE_KEYS.POSTS, posts);
       return posts[index];
     }
     return null;
   },
   
   delete: (id) => {
-    const posts = DataStore.get(STORAGE_KEYS.POSTS) || [];
+    const posts = postsAPI.getAll();
     const filtered = posts.filter(p => p.id !== id);
-    DataStore.set(STORAGE_KEYS.POSTS, filtered);
+    DataStore.safeSet(STORAGE_KEYS.POSTS, filtered);
     return true;
   },
 };
 
-// 导出pages操作
 export const pagesAPI = {
-  getAll: () => DataStore.get(STORAGE_KEYS.PAGES) || [],
+  getAll: () => {
+    const pages = DataStore.safeGet(STORAGE_KEYS.PAGES, []);
+    return Array.isArray(pages) ? pages : [];
+  },
   
   getById: (id) => {
-    const pages = DataStore.get(STORAGE_KEYS.PAGES) || [];
+    const pages = pagesAPI.getAll();
     return pages.find(p => p.id === id);
   },
   
   create: (page) => {
-    const pages = DataStore.get(STORAGE_KEYS.PAGES) || [];
+    const pages = pagesAPI.getAll();
     const newPage = {
       ...page,
       id: Date.now(),
@@ -234,45 +242,47 @@ export const pagesAPI = {
       updatedAt: new Date().toISOString().split('T')[0],
     };
     pages.unshift(newPage);
-    DataStore.set(STORAGE_KEYS.PAGES, pages);
+    DataStore.safeSet(STORAGE_KEYS.PAGES, pages);
     return newPage;
   },
   
   update: (id, updates) => {
-    const pages = DataStore.get(STORAGE_KEYS.PAGES) || [];
+    const pages = pagesAPI.getAll();
     const index = pages.findIndex(p => p.id === id);
     if (index !== -1) {
       pages[index] = { ...pages[index], ...updates, updatedAt: new Date().toISOString().split('T')[0] };
-      DataStore.set(STORAGE_KEYS.PAGES, pages);
+      DataStore.safeSet(STORAGE_KEYS.PAGES, pages);
       return pages[index];
     }
     return null;
   },
   
   delete: (id) => {
-    const pages = DataStore.get(STORAGE_KEYS.PAGES) || [];
+    const pages = pagesAPI.getAll();
     const filtered = pages.filter(p => p.id !== id);
-    DataStore.set(STORAGE_KEYS.PAGES, filtered);
+    DataStore.safeSet(STORAGE_KEYS.PAGES, filtered);
     return true;
   },
 };
 
-// 导出users操作
 export const usersAPI = {
-  getAll: () => DataStore.get(STORAGE_KEYS.USERS) || [],
+  getAll: () => {
+    const users = DataStore.safeGet(STORAGE_KEYS.USERS, []);
+    return Array.isArray(users) ? users : [];
+  },
   
   getById: (id) => {
-    const users = DataStore.get(STORAGE_KEYS.USERS) || [];
+    const users = usersAPI.getAll();
     return users.find(u => u.id === id);
   },
   
   getByUsername: (username) => {
-    const users = DataStore.get(STORAGE_KEYS.USERS) || [];
+    const users = usersAPI.getAll();
     return users.find(u => u.username === username);
   },
   
   login: (username, password) => {
-    const users = DataStore.get(STORAGE_KEYS.USERS) || [];
+    const users = usersAPI.getAll();
     const user = users.find(u => u.username === username && u.password === password);
     if (user) {
       return { success: true, user };
@@ -281,7 +291,7 @@ export const usersAPI = {
   },
   
   create: (user) => {
-    const users = DataStore.get(STORAGE_KEYS.USERS) || [];
+    const users = usersAPI.getAll();
     const existing = users.find(u => u.username === user.username || u.email === user.email);
     if (existing) {
       return { success: false, message: '用户名或邮箱已存在' };
@@ -293,38 +303,40 @@ export const usersAPI = {
       updatedAt: new Date().toISOString().split('T')[0],
     };
     users.unshift(newUser);
-    DataStore.set(STORAGE_KEYS.USERS, users);
+    DataStore.safeSet(STORAGE_KEYS.USERS, users);
     return { success: true, user: newUser };
   },
   
   update: (id, updates) => {
-    const users = DataStore.get(STORAGE_KEYS.USERS) || [];
+    const users = usersAPI.getAll();
     const index = users.findIndex(u => u.id === id);
     if (index !== -1) {
       users[index] = { ...users[index], ...updates, updatedAt: new Date().toISOString().split('T')[0] };
-      DataStore.set(STORAGE_KEYS.USERS, users);
+      DataStore.safeSet(STORAGE_KEYS.USERS, users);
       return { success: true, user: users[index] };
     }
     return { success: false, message: '用户不存在' };
   },
   
   delete: (id) => {
-    const users = DataStore.get(STORAGE_KEYS.USERS) || [];
+    const users = usersAPI.getAll();
     if (users.length <= 1) {
       return { success: false, message: '不能删除最后一个用户' };
     }
     const filtered = users.filter(u => u.id !== id);
-    DataStore.set(STORAGE_KEYS.USERS, filtered);
+    DataStore.safeSet(STORAGE_KEYS.USERS, filtered);
     return { success: true };
   },
 };
 
-// 导出media操作
 export const mediaAPI = {
-  getAll: () => DataStore.get(STORAGE_KEYS.MEDIA) || [],
+  getAll: () => {
+    const media = DataStore.safeGet(STORAGE_KEYS.MEDIA, []);
+    return Array.isArray(media) ? media : [];
+  },
   
   upload: (file, url) => {
-    const media = DataStore.get(STORAGE_KEYS.MEDIA) || [];
+    const media = mediaAPI.getAll();
     const newMedia = {
       id: Date.now(),
       name: file.name,
@@ -334,55 +346,55 @@ export const mediaAPI = {
       uploadedAt: new Date().toISOString().split('T')[0],
     };
     media.unshift(newMedia);
-    DataStore.set(STORAGE_KEYS.MEDIA, media);
+    DataStore.safeSet(STORAGE_KEYS.MEDIA, media);
     return newMedia;
   },
   
   delete: (id) => {
-    const media = DataStore.get(STORAGE_KEYS.MEDIA) || [];
+    const media = mediaAPI.getAll();
     const filtered = media.filter(m => m.id !== id);
-    DataStore.set(STORAGE_KEYS.MEDIA, filtered);
+    DataStore.safeSet(STORAGE_KEYS.MEDIA, filtered);
     return true;
   },
 };
 
-// 导出settings操作
 export const settingsAPI = {
-  get: () => DataStore.get(STORAGE_KEYS.SETTINGS) || defaultSettings,
+  get: () => {
+    const settings = DataStore.safeGet(STORAGE_KEYS.SETTINGS);
+    return settings || { ...defaultSettings };
+  },
   
   update: (updates) => {
-    const settings = DataStore.get(STORAGE_KEYS.SETTINGS) || defaultSettings;
+    const settings = settingsAPI.get();
     const newSettings = { ...settings, ...updates };
-    DataStore.set(STORAGE_KEYS.SETTINGS, newSettings);
+    DataStore.safeSet(STORAGE_KEYS.SETTINGS, newSettings);
     return newSettings;
   },
 };
 
-// 导出tutorial操作
 export const tutorialAPI = {
-  get: () => DataStore.get(STORAGE_KEYS.TUTORIAL) || defaultTutorial,
+  get: () => {
+    const tutorial = DataStore.safeGet(STORAGE_KEYS.TUTORIAL);
+    return tutorial || { ...defaultTutorial };
+  },
   
   completeStep: (step) => {
-    const tutorial = DataStore.get(STORAGE_KEYS.TUTORIAL) || defaultTutorial;
+    const tutorial = tutorialAPI.get();
     tutorial.steps[step] = true;
-    
-    // 检查是否全部完成
     const allComplete = Object.values(tutorial.steps).every(v => v);
     if (allComplete) {
       tutorial.completed = true;
     }
-    
-    DataStore.set(STORAGE_KEYS.TUTORIAL, tutorial);
+    DataStore.safeSet(STORAGE_KEYS.TUTORIAL, tutorial);
     return tutorial;
   },
   
   reset: () => {
-    DataStore.set(STORAGE_KEYS.TUTORIAL, defaultTutorial);
+    DataStore.safeSet(STORAGE_KEYS.TUTORIAL, defaultTutorial);
     return defaultTutorial;
   },
 };
 
-// 辅助函数
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -391,5 +403,4 @@ function formatFileSize(bytes) {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
-// 导出DataStore
 export { DataStore };

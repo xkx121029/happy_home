@@ -3,7 +3,7 @@ import { Plus, Search, Filter, Edit, Trash2, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { categories } from '../data/mockData';
 
-export default function Posts({ posts, onEdit, onDelete, onNew }) {
+export default function Posts({ posts, onDelete }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
@@ -25,12 +25,10 @@ export default function Posts({ posts, onEdit, onDelete, onNew }) {
   };
 
   const handleEditPost = (post) => {
-    onEdit(post);
     navigate(`/admin/posts/${post.id}/edit`);
   };
 
   const handleNewPost = () => {
-    onNew();
     navigate('/admin/posts/new');
   };
 

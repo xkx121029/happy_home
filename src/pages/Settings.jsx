@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Settings as SettingsIcon, Globe, Palette, Shield, Bell, Mail, Key, Save, RotateCcw, Database, Trash2 } from 'lucide-react';
-import { DataStore } from '../utils/dataStore';
+import { useData } from '../contexts/DataContext';
 
 export default function Settings({ settings, onSave }) {
+  const { clearAllData } = useData();
   const [activeTab, setActiveTab] = useState('general');
   const [formData, setFormData] = useState(settings || {});
   const [hasChanges, setHasChanges] = useState(false);
@@ -32,20 +33,14 @@ export default function Settings({ settings, onSave }) {
 
   const handleReset = () => {
     if (window.confirm('确定要重置所有设置吗？这将恢复默认设置。')) {
-      DataStore.reset();
+      localStorage.clear();
       window.location.reload();
     }
   };
 
   const handleClearAllData = () => {
     if (window.confirm('警告：这将删除所有数据，包括文章、页面、用户、媒体文件和设置。此操作不可恢复！确定要继续吗？')) {
-      DataStore.remove('happyhome_posts');
-      DataStore.remove('happyhome_pages');
-      DataStore.remove('happyhome_users');
-      DataStore.remove('happyhome_media');
-      DataStore.remove('happyhome_settings');
-      DataStore.remove('happyhome_tutorial');
-      DataStore.initialize();
+      clearAllData();
       window.location.reload();
     }
   };

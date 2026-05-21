@@ -4,10 +4,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
 import ContentPreview from '../components/ContentPreview';
 import { categories } from '../data/mockData';
-import { postsAPI } from '../utils/dataStore';
+import { useData } from '../contexts/DataContext';
 
-export default function PostEditor({ onSave, onCancel }) {
+export default function PostEditor({ onSave }) {
   const { id } = useParams();
+  const { postsAPI } = useData();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [excerpt, setExcerpt] = useState('');
@@ -32,7 +33,7 @@ export default function PostEditor({ onSave, onCancel }) {
         setIsPublished(fetchedPost.status === 'published');
       }
     }
-  }, [id]);
+  }, [id, postsAPI]);
 
   const handleAddTag = (e) => {
     if (e.key === 'Enter' && newTag.trim()) {
@@ -92,9 +93,6 @@ export default function PostEditor({ onSave, onCancel }) {
   };
 
   const handleCancelClick = () => {
-    if (onCancel) {
-      onCancel();
-    }
     navigate('/admin/posts');
   };
 

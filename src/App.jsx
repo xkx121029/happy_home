@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
+import { DataProvider, useData } from './contexts/DataContext';
 
-// Admin Components
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
@@ -18,173 +18,19 @@ import Help from './pages/Help';
 import Analytics from './pages/Analytics';
 import Login from './pages/Login';
 
-// Public Components
 import PublicHeader from './components/PublicHeader';
 import PublicFooter from './components/PublicFooter';
 import PublicHome from './pages/public/PublicHome';
 import PublicPosts from './pages/public/PublicPosts';
 import PublicPostDetail from './pages/public/PublicPostDetail';
 
-// Data Store
-import { postsAPI, pagesAPI, usersAPI, mediaAPI, settingsAPI, DataStore } from './utils/dataStore';
 import TutorialSystem from './components/TutorialSystem';
 
-export default function App() {
+function AppContent() {
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [darkMode, setDarkMode] = useState(false);
-  const [posts, setPosts] = useState([]);
-  const [pages, setPages] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [media, setMedia] = useState([]);
-  const [settings, setSettings] = useState(null);
-  const [editingPost, setEditingPost] = useState(null);
-  const [editingPage, setEditingPage] = useState(null);
-  const [editingUser, setEditingUser] = useState(null);
-  const [activeEditor, setActiveEditor] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { posts, pages, users, media, settings, postsAPI, pagesAPI, usersAPI, mediaAPI, settingsAPI, clearAllData } = useData();
 
-  // 初始化数据
-  useEffect(() => {
-    DataStore.initialize();
-    loadData();
-  }, []);
-
-  // 加载所有数据
-  const loadData = () => {
-    setIsLoading(true);
-    try {
-      setPosts(postsAPI.getAll());
-      setPages(pagesAPI.getAll());
-      setUsers(usersAPI.getAll());
-      setMedia(mediaAPI.getAll());
-      setSettings(settingsAPI.get());
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Posts handlers
-  const handleSavePost = useCallback((postData) => {
-    if (postData.id) {
-      postsAPI.update(postData.id, postData);
-    } else {
-      postsAPI.create(postData);
-    }
-    setPosts(postsAPI.getAll());
-    setEditingPost(null);
-    setActiveEditor(null);
-  }, []);
-
-  const handleEditPost = useCallback((post) => {
-    setEditingPost(post);
-    setActiveEditor('post');
-  }, []);
-
-  const handleDeletePost = useCallback((id) => {
-    if (window.confirm('确定要删除这篇文章吗？')) {
-      postsAPI.delete(id);
-      setPosts(postsAPI.getAll());
-    }
-  }, []);
-
-  const handleNewPost = useCallback(() => {
-    setEditingPost(null);
-    setActiveEditor('post');
-  }, []);
-
-  // Pages handlers
-  const handleSavePage = useCallback((pageData) => {
-    if (pageData.id) {
-      pagesAPI.update(pageData.id, pageData);
-    } else {
-      pagesAPI.create(pageData);
-    }
-    setPages(pagesAPI.getAll());
-    setEditingPage(null);
-    setActiveEditor(null);
-  }, []);
-
-  const handleEditPage = useCallback((page) => {
-    setEditingPage(page);
-    setActiveEditor('page');
-  }, []);
-
-  const handleDeletePage = useCallback((id) => {
-    if (window.confirm('确定要删除这个页面吗？')) {
-      pagesAPI.delete(id);
-      setPages(pagesAPI.getAll());
-    }
-  }, []);
-
-  const handleNewPage = useCallback(() => {
-    setEditingPage(null);
-    setActiveEditor('page');
-  }, []);
-
-  // Users handlers
-  const handleSaveUser = useCallback((userData) => {
-    if (userData.id) {
-      const result = usersAPI.update(userData.id, userData);
-      if (!result.success) {
-        alert(result.message);
-        return;
-      }
-    } else {
-      const result = usersAPI.create(userData);
-      if (!result.success) {
-        alert(result.message);
-        return;
-      }
-    }
-    setUsers(usersAPI.getAll());
-    setEditingUser(null);
-    setActiveEditor(null);
-  }, []);
-
-  const handleEditUser = useCallback((user) => {
-    setEditingUser(user);
-    setActiveEditor('user');
-  }, []);
-
-  const handleDeleteUser = useCallback((id) => {
-    if (window.confirm('确定要删除这个用户吗？')) {
-      const result = usersAPI.delete(id);
-      if (!result.success) {
-        alert(result.message);
-        return;
-      }
-      setUsers(usersAPI.getAll());
-    }
-  }, []);
-
-  const handleNewUser = useCallback(() => {
-    setEditingUser(null);
-    setActiveEditor('user');
-  }, []);
-
-  // Media handlers
-  const handleUploadMedia = useCallback((file, url) => {
-    mediaAPI.upload(file, url);
-    setMedia(mediaAPI.getAll());
-  }, []);
-
-  const handleDeleteMedia = useCallback((id) => {
-    if (window.confirm('确定要删除这个媒体文件吗？')) {
-      mediaAPI.delete(id);
-      setMedia(mediaAPI.getAll());
-    }
-  }, []);
-
-  // Settings handlers
-  const handleSaveSettings = useCallback((newSettings) => {
-    const updated = settingsAPI.update(newSettings);
-    setSettings(updated);
-    alert('设置已保存！');
-  }, []);
-
-  // Dark mode toggle
   const handleDarkModeToggle = useCallback(() => {
     setDarkMode(prev => {
       const newValue = !prev;
@@ -193,18 +39,70 @@ export default function App() {
     });
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">加载中...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleSavePost = useCallback((postData) => {
+    if (postData.id) {
+      postsAPI.update(postData.id, postData);
+    } else {
+      postsAPI.create(postData);
+    }
+  }, [postsAPI]);
 
-  // Render Admin Layout
+  const handleDeletePost = useCallback((id) => {
+    if (window.confirm('确定要删除这篇文章吗？')) {
+      postsAPI.delete(id);
+    }
+  }, [postsAPI]);
+
+  const handleSavePage = useCallback((pageData) => {
+    if (pageData.id) {
+      pagesAPI.update(pageData.id, pageData);
+    } else {
+      pagesAPI.create(pageData);
+    }
+  }, [pagesAPI]);
+
+  const handleDeletePage = useCallback((id) => {
+    if (window.confirm('确定要删除这个页面吗？')) {
+      pagesAPI.delete(id);
+    }
+  }, [pagesAPI]);
+
+  const handleSaveUser = useCallback((userData) => {
+    if (userData.id) {
+      usersAPI.update(userData.id, userData);
+    } else {
+      usersAPI.create(userData);
+    }
+  }, [usersAPI]);
+
+  const handleDeleteUser = useCallback((id) => {
+    if (window.confirm('确定要删除这个用户吗？')) {
+      usersAPI.delete(id);
+    }
+  }, [usersAPI]);
+
+  const handleUploadMedia = useCallback((file, url) => {
+    mediaAPI.upload(file, url);
+  }, [mediaAPI]);
+
+  const handleDeleteMedia = useCallback((id) => {
+    if (window.confirm('确定要删除这个媒体文件吗？')) {
+      mediaAPI.delete(id);
+    }
+  }, [mediaAPI]);
+
+  const handleSaveSettings = useCallback((newSettings) => {
+    settingsAPI.update(newSettings);
+    alert('设置已保存！');
+  }, [settingsAPI]);
+
+  const handleClearAllData = useCallback(() => {
+    if (window.confirm('警告：这将删除所有数据！确定要继续吗？')) {
+      clearAllData();
+      alert('数据已清除！');
+    }
+  }, [clearAllData]);
+
   const renderAdminLayout = (content) => {
     return (
       <div className={darkMode ? 'dark' : ''}>
@@ -227,7 +125,6 @@ export default function App() {
     );
   };
 
-  // Render Public Layout
   const renderPublicLayout = (content) => {
     return (
       <div className={darkMode ? 'dark' : ''}>
@@ -240,7 +137,6 @@ export default function App() {
     );
   };
 
-  // Admin Routes Components
   const AdminDashboard = () => renderAdminLayout(
     <Dashboard posts={posts} pages={pages} users={users} />
   );
@@ -248,9 +144,7 @@ export default function App() {
   const AdminPosts = () => renderAdminLayout(
     <Posts
       posts={posts}
-      onEdit={handleEditPost}
       onDelete={handleDeletePost}
-      onNew={handleNewPost}
     />
   );
 
@@ -262,13 +156,7 @@ export default function App() {
             darkMode={darkMode}
             onDarkModeToggle={handleDarkModeToggle}
           />
-          <PostEditor
-            onSave={handleSavePost}
-            onCancel={() => {
-              setEditingPost(null);
-              setActiveEditor(null);
-            }}
-          />
+          <PostEditor onSave={handleSavePost} />
         </div>
       </div>
     );
@@ -277,30 +165,23 @@ export default function App() {
   const AdminPages = () => renderAdminLayout(
     <Pages
       pages={pages}
-      onEdit={handleEditPage}
       onDelete={handleDeletePage}
-      onNew={handleNewPage}
     />
   );
 
-  const AdminPageEditor = () => (
-    <div className={darkMode ? 'dark' : ''}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header
-          darkMode={darkMode}
-          onDarkModeToggle={handleDarkModeToggle}
-        />
-        <PageEditor
-          page={editingPage}
-          onSave={handleSavePage}
-          onCancel={() => {
-            setEditingPage(null);
-            setActiveEditor(null);
-          }}
-        />
+  const AdminPageEditor = () => {
+    return (
+      <div className={darkMode ? 'dark' : ''}>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+          <Header
+            darkMode={darkMode}
+            onDarkModeToggle={handleDarkModeToggle}
+          />
+          <PageEditor onSave={handleSavePage} />
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const AdminMedia = () => renderAdminLayout(
     <Media
@@ -317,43 +198,35 @@ export default function App() {
   const AdminUsers = () => renderAdminLayout(
     <Users
       users={users}
-      onEdit={handleEditUser}
       onDelete={handleDeleteUser}
-      onNew={handleNewUser}
     />
   );
 
-  const AdminUserEditor = () => (
-    <div className={darkMode ? 'dark' : ''}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header
-          darkMode={darkMode}
-          onDarkModeToggle={handleDarkModeToggle}
-        />
-        <UserEditor
-          user={editingUser}
-          onSave={handleSaveUser}
-          onCancel={() => {
-            setEditingUser(null);
-            setActiveEditor(null);
-          }}
-        />
+  const AdminUserEditor = () => {
+    return (
+      <div className={darkMode ? 'dark' : ''}>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+          <Header
+            darkMode={darkMode}
+            onDarkModeToggle={handleDarkModeToggle}
+          />
+          <UserEditor onSave={handleSaveUser} />
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const AdminSettings = () => renderAdminLayout(
     <Settings
       settings={settings}
       onSave={handleSaveSettings}
+      onClearData={handleClearAllData}
     />
   );
 
   const AdminHelp = () => renderAdminLayout(<Help />);
-
   const AdminAnalytics = () => renderAdminLayout(<Analytics />);
 
-  // Public Routes Components
   const HomePage = () => renderPublicLayout(<PublicHome posts={posts} settings={settings} />);
   const PostsPage = () => renderPublicLayout(<PublicPosts posts={posts} />);
   const PostDetailPage = () => renderPublicLayout(<PublicPostDetail posts={posts} />);
@@ -361,13 +234,11 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/posts" element={<PostsPage />} />
         <Route path="/posts/:id" element={<PostDetailPage />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Admin Routes */}
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/posts" element={<AdminPosts />} />
         <Route path="/admin/posts/new" element={<AdminPostEditor />} />
@@ -385,8 +256,15 @@ export default function App() {
         <Route path="/admin/analytics" element={<AdminAnalytics />} />
       </Routes>
 
-      {/* Tutorial System */}
       <TutorialSystem />
     </Router>
+  );
+}
+
+export default function App() {
+  return (
+    <DataProvider>
+      <AppContent />
+    </DataProvider>
   );
 }

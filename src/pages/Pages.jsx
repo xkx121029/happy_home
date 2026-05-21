@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, Search, Edit, Trash2, Eye, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function Pages({ pages, onEdit, onDelete, onNew }) {
+export default function Pages({ pages, onDelete }) {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
@@ -19,12 +19,10 @@ export default function Pages({ pages, onEdit, onDelete, onNew }) {
   };
 
   const handleEditPage = (page) => {
-    onEdit(page);
     navigate(`/admin/pages/${page.id}/edit`);
   };
 
   const handleNewPage = () => {
-    onNew();
     navigate('/admin/pages/new');
   };
 

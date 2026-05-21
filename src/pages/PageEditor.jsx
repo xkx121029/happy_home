@@ -1,21 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Eye } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
 import ContentPreview from '../components/ContentPreview';
+import { useData } from '../contexts/DataContext';
 
-const statusOptions = [
-  { id: 'draft', label: '草稿' },
-  { id: 'published', label: '发布' },
-];
-
-export default function PageEditor({ page, onSave, onCancel }) {
-  const [title, setTitle] = useState(page?.title || '');
-  const [content, setContent] = useState(page?.content || '');
-  const [slug, setSlug] = useState(page?.slug || '');
-  const [status, setStatus] = useState(page?.status || 'draft');
+export default function PageEditor({ onSave }) {
+  const { pagesAPI } = useData();
+  const { id } = useParams();
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [slug, setSlug] = useState('');
+  const [status, setStatus] = useState('draft');
   const [showPreview, setShowPreview] = useState(false);
+  const [pageId, setPageId] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (id) {
+      const fetchedPage = pagesAPI.getById(parseInt(id));
+      if (fetchedPage) {
+        setPageId(fetchedPage.id);
+        setTitle(fetchedPage.title || '');
+        setContent(fetchedPage.content || '');
+        setSlug(fetchedPage.slug || '');
+        setStatus(fetchedPage.status || 'draft');
+      }
+    }
+  }, [id, pagesAPI]);
 
   const generateSlug = (titleStr) => {
     return titleStr
@@ -27,32 +39,36 @@ export default function PageEditor({ page, onSave, onCancel }) {
   const handleTitleChange = (e) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    if (!page) {
+    if (!pageId) {
       setSlug(generateSlug(newTitle));
     }
   };
 
   const handleSave = () => {
+    if (!title.trim()) {
+      alert('请输入页面标题');
+      return;
+    }
+    if (!content.trim()) {
+      alert('请输入页面内容');
+      return;
+    }
+    
     const pageData = {
-      id: page?.id || Date.now(),
       title,
       content,
       slug: slug || generateSlug(title),
       status,
       author: 'admin',
-      createdAt: page?.createdAt || new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0],
     };
+    
     if (onSave) {
-      onSave(pageData);
+      onSave({ ...pageData, id: pageId });
     }
     navigate('/admin/pages');
   };
 
   const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    }
     navigate('/admin/pages');
   };
 
@@ -68,7 +84,7 @@ export default function PageEditor({ page, onSave, onCancel }) {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {page ? '编辑页面' : '新建页面'}
+              {pageId ? '编辑页面' : '新建页面'}
             </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">创建和管理网站页面</p>
           </div>
@@ -76,14 +92,17 @@ export default function PageEditor({ page, onSave, onCancel }) {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setShowPreview(true)}
-            className="btn-secondary dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 flex items-center gap-2"
+            className="px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
           >
             <Eye className="w-4 h-4" />
             预览
           </button>
-          <button className="btn-primary flex items-center gap-2" onClick={handleSave}>
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2"
+          >
             <Save className="w-4 h-4" />
-            {status === 'published' ? '更新' : '保存'}
+            {status === 'published' ? '更新发布' : '保存草稿'}
           </button>
         </div>
       </div>
@@ -109,17 +128,20 @@ export default function PageEditor({ page, onSave, onCancel }) {
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">状态</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">发布状态</label>
                 <div className="flex gap-2">
-                  {statusOptions.map((option) => (
-                    <button
-                      key={option.id}
-                      onClick={() => setStatus(option.id)}
-                      className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${status === option.id ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+                  <button
+                    onClick={() => setStatus('draft')}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${status === 'draft' ? 'bg-yellow-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+                  >
+                    草稿
+                  </button>
+                  <button
+                    onClick={() => setStatus('published')}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${status === 'published' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+                  >
+                    发布
+                  </button>
                 </div>
               </div>
 
@@ -136,7 +158,7 @@ export default function PageEditor({ page, onSave, onCancel }) {
                   />
                 </div>
                 <p className="text-xs text-gray-400 mt-2">
-                  页面访问地址: http://localhost:3000/{slug || 'page-url'}
+                  页面访问地址: /{slug || 'page-url'}
                 </p>
               </div>
             </div>

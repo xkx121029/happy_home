@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { User, Lock, Mail, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
-import { usersAPI } from '../utils/dataStore';
+import { useData } from '../contexts/DataContext';
 
 export default function Login() {
+  const { usersAPI } = useData();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -75,7 +76,6 @@ export default function Login() {
           <p className="text-gray-500 mt-1">欢迎回来</p>
         </div>
 
-        {/* Toggle */}
         <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
           <button
             onClick={() => setIsLogin(true)}
@@ -95,7 +95,6 @@ export default function Login() {
           </button>
         </div>
 
-        {/* Form */}
         {error && (
           <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
             {error}
@@ -222,7 +221,6 @@ export default function Login() {
           </form>
         )}
 
-        {/* Info */}
         <div className="mt-6 text-center">
           {isLogin ? (
             <p className="text-sm text-gray-500">
@@ -247,7 +245,6 @@ export default function Login() {
           )}
         </div>
 
-        {/* Demo Credentials */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <p className="text-xs text-gray-500 text-center">演示账户</p>
           <p className="text-xs text-gray-600 text-center mt-1">用户名: admin | 密码: admin123</p>
