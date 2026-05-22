@@ -347,7 +347,7 @@ export default function Help() {
             </p>
             <div className="flex gap-3">
               <a
-                href="mailto:support@happpyhome.com"
+                href="mailto:support@happyhome.com"
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
                 发送邮件

@@ -51,6 +51,7 @@ export default function RichTextEditor({ value, onChange, placeholder = '开始�
   }, [value]);
 
   const executeCommand = (command, cmdValue = null) => {
+    // 只打开弹窗的命令，不需要触发内容更新
     if (command === 'createLink') {
       setShowLinkModal(true);
       const selection = window.getSelection();
@@ -59,12 +60,15 @@ export default function RichTextEditor({ value, onChange, placeholder = '开始�
         const selectedText = range.toString();
         setLinkText(selectedText);
       }
+      return; // 不触发内容更新
     } else if (command === 'insertImage') {
       setShowImageModal(true);
-    } else if (command === 'removeLink') {
-      document.execCommand('unlink', false, null);
+      return; // 不触发内容更新
     } else if (command === 'insertCodeBlock') {
       setShowCodeModal(true);
+      return; // 不触发内容更新
+    } else if (command === 'removeLink') {
+      document.execCommand('unlink', false, null);
     } else {
       document.execCommand(command, false, cmdValue);
     }
@@ -179,7 +183,7 @@ export default function RichTextEditor({ value, onChange, placeholder = '开始�
   };
 
   const handleInsertCodeBlock = () => {
-    if (codeContent !== undefined) {
+    if (codeContent && codeContent.trim()) {
       const pre = document.createElement('pre');
       pre.style.cssText = `
         background-color: #1e293b;

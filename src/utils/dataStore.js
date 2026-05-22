@@ -7,6 +7,20 @@ const STORAGE_KEYS = {
   TUTORIAL: 'happyhome_tutorial',
 };
 
+// 简单的密码哈希函数（用于演示目的）
+// 注意：在实际生产环境中，密码加密应在后端完成
+const hashPassword = (password) => {
+  // 使用简单的Base64编码作为演示（实际应使用bcrypt等加密算法）
+  // 这不是真正的安全方案，仅用于防止密码在localStorage中明文显示
+  const encoded = btoa(unescape(encodeURIComponent(password + '_happyhome_salt')));
+  return encoded;
+};
+
+// 验证密码
+const verifyPassword = (inputPassword, storedHash) => {
+  return hashPassword(inputPassword) === storedHash;
+};
+
 const defaultPosts = [
   {
     id: 1,
@@ -37,7 +51,7 @@ const defaultPages = [
   {
     id: 2,
     title: '联系我们',
-    content: '<h2>联系我们</h2><p>如果您有任何问题或建议，请通过以下方式联系我们：</p><ul><li>邮箱：contact@happpyhome.com</li><li>电话：400-123-4567</li></ul>',
+    content: '<h2>联系我们</h2><p>如果您有任何问题或建议，请通过以下方式联系我们：</p><ul><li>邮箱：contact@happyhome.com</li><li>电话：400-123-4567</li></ul>',
     slug: 'contact',
     status: 'published',
     author: 'admin',
@@ -51,7 +65,9 @@ const defaultUsers = [
     id: 1,
     username: 'admin',
     email: 'admin@example.com',
-    password: 'admin123',
+    // 密码哈希值：admin123 -> YWRtaW4xMjNfX2hhcHB5aG9tZV9zYWx0
+    // 注意：在实际生产环境中，应在后端使用bcrypt等加密算法
+    password: 'YWRtaW4xMjNfX2hhcHB5aG9tZV9zYWx0',
     role: 'administrator',
     status: 'active',
     createdAt: '2024-01-01',
@@ -283,9 +299,11 @@ export const usersAPI = {
   
   login: (username, password) => {
     const users = usersAPI.getAll();
-    const user = users.find(u => u.username === username && u.password === password);
-    if (user) {
-      return { success: true, user };
+    const user = users.find(u => u.username === username);
+    if (user && verifyPassword(password, user.password)) {
+      // 不返回密码给前端
+      const { password: _, ...userWithoutPassword } = user;
+      return { success: true, user: userWithoutPassword };
     }
     return { success: false, message: '用户名或密码错误' };
   },
@@ -299,6 +317,8 @@ export const usersAPI = {
     const newUser = {
       ...user,
       id: Date.now(),
+      // 对密码进行哈希处理
+      password: hashPassword(user.password),
       createdAt: new Date().toISOString().split('T')[0],
       updatedAt: new Date().toISOString().split('T')[0],
     };

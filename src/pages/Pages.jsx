@@ -26,6 +26,16 @@ export default function Pages({ pages, onDelete }) {
     navigate('/admin/pages/new');
   };
 
+  const handlePreviewPage = (page) => {
+    if (page.status === 'published') {
+      // 已发布的页面跳转到前台
+      window.open(`/page/${page.slug}`, '_blank');
+    } else {
+      // 草稿页面提示用户
+      alert('该页面尚未发布，无法预览。请先发布页面。');
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -73,13 +83,17 @@ export default function Pages({ pages, onDelete }) {
               </div>
               
               <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-4">
-                {page.content.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                {page.content ? page.content.replace(/<[^>]*>/g, '').substring(0, 100) : ''}...
               </p>
               
               <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-600">
                 <span className="text-xs text-gray-400 dark:text-gray-500">{page.updatedAt}</span>
                 <div className="flex items-center gap-2">
-                  <button className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors">
+                  <button 
+                    onClick={() => handlePreviewPage(page)}
+                    className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors"
+                    title={page.status === 'published' ? '预览页面' : '页面未发布，无法预览'}
+                  >
                     <Eye className="w-4 h-4" />
                   </button>
                   <button

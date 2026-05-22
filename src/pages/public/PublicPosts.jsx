@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FileText, Calendar, User, Search } from 'lucide-react';
+import { FileText, Calendar, User, Search, Pin } from 'lucide-react';
 import { useState } from 'react';
 
 export default function PublicPosts({ posts }) {
@@ -8,7 +8,13 @@ export default function PublicPosts({ posts }) {
 
   const publishedPosts = posts.filter(post => post.status === 'published');
 
-  const filteredPosts = publishedPosts.filter(post => {
+  const sortedPosts = [...publishedPosts].sort((a, b) => {
+    if (a.sticky && !b.sticky) return -1;
+    if (!a.sticky && b.sticky) return 1;
+    return new Date(b.updatedAt) - new Date(a.updatedAt);
+  });
+
+  const filteredPosts = sortedPosts.filter(post => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory;
@@ -65,6 +71,12 @@ export default function PublicPosts({ posts }) {
                   </div>
                   <div className="p-6">
                     <div className="flex items-center gap-2 mb-3">
+                      {post.sticky && (
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium flex items-center gap-1">
+                          <Pin className="w-3 h-3" />
+                          置顶
+                        </span>
+                      )}
                       <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                         {post.category}
                       </span>

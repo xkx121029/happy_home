@@ -6,6 +6,8 @@ const roleOptions = [
   { id: 'administrator', label: '管理员', color: 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300' },
   { id: 'editor', label: '编辑', color: 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' },
   { id: 'author', label: '作者', color: 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' },
+  { id: 'contributor', label: '贡献者', color: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300' },
+  { id: 'subscriber', label: '订阅者', color: 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300' },
 ];
 
 const statusOptions = [
@@ -16,12 +18,16 @@ const statusOptions = [
 
 export default function Users({ users, onEdit, onDelete, onNew }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterRole, setFilterRole] = useState('');
   const navigate = useNavigate();
 
-  const filteredUsers = users.filter((user) =>
-    user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = !filterRole || user.role === filterRole;
+    return matchesSearch && matchesRole;
+  });
 
   const getRoleBadge = (role) => {
     const option = roleOptions.find((r) => r.id === role);
@@ -69,15 +75,32 @@ export default function Users({ users, onEdit, onDelete, onNew }) {
 
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="搜索用户..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="搜索用户..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="relative">
+              <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <select
+                value={filterRole}
+                onChange={(e) => setFilterRole(e.target.value)}
+                className="pl-10 pr-8 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+              >
+                <option value="">所有角色</option>
+                {roleOptions.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 

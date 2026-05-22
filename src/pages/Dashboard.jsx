@@ -1,6 +1,6 @@
 import { FileText, FolderOpen, Image, Users, Eye, TrendingUp } from 'lucide-react';
 
-export default function Dashboard({ posts = [], pages = [], users = [] }) {
+export default function Dashboard({ posts = [], pages = [], media = [], users = [] }) {
   const publishedPosts = posts.filter(post => post.status === 'published').length;
   const draftPosts = posts.filter(post => post.status === 'draft').length;
 
@@ -9,7 +9,7 @@ export default function Dashboard({ posts = [], pages = [], users = [] }) {
     { label: '已发布', value: publishedPosts, icon: FileText, color: 'bg-green-500' },
     { label: '草稿', value: draftPosts, icon: FileText, color: 'bg-yellow-500' },
     { label: '页面', value: pages.length, icon: FolderOpen, color: 'bg-purple-500' },
-    { label: '媒体文件', value: 3, icon: Image, color: 'bg-pink-500' },
+    { label: '媒体文件', value: media.length, icon: Image, color: 'bg-pink-500' },
     { label: '用户', value: users.length, icon: Users, color: 'bg-indigo-500' },
   ];
 

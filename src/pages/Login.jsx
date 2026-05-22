@@ -1,10 +1,28 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { User, Lock, Mail, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { User, Lock, Mail, Eye, EyeOff, LogIn, UserPlus, Zap } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 
+// 简单的用户验证（硬编码）
+const validateLogin = (username, password) => {
+  const validUsers = [
+    { username: 'admin', password: 'admin123', role: 'administrator', email: 'admin@example.com' },
+    { username: 'editor', password: 'editor123', role: 'editor', email: 'editor@example.com' },
+    { username: 'author', password: 'author123', role: 'author', email: 'author@example.com' },
+    { username: 'contributor', password: 'contributor123', role: 'contributor', email: 'contributor@example.com' },
+    { username: 'subscriber', password: 'subscriber123', role: 'subscriber', email: 'subscriber@example.com' },
+  ];
+  
+  const user = validUsers.find(u => u.username === username && u.password === password);
+  if (user) {
+    const { password: _, ...userWithoutPassword } = user;
+    return { success: true, user: userWithoutPassword };
+  }
+  return { success: false, message: '用户名或密码错误' };
+};
+
 export default function Login() {
-  const { usersAPI } = useData();
+  const { settings } = useData();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -23,8 +41,10 @@ export default function Login() {
       return;
     }
 
-    const result = usersAPI.login(username, password);
+    const result = validateLogin(username, password);
     if (result.success) {
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('currentUser', JSON.stringify(result.user));
       navigate('/admin');
     } else {
       setError(result.message);
@@ -59,6 +79,9 @@ export default function Login() {
     });
 
     if (result.success) {
+      // 注册成功后保存登录状态
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('currentUser', JSON.stringify(result.user));
       navigate('/admin');
     } else {
       setError(result.message);
@@ -145,6 +168,20 @@ export default function Login() {
               <LogIn className="w-5 h-5" />
               登录
             </button>
+
+            {settings?.showQuickLoginButton !== false && (
+              <button
+                type="button"
+                onClick={() => {
+                  setUsername('admin');
+                  setPassword('admin123');
+                }}
+                className="w-full py-3 mt-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-medium hover:from-orange-600 hover:to-red-600 transition-all flex items-center justify-center gap-2"
+              >
+                <Zap className="w-5 h-5" />
+                快速登录管理员
+              </button>
+            )}
           </form>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4">
@@ -221,17 +258,28 @@ export default function Login() {
           </form>
         )}
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-2">
           {isLogin ? (
-            <p className="text-sm text-gray-500">
-              还没有账户？{' '}
-              <button
-                onClick={() => setIsLogin(false)}
-                className="text-blue-600 hover:text-blue-700 font-medium"
-              >
-                立即注册
-              </button>
-            </p>
+            <>
+              <p className="text-sm text-gray-500">
+                还没有账户？{' '}
+                <button
+                  onClick={() => setIsLogin(false)}
+                  className="text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  立即注册
+                </button>
+              </p>
+              <p className="text-sm text-gray-500">
+                忘记密码？{' '}
+                <Link
+                  to="/forgot-password"
+                  className="text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  找回密码
+                </Link>
+              </p>
+            </>
           ) : (
             <p className="text-sm text-gray-500">
               已有账户？{' '}
@@ -245,10 +293,6 @@ export default function Login() {
           )}
         </div>
 
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-500 text-center">演示账户</p>
-          <p className="text-xs text-gray-600 text-center mt-1">用户名: admin | 密码: admin123</p>
-        </div>
       </div>
     </div>
   );

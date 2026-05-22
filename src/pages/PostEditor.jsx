@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Save, Eye, Calendar, Tag } from 'lucide-react';
+import { ArrowLeft, Save, Eye, Calendar, Tag, Pin, Clock, History, RotateCcw, Trash2, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
 import ContentPreview from '../components/ContentPreview';
@@ -8,7 +8,7 @@ import { useData } from '../contexts/DataContext';
 
 export default function PostEditor({ onSave }) {
   const { id } = useParams();
-  const { postsAPI } = useData();
+  const { postsAPI, revisionsAPI } = useData();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [excerpt, setExcerpt] = useState('');
@@ -18,6 +18,12 @@ export default function PostEditor({ onSave }) {
   const [showPreview, setShowPreview] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
   const [postId, setPostId] = useState(null);
+  const [isSticky, setIsSticky] = useState(false);
+  const [publishType, setPublishType] = useState('now');
+  const [publishDate, setPublishDate] = useState('');
+  const [showRevisions, setShowRevisions] = useState(false);
+  const [selectedRevision, setSelectedRevision] = useState(null);
+  const [revisions, setRevisions] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,9 +37,16 @@ export default function PostEditor({ onSave }) {
         setCategory(fetchedPost.category || categories[0]);
         setTags(fetchedPost.tags || []);
         setIsPublished(fetchedPost.status === 'published');
+        setIsSticky(fetchedPost.sticky || false);
+        if (fetchedPost.status === 'future') {
+          setPublishType('scheduled');
+          setPublishDate(fetchedPost.publishDate || '');
+        }
+        const postRevisions = revisionsAPI.getByPostId(fetchedPost.id);
+        setRevisions(postRevisions);
       }
     }
-  }, [id, postsAPI]);
+  }, [id, postsAPI, revisionsAPI]);
 
   const handleAddTag = (e) => {
     if (e.key === 'Enter' && newTag.trim()) {
@@ -49,17 +62,31 @@ export default function PostEditor({ onSave }) {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
+  const createRevisionIfNeeded = () => {
+    if (postId) {
+      revisionsAPI.create(postId, {
+        title,
+        content,
+        excerpt,
+        author: 'admin',
+      });
+    }
+  };
+
   const handleSaveDraft = () => {
+    createRevisionIfNeeded();
     const postData = {
       title: title || '无标题',
       content,
       excerpt: excerpt || content.replace(/<[^>]*>/g, '').substring(0, 100) + '...',
       status: 'draft',
+      publishDate: null,
       category,
       tags,
+      sticky: isSticky,
       author: 'admin',
     };
-    
+
     if (onSave) {
       onSave({ ...postData, id: postId });
     }
@@ -75,21 +102,46 @@ export default function PostEditor({ onSave }) {
       alert('请输入文章内容');
       return;
     }
-    
+    if (publishType === 'scheduled' && !publishDate) {
+      alert('请选择定时发布时间');
+      return;
+    }
+
+    createRevisionIfNeeded();
     const postData = {
       title,
       content,
       excerpt: excerpt || content.replace(/<[^>]*>/g, '').substring(0, 100) + '...',
-      status: 'published',
+      status: publishType === 'scheduled' ? 'future' : 'published',
+      publishDate: publishType === 'scheduled' ? publishDate : null,
       category,
       tags,
+      sticky: isSticky,
       author: 'admin',
     };
-    
+
     if (onSave) {
       onSave({ ...postData, id: postId });
     }
     navigate('/admin/posts');
+  };
+
+  const handleRestoreRevision = (revision) => {
+    if (window.confirm('确定要恢复到该修订版本吗？当前内容将被保存为新修订。')) {
+      setTitle(revision.title);
+      setContent(revision.content);
+      setExcerpt(revision.excerpt);
+      revisionsAPI.create(postId, {
+        title: revision.title,
+        content: revision.content,
+        excerpt: revision.excerpt,
+        author: revision.author,
+      });
+      const postRevisions = revisionsAPI.getByPostId(postId);
+      setRevisions(postRevisions);
+      setSelectedRevision(null);
+      setShowRevisions(false);
+    }
   };
 
   const handleCancelClick = () => {
@@ -114,7 +166,16 @@ export default function PostEditor({ onSave }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button 
+          {postId && (
+            <button
+              onClick={() => setShowRevisions(true)}
+              className="px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+            >
+              <History className="w-4 h-4" />
+              修订
+            </button>
+          )}
+          <button
             onClick={() => setShowPreview(true)}
             className="px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
           >
@@ -226,13 +287,71 @@ export default function PostEditor({ onSave }) {
               <div>
                 <span>作者: admin</span>
               </div>
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+                <span>置顶文章</span>
+                <button
+                  onClick={() => setIsSticky(!isSticky)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    isSticky ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      isSticky ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
               <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
                 <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                  publishType === 'scheduled' ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300' :
                   isPublished ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300'
                 }`}>
-                  {isPublished ? '已发布' : '草稿'}
+                  {publishType === 'scheduled' ? '定时发布' : isPublished ? '已发布' : '草稿'}
                 </span>
               </div>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">发布选项</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  id="publishNow"
+                  name="publishType"
+                  checked={publishType === 'now'}
+                  onChange={() => setPublishType('now')}
+                  className="w-4 h-4 text-blue-500"
+                />
+                <label htmlFor="publishNow" className="text-sm text-gray-700 dark:text-gray-300">
+                  立即发布
+                </label>
+              </div>
+              <div className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  id="publishScheduled"
+                  name="publishType"
+                  checked={publishType === 'scheduled'}
+                  onChange={() => setPublishType('scheduled')}
+                  className="w-4 h-4 text-blue-500"
+                />
+                <label htmlFor="publishScheduled" className="text-sm text-gray-700 dark:text-gray-300">
+                  定时发布
+                </label>
+              </div>
+              {publishType === 'scheduled' && (
+                <div className="pl-7">
+                  <input
+                    type="datetime-local"
+                    value={publishDate}
+                    onChange={(e) => setPublishDate(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -245,6 +364,84 @@ export default function PostEditor({ onSave }) {
           onClose={() => setShowPreview(false)}
           type="article"
         />
+      )}
+
+      {showRevisions && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">修订历史</h2>
+              <button
+                onClick={() => {
+                  setShowRevisions(false);
+                  setSelectedRevision(null);
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex h-[calc(80vh-140px)]">
+              <div className="w-1/3 border-r border-gray-100 dark:border-gray-700 overflow-y-auto">
+                {revisions.length > 0 ? (
+                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {revisions.map((revision) => (
+                      <button
+                        key={revision.id}
+                        onClick={() => setSelectedRevision(revision)}
+                        className={`w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                          selectedRevision?.id === revision.id ? 'bg-blue-50 dark:bg-blue-900' : ''
+                        }`}
+                      >
+                        <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {revision.title.substring(0, 30)}{revision.title.length > 30 ? '...' : ''}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {new Date(revision.createdAt).toLocaleString()}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+                    暂无修订记录
+                  </div>
+                )}
+              </div>
+              <div className="w-2/3 p-6 overflow-y-auto">
+                {selectedRevision ? (
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                      {selectedRevision.title}
+                    </h3>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-2">
+                      <span>修订时间: {new Date(selectedRevision.createdAt).toLocaleString()}</span>
+                      <span>|</span>
+                      <span>作者: {selectedRevision.author}</span>
+                    </div>
+                    <div className="prose dark:prose-invert max-w-none">
+                      <div dangerouslySetInnerHTML={{ __html: selectedRevision.content }} />
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                      <button
+                        onClick={() => handleRestoreRevision(selectedRevision)}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        恢复到该版本
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+                    选择一个修订版本查看详情
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

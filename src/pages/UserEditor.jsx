@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ArrowLeft, Save, User, Mail, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -6,6 +6,8 @@ const roleOptions = [
   { id: 'administrator', label: '管理员', color: 'bg-red-100 text-red-700' },
   { id: 'editor', label: '编辑', color: 'bg-blue-100 text-blue-700' },
   { id: 'author', label: '作者', color: 'bg-green-100 text-green-700' },
+  { id: 'contributor', label: '贡献者', color: 'bg-yellow-100 text-yellow-700' },
+  { id: 'subscriber', label: '订阅者', color: 'bg-purple-100 text-purple-700' },
 ];
 
 const statusOptions = [
@@ -21,6 +23,9 @@ export default function UserEditor({ user, onSave, onCancel }) {
   const [role, setRole] = useState(user?.role || 'author');
   const [status, setStatus] = useState(user?.status || 'active');
   const navigate = useNavigate();
+
+  // 使用useMemo缓存当前日期，避免每次渲染都重新计算
+  const currentDate = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   const handleSave = () => {
     const userData = {
@@ -63,7 +68,7 @@ export default function UserEditor({ user, onSave, onCancel }) {
             <p className="text-gray-500 dark:text-gray-400 mt-1">管理网站用户账户</p>
           </div>
         </div>
-        <button className="btn-primary flex items-center gap-2" onClick={handleSave}>
+        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2" onClick={handleSave}>
           <Save className="w-4 h-4" />
           保存
         </button>
@@ -176,7 +181,7 @@ export default function UserEditor({ user, onSave, onCancel }) {
                   </div>
                   <div>
                     <span className="text-gray-500 dark:text-gray-400">更新时间:</span>
-                    <div>{new Date().toISOString().split('T')[0]}</div>
+                    <div>{currentDate}</div>
                   </div>
                 </div>
               </div>

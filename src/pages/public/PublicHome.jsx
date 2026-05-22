@@ -1,12 +1,102 @@
 import { Link } from 'react-router-dom';
-import { FileText, Clock, User, Calendar, ExternalLink } from 'lucide-react';
+import { FileText, Clock, User, Calendar, ExternalLink, Pin } from 'lucide-react';
+import { useEffect } from 'react';
 
-export default function PublicHome({ posts, settings }) {
+export default function PublicHome({ posts, pages, settings }) {
   const publishedPosts = posts.filter(post => post.status === 'published');
-  const recentPosts = publishedPosts.slice(0, 3);
+  const sortedPosts = [...publishedPosts].sort((a, b) => {
+    if (a.sticky && !b.sticky) return -1;
+    if (!a.sticky && b.sticky) return 1;
+    return new Date(b.updatedAt) - new Date(a.updatedAt);
+  });
+  const recentPosts = sortedPosts.slice(0, 3);
+  const publishedPages = (pages || []).filter(page => page.status === 'published');
 
   const siteName = settings?.siteName || 'HappyHome';
   const siteDescription = settings?.siteDescription || '一个功能强大、易于使用的建站平台';
+
+  // SEO 设置
+  const seo = settings?.seo || {};
+  const siteUrl = settings?.siteUrl || '';
+
+  // 更新页面 SEO 标签
+  useEffect(() => {
+    const title = seo.siteTitle || siteName;
+    const description = seo.siteDescription || siteDescription;
+    const keywords = seo.siteKeywords || '';
+    const ogImage = seo.ogImage || '';
+
+    // 设置文档标题
+    document.title = title;
+
+    // 更新 meta 标签
+    const updateMeta = (name, content) => {
+      let meta = document.querySelector(`meta[name="${name}"]`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute('name', name);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', content);
+    };
+
+    updateMeta('description', description);
+    updateMeta('keywords', keywords);
+
+    // Open Graph 标签
+    const updateOg = (property, content) => {
+      let meta = document.querySelector(`meta[property="${property}"]`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute('property', property);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', content);
+    };
+
+    updateOg('og:title', title);
+    updateOg('og:description', description);
+    updateOg('og:type', 'website');
+    updateOg('og:url', siteUrl || window.location.origin);
+    updateOg('og:site_name', siteName);
+    if (ogImage) updateOg('og:image', ogImage);
+
+    // Twitter Card 标签
+    updateMeta('twitter:card', 'summary_large_image');
+    updateMeta('twitter:title', title);
+    updateMeta('twitter:description', description);
+    if (ogImage) updateMeta('twitter:image', ogImage);
+
+    // robots
+    if (seo.noIndex) {
+      updateMeta('robots', 'noindex, nofollow');
+    } else {
+      updateMeta('robots', seo.robots || 'index, follow');
+    }
+
+    // Canonical
+    if (seo.canonical) {
+      let link = document.querySelector('link[rel="canonical"]');
+      if (!link) {
+        link = document.createElement('link');
+        link.setAttribute('rel', 'canonical');
+        document.head.appendChild(link);
+      }
+      link.setAttribute('href', siteUrl || window.location.origin);
+    }
+
+    // 站长验证
+    if (seo.bingVerification) {
+      updateMeta('msvalidate.01', seo.bingVerification);
+    }
+    if (seo.baiduVerification) {
+      updateMeta('baidu-site-verification', seo.baiduVerification);
+    }
+
+    return () => {
+      document.title = siteName;
+    };
+  }, [seo, siteName, siteDescription, siteUrl]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -55,10 +145,10 @@ export default function PublicHome({ posts, settings }) {
                 title: '用户管理',
                 desc: '完整的权限系统，支持多用户协作，灵活的角色分配。'
               }
-            ].map((feature, idx) => {
+            ].map((feature) => {
               const Icon = feature.icon;
               return (
-                <div key={idx} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div key={feature.title} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                   <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
                     <Icon className="w-7 h-7 text-blue-600" />
                   </div>
@@ -95,6 +185,12 @@ export default function PublicHome({ posts, settings }) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mb-2">
+                      {post.sticky && (
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium flex items-center gap-1">
+                          <Pin className="w-3 h-3" />
+                          置顶
+                        </span>
+                      )}
                       <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                         {post.category}
                       </span>
@@ -121,28 +217,33 @@ export default function PublicHome({ posts, settings }) {
         </section>
       )}
 
-      {/* About Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">关于 {siteName}</h2>
-          <p className="text-gray-600 text-lg leading-relaxed mb-8">
-            {siteName} 致力于为每个人提供简单易用的建站解决方案。我们相信
-            每个人都应该能够轻松展示自己的创意和内容，无需复杂的技术知识。
-          </p>
-          <div className="flex flex-wrap justify-center gap-8">
-            {[
-              { number: '10K+', label: '网站数量' },
-              { number: '50K+', label: '用户数量' },
-              { number: '1M+', label: '文章总数' }
-            ].map((stat, idx) => (
-              <div key={idx} className="text-center">
-                <div className="text-4xl font-bold text-blue-600 mb-1">{stat.number}</div>
-                <div className="text-gray-600">{stat.label}</div>
-              </div>
-            ))}
+      {/* Pages */}
+      {publishedPages.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="flex items-center justify-between mb-12">
+              <h2 className="text-3xl font-bold text-gray-900">更多页面</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {publishedPages.map((page) => (
+                <article key={page.id} className="group">
+                  <Link to={`/page/${page.slug}`} className="block">
+                    <div className="bg-gradient-to-br from-green-400 to-teal-500 rounded-2xl aspect-video mb-4 group-hover:scale-[1.02] transition-transform overflow-hidden flex items-center justify-center">
+                      <FileText className="w-16 h-16 text-white opacity-30" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                      {page.title}
+                    </h3>
+                    <p className="text-gray-600 line-clamp-2">
+                      点击查看页面内容
+                    </p>
+                  </Link>
+                </article>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }

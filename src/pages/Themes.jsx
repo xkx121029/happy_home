@@ -103,12 +103,21 @@ export default function Themes({ settings, onSave }) {
   };
 
   const handleSave = () => {
-    const activeTheme = themes.find(t => t.active) || defaultThemes[0];
+    const activePreset = themes.find(t => t.active);
+    let colorsToSave;
+    
+    if (activePreset) {
+      colorsToSave = activePreset.colors;
+    } else {
+      colorsToSave = customTheme.colors;
+    }
+    
     const newSettings = {
       ...settings,
       theme: {
+        name: activePreset ? activePreset.name : 'custom',
         ...customTheme,
-        colors: activeTheme.colors,
+        colors: colorsToSave,
       },
     };
     if (onSave) {

@@ -1,16 +1,37 @@
-import { Search, Bell, Settings, User, Sun, Moon, ExternalLink } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Bell, Settings, User, Sun, Moon, ExternalLink, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function Header({ darkMode, onDarkModeToggle }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // 从 localStorage 读取当前登录用户
+  useEffect(() => {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      try {
+        setCurrentUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error('解析用户信息失败:', error);
+      }
+    }
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate('/admin/posts');
+    }
+  };
+
+  const handleLogout = () => {
+    if (window.confirm('确定要退出登录吗？')) {
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('currentUser');
+      navigate('/login');
     }
   };
 
@@ -70,9 +91,21 @@ export default function Header({ darkMode, onDarkModeToggle }) {
               <User className="w-4 h-4 text-blue-600 dark:text-blue-300" />
             </div>
             <div className="hidden sm:block">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">admin</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">管理员</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                {currentUser?.username || 'admin'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {currentUser?.role === 'administrator' ? '管理员' : 
+                 currentUser?.role === 'editor' ? '编辑' : '作者'}
+              </p>
             </div>
+            <button
+              onClick={handleLogout}
+              className="ml-2 p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
+              title="退出登录"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>

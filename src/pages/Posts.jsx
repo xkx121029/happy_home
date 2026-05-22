@@ -1,15 +1,23 @@
 import { useState } from 'react';
-import { Plus, Search, Filter, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Filter, Edit, Trash2, Eye, Pin, Clock, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { categories } from '../data/mockData';
+import { useData } from '../contexts/DataContext';
 
 export default function Posts({ posts, onDelete }) {
+  const { postsAPI } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
   const navigate = useNavigate();
 
-  const filteredPosts = posts.filter((post) => {
+  const sortedPosts = [...posts].sort((a, b) => {
+    if (a.sticky && !b.sticky) return -1;
+    if (!a.sticky && b.sticky) return 1;
+    return new Date(b.updatedAt) - new Date(a.updatedAt);
+  });
+
+  const filteredPosts = sortedPosts.filter((post) => {
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = filterStatus === 'all' || post.status === filterStatus;
@@ -21,7 +29,22 @@ export default function Posts({ posts, onDelete }) {
     if (status === 'published') {
       return <span className="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full">已发布</span>;
     }
+    if (status === 'future') {
+      return <span className="px-2 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full">定时发布</span>;
+    }
     return <span className="px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded-full">草稿</span>;
+  };
+
+  const handleToggleSticky = (post, e) => {
+    e.stopPropagation();
+    postsAPI.update(post.id, { sticky: !post.sticky });
+  };
+
+  const handleCancelScheduled = (post, e) => {
+    e.stopPropagation();
+    if (window.confirm('确定要取消定时发布吗？')) {
+      postsAPI.update(post.id, { status: 'draft', publishDate: null });
+    }
   };
 
   const handleEditPost = (post) => {
@@ -73,6 +96,7 @@ export default function Posts({ posts, onDelete }) {
                   <option value="all">全部状态</option>
                   <option value="published">已发布</option>
                   <option value="draft">草稿</option>
+                  <option value="future">定时发布</option>
                 </select>
               </div>
               
@@ -94,6 +118,7 @@ export default function Posts({ posts, onDelete }) {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 dark:bg-gray-700">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-12">置顶</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">标题</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">分类</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">作者</th>
@@ -106,8 +131,24 @@ export default function Posts({ posts, onDelete }) {
               {filteredPosts.map((post) => (
                 <tr key={post.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-4 py-4">
+                    <button
+                      onClick={(e) => handleToggleSticky(post, e)}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        post.sticky
+                          ? 'text-blue-500 bg-blue-50 dark:bg-blue-900 hover:bg-blue-100 dark:hover:bg-blue-800'
+                          : 'text-gray-400 hover:text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
+                      title={post.sticky ? '取消置顶' : '置顶'}
+                    >
+                      <Pin className="w-4 h-4" />
+                    </button>
+                  </td>
+                  <td className="px-4 py-4">
                     <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white">{post.title}</h3>
+                      <h3 className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                        {post.sticky && <Pin className="w-4 h-4 text-blue-500" />}
+                        {post.title}
+                      </h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{post.excerpt}</p>
                     </div>
                   </td>
@@ -117,10 +158,29 @@ export default function Posts({ posts, onDelete }) {
                     </span>
                   </td>
                   <td className="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{post.author}</td>
-                  <td className="px-4 py-4">{getStatusBadge(post.status)}</td>
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(post.status, post.publishDate)}
+                      {post.status === 'future' && post.publishDate && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {new Date(post.publishDate).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">{post.createdAt}</td>
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-end gap-2">
+                      {post.status === 'future' && (
+                        <button
+                          onClick={(e) => handleCancelScheduled(post, e)}
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
+                          title="取消定时发布"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                       <button className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors">
                         <Eye className="w-4 h-4" />
                       </button>

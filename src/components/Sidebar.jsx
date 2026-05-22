@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, FolderOpen, Image, Palette, Users, BarChart3, Settings, HelpCircle, Globe } from 'lucide-react';
+import { LayoutDashboard, FileText, FolderOpen, Image, Palette, Users, BarChart3, Settings, HelpCircle, Globe, Tag, FolderTree, Menu as MenuIcon, Search, MessageSquare, Layout, Database, Share2, Code, History, Shield } from 'lucide-react';
 
 export default function Sidebar({ activeMenu, onMenuChange }) {
   const location = useLocation();
@@ -7,10 +7,21 @@ export default function Sidebar({ activeMenu, onMenuChange }) {
   const menuItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: '仪表盘', path: '/admin' },
     { id: 'posts', icon: FileText, label: '文章', path: '/admin/posts' },
+    { id: 'revisions', icon: History, label: '修订历史', path: '/admin/revisions' },
+    { id: 'categories', icon: FolderTree, label: '分类', path: '/admin/categories' },
+    { id: 'tags', icon: Tag, label: '标签', path: '/admin/tags' },
     { id: 'pages', icon: FolderOpen, label: '页面', path: '/admin/pages' },
     { id: 'media', icon: Image, label: '媒体库', path: '/admin/media' },
+    { id: 'comments', icon: MessageSquare, label: '评论', path: '/admin/comments' },
+    { id: 'menus', icon: MenuIcon, label: '菜单', path: '/admin/menus' },
+    { id: 'widgets', icon: Layout, label: '小工具', path: '/admin/widgets' },
+    { id: 'seo', icon: Search, label: 'SEO', path: '/admin/seo' },
     { id: 'themes', icon: Palette, label: '主题', path: '/admin/themes' },
     { id: 'users', icon: Users, label: '用户', path: '/admin/users' },
+    { id: 'roles', icon: Shield, label: '角色管理', path: '/admin/roles' },
+    { id: 'backup', icon: Database, label: '备份', path: '/admin/backup' },
+    { id: 'social-share', icon: Share2, label: '社交分享', path: '/admin/social-share' },
+    { id: 'custom-css', icon: Code, label: '自定义CSS', path: '/admin/custom-css' },
   ];
 
   const bottomItems = [

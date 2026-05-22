@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Home, FileText, Image, User, Search, Menu, X, ArrowRight } from 'lucide-react';
+import { User, Menu, X, ArrowRight } from 'lucide-react';
 
 export default function PublicSite({ posts, onNavigate }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
