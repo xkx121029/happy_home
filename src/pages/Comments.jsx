@@ -4,7 +4,7 @@ import { Search, Check, Trash2, Reply, MessageSquare, User, Mail, AlertTriangle 
 import { useData } from '../contexts/DataContext';
 
 export default function Comments() {
-  const { comments, commentsAPI, posts } = useData();
+  const { comments, posts, deleteComment, updateCommentStatus, createComment } = useData();
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedComments, setSelectedComments] = useState([]);
@@ -29,7 +29,7 @@ export default function Comments() {
       );
     }
     return true;
-  }).filter(c => !c.parentId);
+  }).filter(c => !getCommentField(c, 'parentId'));
 
   const topLevelComments = filteredComments;
 
@@ -54,6 +54,16 @@ export default function Comments() {
     return post ? post.title : '未知文章';
   };
 
+  const getCommentField = (comment, field) => {
+    const mapping = {
+      postId: comment.post_id,
+      parentId: comment.parent_id,
+      createdAt: comment.created_at,
+      updatedAt: comment.updated_at
+    };
+    return mapping[field] !== undefined ? mapping[field] : comment[field];
+  };
+
   const getAvatar = (author) => {
     return (
       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-medium">
@@ -69,33 +79,33 @@ export default function Comments() {
   };
 
   const handleApprove = (id) => {
-    commentsAPI.approve(id);
+    updateCommentStatus(id, 'approved');
   };
 
   const handleSpam = (id) => {
-    commentsAPI.spam(id);
+    updateCommentStatus(id, 'spam');
   };
 
   const handleTrash = (id) => {
-    if (window.confirm('确定要将这条评论移至回收站吗？')) {
-      commentsAPI.trash(id);
+    if (window.confirm('确定要将这条评论移到回收站吗？')) {
+      updateCommentStatus(id, 'trash');
     }
   };
 
   const handleDelete = (id) => {
     if (window.confirm('确定要永久删除这条评论及其回复吗？')) {
-      commentsAPI.delete(id);
+      deleteComment(id);
     }
   };
 
   const handleBulkApprove = () => {
-    selectedComments.forEach(id => commentsAPI.approve(id));
+    selectedComments.forEach(id => updateCommentStatus(id, 'approved'));
     setSelectedComments([]);
   };
 
   const handleBulkDelete = () => {
     if (window.confirm(`确定要永久删除选中的 ${selectedComments.length} 条评论吗？`)) {
-      selectedComments.forEach(id => commentsAPI.delete(id));
+      selectedComments.forEach(id => deleteComment(id));
       setSelectedComments([]);
     }
   };
@@ -111,7 +121,10 @@ export default function Comments() {
       alert('请填写所有字段');
       return;
     }
-    commentsAPI.reply(replyingTo, {
+    const parentComment = comments.find(c => c.id === replyingTo);
+    createComment({
+      postId: parentComment ? getCommentField(parentComment, 'postId') || null : null,
+      parentId: replyingTo,
       author: replyForm.author,
       email: replyForm.email,
       content: replyForm.content,
@@ -126,7 +139,7 @@ export default function Comments() {
   };
 
   const renderReplies = (parentId, level = 1) => {
-    const replies = comments.filter(c => c.parentId === parentId);
+    const replies = comments.filter(c => getCommentField(c, 'parentId') === parentId);
     if (replies.length === 0) return null;
 
     return (
@@ -143,7 +156,7 @@ export default function Comments() {
                 </div>
                 <p className="text-gray-600 dark:text-gray-300 mb-2">{reply.content}</p>
                 <div className="flex items-center gap-4 text-sm">
-                  <span className="text-gray-400">{reply.createdAt}</span>
+                  <span className="text-gray-400">{getCommentField(reply, 'createdAt')}</span>
                   {reply.status === 'approved' && (
                     <button
                       onClick={() => handleReply(reply.id)}
@@ -291,7 +304,7 @@ export default function Comments() {
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {topLevelComments.map(comment => {
-              const replyCount = commentsAPI.getReplyCount(comment.id);
+              const replyCount = comments.filter(c => getCommentField(c, 'parentId') === comment.id).length;
               return (
                 <div key={comment.id} className="p-6">
                   <div className="flex gap-3">
@@ -320,13 +333,13 @@ export default function Comments() {
                       <p className="text-gray-600 dark:text-gray-300 mb-2">{comment.content}</p>
                       <div className="flex items-center gap-4 text-sm">
                         <Link
-                          to={`/posts/${comment.postId}`}
+                          to={`/posts/${getCommentField(comment, 'postId')}`}
                           className="text-blue-500 hover:text-blue-600 flex items-center gap-1"
                         >
                           <User className="w-3 h-3" />
-                          {getPostTitle(comment.postId)}
+                          {getPostTitle(getCommentField(comment, 'postId'))}
                         </Link>
-                        <span className="text-gray-400">{comment.createdAt}</span>
+                        <span className="text-gray-400">{getCommentField(comment, 'createdAt')}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-3">
                         {comment.status === 'pending' && (

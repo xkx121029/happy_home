@@ -12,7 +12,6 @@ import Tags from './pages/Tags';
 import Pages from './pages/Pages';
 import PageEditor from './pages/PageEditor';
 import Media from './pages/Media';
-import Themes from './pages/Themes';
 import Users from './pages/Users';
 import UserEditor from './pages/UserEditor';
 import Settings from './pages/Settings';
@@ -23,12 +22,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Roles from './pages/Roles';
 import Menus from './pages/Menus';
-import SEO from './pages/SEO';
 import Comments from './pages/Comments';
 import Widgets from './pages/Widgets';
-import Backup from './pages/Backup';
-import SocialShare from './pages/SocialShare';
-import CustomCSS from './pages/CustomCSS';
 import Revisions from './pages/Revisions';
 
 import PublicHeader from './components/PublicHeader';
@@ -259,10 +254,6 @@ function AppContent() {
     />
   );
 
-  const AdminThemes = () => renderAdminLayout(
-    <Themes settings={settings} onSave={handleSaveSettings} />
-  );
-
   const AdminUsers = () => renderAdminLayout(
     <Users
       users={users}
@@ -284,27 +275,12 @@ function AppContent() {
     );
   };
 
-  const AdminSettings = () => renderAdminLayout(
-    <Settings
-      settings={settings}
-      posts={posts}
-      pages={pages}
-      categories={categories}
-      tags={tags}
-      onSave={handleSaveSettings}
-      onClearData={handleClearAllData}
-    />
-  );
-
+  const AdminSettings = () => renderAdminLayout(<Settings />);
   const AdminHelp = () => renderAdminLayout(<Help />);
   const AdminAnalytics = () => renderAdminLayout(<Analytics />);
   const AdminMenus = () => renderAdminLayout(<Menus />);
-  const AdminSEO = () => renderAdminLayout(<SEO />);
   const AdminComments = () => renderAdminLayout(<Comments />);
   const AdminWidgets = () => renderAdminLayout(<Widgets />);
-  const AdminBackup = () => renderAdminLayout(<Backup />);
-  const AdminSocialShare = () => renderAdminLayout(<SocialShare />);
-  const AdminCustomCSS = () => renderAdminLayout(<CustomCSS />);
   const AdminRevisions = () => renderAdminLayout(<Revisions />);
   const AdminRoles = () => renderAdminLayout(<Roles />);
 
@@ -374,11 +350,6 @@ function AppContent() {
             <AdminTags />
           </PrivateRoute>
         } />
-        <Route path="/admin/themes" element={
-          <PrivateRoute>
-            <AdminThemes />
-          </PrivateRoute>
-        } />
         <Route path="/admin/users" element={
           <PrivateRoute>
             <AdminUsers />
@@ -414,11 +385,6 @@ function AppContent() {
             <AdminMenus />
           </PrivateRoute>
         } />
-        <Route path="/admin/seo" element={
-          <PrivateRoute>
-            <AdminSEO />
-          </PrivateRoute>
-        } />
         <Route path="/admin/comments" element={
           <PrivateRoute>
             <AdminComments />
@@ -427,21 +393,6 @@ function AppContent() {
         <Route path="/admin/widgets" element={
           <PrivateRoute>
             <AdminWidgets />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/backup" element={
-          <PrivateRoute>
-            <AdminBackup />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/social-share" element={
-          <PrivateRoute>
-            <AdminSocialShare />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/custom-css" element={
-          <PrivateRoute>
-            <AdminCustomCSS />
           </PrivateRoute>
         } />
         <Route path="/admin/revisions" element={

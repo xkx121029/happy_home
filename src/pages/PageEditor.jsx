@@ -6,7 +6,7 @@ import ContentPreview from '../components/ContentPreview';
 import { useData } from '../contexts/DataContext';
 
 export default function PageEditor({ onSave }) {
-  const { pagesAPI } = useData();
+  const { pages, createPage, updatePage } = useData();
   const { id } = useParams();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -17,8 +17,8 @@ export default function PageEditor({ onSave }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (id) {
-      const fetchedPage = pagesAPI.getById(parseInt(id));
+    if (id && pages) {
+      const fetchedPage = pages.find(p => p.id === parseInt(id) || p.id === id);
       if (fetchedPage) {
         setPageId(fetchedPage.id);
         setTitle(fetchedPage.title || '');
@@ -27,7 +27,17 @@ export default function PageEditor({ onSave }) {
         setStatus(fetchedPage.status || 'draft');
       }
     }
-  }, [id, pagesAPI]);
+  }, [id, pages]);
+
+  useEffect(() => {
+    if (!id) {
+      setPageId(null);
+      setTitle('');
+      setContent('');
+      setSlug('');
+      setStatus('draft');
+    }
+  }, [id]);
 
   const generateSlug = (titleStr) => {
     return titleStr
@@ -44,7 +54,7 @@ export default function PageEditor({ onSave }) {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) {
       alert('请输入页面标题');
       return;
@@ -59,13 +69,19 @@ export default function PageEditor({ onSave }) {
       content,
       slug: slug || generateSlug(title),
       status,
-      author: 'admin',
     };
     
-    if (onSave) {
-      onSave({ ...pageData, id: pageId });
+    try {
+      if (pageId) {
+        await updatePage(pageId, pageData);
+      } else {
+        await createPage(pageData);
+      }
+      navigate('/admin/pages');
+    } catch (error) {
+      console.error('保存页面失败:', error);
+      alert('保存页面失败，请重试');
     }
-    navigate('/admin/pages');
   };
 
   const handleCancel = () => {

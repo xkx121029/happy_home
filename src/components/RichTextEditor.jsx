@@ -2,8 +2,9 @@ import { useRef, useEffect, useState } from 'react';
 import { 
   Bold, Italic, Underline, List, ListOrdered, AlignLeft, AlignCenter, AlignRight, 
   Link, Image, Heading1, Heading2, Heading3, Quote, Code, Strikethrough, Minus, 
-  Undo, Redo, Link2Off, Type, X, Terminal
+  Undo, Redo, Link2Off, Type, X, Terminal, FolderOpen
 } from 'lucide-react';
+import { useData } from '../contexts/DataContext';
 
 const toolbarButtons = [
   { icon: Undo, command: 'undo', title: '撤销 (Ctrl+Z)' },

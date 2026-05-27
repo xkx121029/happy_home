@@ -13,14 +13,27 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { tutorialAPI } from '../utils/dataStore';
+import { useData } from '../contexts/DataContext';
 
 export default function TutorialSystem() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [tutorial, setTutorial] = useState(null);
+  const { currentUser } = useData();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // 检查是否已设置"不再显示"
+    const neverShowAgain = localStorage.getItem('tutorial_never_show');
+    if (neverShowAgain === 'true') {
+      return;
+    }
+
+    // 检查用户是否为管理员
+    if (!currentUser || currentUser.role !== 'administrator') {
+      return;
+    }
+
     const tutorialData = tutorialAPI.get();
     setTutorial(tutorialData);
     
@@ -29,7 +42,7 @@ export default function TutorialSystem() {
       const timer = setTimeout(() => setShowTutorial(true), 1000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [currentUser]);
 
   const tutorialSteps = [
     {
@@ -227,12 +240,23 @@ export default function TutorialSystem() {
             >
               重新开始教程
             </button>
-            <button
-              onClick={() => setShowTutorial(false)}
-              className="px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
-            >
-              稍后再说
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  localStorage.setItem('tutorial_never_show', 'true');
+                  setShowTutorial(false);
+                }}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                不再显示
+              </button>
+              <button
+                onClick={() => setShowTutorial(false)}
+                className="px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+              >
+                稍后再说
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -244,11 +268,23 @@ export default function TutorialSystem() {
 export function PageTutorial({ pageKey, children }) {
   const [showTip, setShowTip] = useState(false);
   const [tutorial, setTutorial] = useState(null);
+  const { currentUser } = useData();
 
   useEffect(() => {
+    // 检查是否已设置"不再显示"
+    const neverShowAgain = localStorage.getItem('tutorial_never_show');
+    if (neverShowAgain === 'true') {
+      return;
+    }
+
+    // 检查用户是否为管理员
+    if (!currentUser || currentUser.role !== 'administrator') {
+      return;
+    }
+
     const tutorialData = tutorialAPI.get();
     setTutorial(tutorialData);
-  }, []);
+  }, [currentUser]);
 
   const pageTips = {
     posts: {

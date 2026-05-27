@@ -295,6 +295,12 @@ export const DataProvider = ({ children }) => {
     return response;
   };
 
+  const createComment = async (data) => {
+    const response = await commentsAPI.create(data);
+    setComments(prev => [response.data, ...prev]);
+    return response;
+  };
+
   // Settings
   const getSettings = async () => {
     const response = await settingsAPI.getAll();
@@ -375,6 +381,7 @@ export const DataProvider = ({ children }) => {
     getComments,
     updateCommentStatus,
     deleteComment,
+    createComment,
 
     // Settings
     getSettings,

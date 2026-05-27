@@ -1,5 +1,11 @@
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, FolderOpen, Image, Palette, Users, BarChart3, Settings, HelpCircle, Globe, Tag, FolderTree, Menu as MenuIcon, Search, MessageSquare, Layout, Database, Share2, Code, History, Shield } from 'lucide-react';
+import { 
+  LayoutDashboard, FileText, FolderOpen, Image, Palette, Users, BarChart3, 
+  Settings, HelpCircle, Globe, Tag, FolderTree, Menu as MenuIcon, Search, 
+  MessageSquare, Layout, Database, Share2, Code, History, Shield, Bell,
+  ChevronDown, ChevronRight, Sliders
+} from 'lucide-react';
 
 export default function Sidebar({ activeMenu, onMenuChange }) {
   const location = useLocation();
@@ -15,19 +21,14 @@ export default function Sidebar({ activeMenu, onMenuChange }) {
     { id: 'comments', icon: MessageSquare, label: '评论', path: '/admin/comments' },
     { id: 'menus', icon: MenuIcon, label: '菜单', path: '/admin/menus' },
     { id: 'widgets', icon: Layout, label: '小工具', path: '/admin/widgets' },
-    { id: 'seo', icon: Search, label: 'SEO', path: '/admin/seo' },
-    { id: 'themes', icon: Palette, label: '主题', path: '/admin/themes' },
     { id: 'users', icon: Users, label: '用户', path: '/admin/users' },
     { id: 'roles', icon: Shield, label: '角色管理', path: '/admin/roles' },
-    { id: 'backup', icon: Database, label: '备份', path: '/admin/backup' },
-    { id: 'social-share', icon: Share2, label: '社交分享', path: '/admin/social-share' },
-    { id: 'custom-css', icon: Code, label: '自定义CSS', path: '/admin/custom-css' },
+    { id: 'settings', icon: Settings, label: '设置', path: '/admin/settings' },
   ];
 
   const bottomItems = [
     { id: 'public', icon: Globe, label: '访问前台', path: '/' },
     { id: 'analytics', icon: BarChart3, label: '数据分析', path: '/admin/analytics' },
-    { id: 'settings', icon: Settings, label: '设置', path: '/admin/settings' },
     { id: 'help', icon: HelpCircle, label: '帮助', path: '/admin/help' },
   ];
 
@@ -40,7 +41,7 @@ export default function Sidebar({ activeMenu, onMenuChange }) {
 
   return (
     <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 min-h-screen flex flex-col">
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 p-4 overflow-y-auto">
         <ul className="space-y-1">
           {menuItems.map((item) => {
             const Icon = item.icon;

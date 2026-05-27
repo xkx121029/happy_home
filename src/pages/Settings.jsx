@@ -1,437 +1,257 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Settings as SettingsIcon, Globe, Palette, Shield, Bell, Mail, Database,
   Layout, Type, Search, Eye, Lock, FileText, User, Server, Code,
-  Cpu, Zap, Share2, MessageSquare, Image as ImageIcon, CreditCard,
-  Save, RotateCcw, Trash2, Filter, X, Check, ChevronDown, ExternalLink,
-  TestTube, RefreshCw
+  Cpu, Zap, Share2, MessageSquare, Image as ImageIcon,
+  Save, RotateCcw, Trash2, X, Check, TestTube, RefreshCw,
+  Download, Upload, Cloud, AlertTriangle, Info, CheckCircle,
+  Clock, Filter, ExternalLink, Send
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
-import { smtpAPI } from '../services/api';
+import { smtpAPI, notificationsAPI } from '../services/api';
 import { filterSettings } from '../utils/allowedSettings';
 import Modal, { Toast } from '../components/Modal';
 import { useModal, useToast } from '../hooks/useModal';
 
-const settingCategories = [
-  {
-    id: 'general',
-    label: '常规设置',
-    icon: SettingsIcon,
-    description: '网站基本信息',
-    settings: [
-      { key: 'siteName', label: '网站名称', type: 'text', placeholder: '我的网站', category: 'basic' },
-      { key: 'siteDescription', label: '网站描述', type: 'textarea', placeholder: '这是一个很棒的网站', category: 'basic' },
-      { key: 'siteUrl', label: '网站URL', type: 'url', placeholder: 'https://example.com', category: 'basic' },
-      { key: 'tagline', label: '网站标语', type: 'text', placeholder: '简单而强大', category: 'basic' },
-      { key: 'adminEmail', label: '管理员邮箱', type: 'email', placeholder: 'admin@example.com', category: 'contact' },
-      { key: 'timezone', label: '时区', type: 'select', options: [
-        { value: 'Asia/Shanghai', label: 'Asia/Shanghai (UTC+8)' },
-        { value: 'Asia/Tokyo', label: 'Asia/Tokyo (UTC+9)' },
-        { value: 'America/New_York', label: 'America/New_York (UTC-5)' },
-        { value: 'Europe/London', label: 'Europe/London (UTC+0)' },
-        { value: 'America/Los_Angeles', label: 'America/Los_Angeles (UTC-8)' },
-      ], category: 'basic' },
-      { key: 'language', label: '语言', type: 'select', options: [
-        { value: 'zh-CN', label: '简体中文' },
-        { value: 'zh-TW', label: '繁体中文' },
-        { value: 'en-US', label: 'English (US)' },
-        { value: 'ja-JP', label: '日本語' },
-      ], category: 'basic' },
-      { key: 'dateFormat', label: '日期格式', type: 'select', options: [
-        { value: 'Y-m-d', label: 'YYYY-MM-DD' },
-        { value: 'd/m/Y', label: 'DD/MM/YYYY' },
-        { value: 'm/d/Y', label: 'MM/DD/YYYY' },
-        { value: 'Y年m月d日', label: 'YYYY年MM月DD日' },
-      ], category: 'basic' },
-      { key: 'timeFormat', label: '时间格式', type: 'select', options: [
-        { value: '24h', label: '24小时制' },
-        { value: '12h', label: '12小时制' },
-      ], category: 'basic' },
-    ]
-  },
-  {
-    id: 'appearance',
-    label: '外观',
-    icon: Palette,
-    description: '网站外观和主题',
-    settings: [
-      { key: 'theme', label: '主题', type: 'select', options: [
-        { value: 'default', label: '默认主题' },
-        { value: 'dark', label: '深色主题' },
-        { value: 'light', label: '浅色主题' },
-        { value: 'ocean', label: '海洋蓝' },
-        { value: 'forest', label: '森林绿' },
-        { value: 'sunset', label: '日落橙' },
-      ], category: 'theme' },
-      { key: 'primaryColor', label: '主色调', type: 'color', defaultValue: '#3b82f6', category: 'colors' },
-      { key: 'secondaryColor', label: '次要色', type: 'color', defaultValue: '#8b5cf6', category: 'colors' },
-      { key: 'accentColor', label: '强调色', type: 'color', defaultValue: '#ec4899', category: 'colors' },
-      { key: 'backgroundColor', label: '背景色', type: 'color', defaultValue: '#f9fafb', category: 'colors' },
-      { key: 'textColor', label: '文本色', type: 'color', defaultValue: '#1f2937', category: 'colors' },
-      { key: 'fontFamily', label: '字体', type: 'select', options: [
-        { value: 'system', label: '系统默认' },
-        { value: 'serif', label: '宋体/Serif' },
-        { value: 'sans-serif', label: '黑体/Sans-serif' },
-        { value: 'monospace', label: '等宽字体' },
-      ], category: 'typography' },
-      { key: 'fontSize', label: '字体大小', type: 'range', min: 12, max: 24, defaultValue: 16, category: 'typography' },
-      { key: 'lineHeight', label: '行高', type: 'range', min: 1, max: 2.5, step: 0.1, defaultValue: 1.6, category: 'typography' },
-      { key: 'layout', label: '布局', type: 'select', options: [
-        { value: 'wide', label: '宽屏' },
-        { value: 'boxed', label: '盒装' },
-        { value: 'full', label: '全宽' },
-      ], category: 'layout' },
-      { key: 'sidebarPosition', label: '侧边栏位置', type: 'select', options: [
-        { value: 'left', label: '左侧' },
-        { value: 'right', label: '右侧' },
-      ], category: 'layout' },
-    ]
-  },
-  {
-    id: 'content',
-    label: '内容',
-    icon: FileText,
-    description: '文章和页面设置',
-    settings: [
-      { key: 'postsPerPage', label: '每页文章数', type: 'number', min: 5, max: 100, defaultValue: 10, category: 'posts' },
-      { key: 'postsPerFeed', label: 'Feed文章数', type: 'number', min: 10, max: 50, defaultValue: 20, category: 'posts' },
-      { key: 'excerptLength', label: '摘要长度', type: 'number', min: 50, max: 500, defaultValue: 150, category: 'posts' },
-      { key: 'enableComments', label: '启用评论', type: 'toggle', defaultValue: true, category: 'discussion' },
-      { key: 'commentsModeration', label: '评论审核', type: 'toggle', defaultValue: true, category: 'discussion' },
-      { key: 'allowGuestComments', label: '允许访客评论', type: 'toggle', defaultValue: false, category: 'discussion' },
-      { key: 'requireNameEmail', label: '评论必填姓名邮箱', type: 'toggle', defaultValue: true, category: 'discussion' },
-      { key: 'autoApproval', label: '自动通过老用户评论', type: 'toggle', defaultValue: true, category: 'discussion' },
-      { key: 'enableRevisions', label: '启用文章修订', type: 'toggle', defaultValue: true, category: 'posts' },
-      { key: 'revisionLimit', label: '保留修订数量', type: 'number', min: 0, max: 100, defaultValue: 25, category: 'posts' },
-      { key: 'defaultPostStatus', label: '默认文章状态', type: 'select', options: [
-        { value: 'draft', label: '草稿' },
-        { value: 'pending', label: '待审核' },
-        { value: 'published', label: '已发布' },
-      ], category: 'posts' },
-      { key: 'enablePingbacks', label: '启用Pingback', type: 'toggle', defaultValue: true, category: 'discussion' },
-    ]
-  },
-  {
-    id: 'users',
-    label: '用户',
-    icon: User,
-    description: '用户注册和权限',
-    settings: [
-      { key: 'registrationEnabled', label: '开放注册', type: 'toggle', defaultValue: false, category: 'registration' },
-      { key: 'defaultRole', label: '新用户默认角色', type: 'select', options: [
-        { value: 'subscriber', label: '订阅者' },
-        { value: 'author', label: '作者' },
-        { value: 'editor', label: '编辑' },
-      ], category: 'registration' },
-      { key: 'emailVerification', label: '邮箱验证', type: 'toggle', defaultValue: true, category: 'registration' },
-      { key: 'moderateNewUsers', label: '新用户审核', type: 'toggle', defaultValue: false, category: 'registration' },
-      { key: 'enableAvatars', label: '启用头像', type: 'toggle', defaultValue: true, category: 'profile' },
-      { key: 'avatarType', label: '头像类型', type: 'select', options: [
-        { value: 'gravatar', label: 'Gravatar' },
-        { value: 'local', label: '本地上传' },
-      ], category: 'profile' },
-      { key: 'enableProfileFields', label: '启用个人资料字段', type: 'toggle', defaultValue: true, category: 'profile' },
-      { key: 'enableUserBio', label: '启用用户简介', type: 'toggle', defaultValue: true, category: 'profile' },
-    ]
-  },
-  {
-    id: 'security',
-    label: '安全',
-    icon: Shield,
-    description: '安全和隐私',
-    settings: [
-      { key: 'showQuickLoginButton', label: '显示快速登录按钮', type: 'toggle', defaultValue: true, category: 'security' },
-      { key: 'twoFactorAuth', label: '两步验证', type: 'toggle', defaultValue: false, category: 'security' },
-      { key: 'loginLimit', label: '登录限制', type: 'select', options: [
-        { value: 'none', label: '无限制' },
-        { value: '5', label: '5次/分钟' },
-        { value: '10', label: '10次/分钟' },
-        { value: '20', label: '20次/分钟' },
-      ], category: 'security' },
-      { key: 'sessionTimeout', label: '会话超时', type: 'select', options: [
-        { value: '1', label: '1小时' },
-        { value: '6', label: '6小时' },
-        { value: '24', label: '24小时' },
-        { value: '168', label: '7天' },
-      ], category: 'security' },
-      { key: 'enableSSL', label: '强制HTTPS', type: 'toggle', defaultValue: false, category: 'security' },
-      { key: 'allowFileEdits', label: '允许在线编辑文件', type: 'toggle', defaultValue: false, category: 'security' },
-      { key: 'enableDebug', label: '启用调试模式', type: 'toggle', defaultValue: false, category: 'advanced' },
-      { key: 'errorReporting', label: '错误报告', type: 'toggle', defaultValue: true, category: 'advanced' },
-    ]
-  },
-  {
-    id: 'notifications',
-    label: '通知',
-    icon: Bell,
-    description: '邮件和推送通知',
-    settings: [
-      { key: 'notifyNewComment', label: '新评论通知', type: 'toggle', defaultValue: true, category: 'email' },
-      { key: 'notifyNewUser', label: '新用户注册通知', type: 'toggle', defaultValue: true, category: 'email' },
-      { key: 'notifyPostApproval', label: '文章待审核通知', type: 'toggle', defaultValue: true, category: 'email' },
-      { key: 'notifyUpdates', label: '系统更新通知', type: 'toggle', defaultValue: true, category: 'email' },
-      { key: 'notifySecurity', label: '安全警告通知', type: 'toggle', defaultValue: true, category: 'email' },
-      { key: 'emailFormat', label: '邮件格式', type: 'select', options: [
-        { value: 'html', label: 'HTML' },
-        { value: 'plain', label: '纯文本' },
-      ], category: 'email' },
-      { key: 'emailFromName', label: '发件人名称', type: 'text', placeholder: '网站名称', category: 'email' },
-      { key: 'emailFromAddress', label: '发件人邮箱', type: 'email', placeholder: 'no-reply@example.com', category: 'email' },
-    ]
-  },
-  {
-    id: 'media',
-    label: '媒体',
-    icon: ImageIcon,
-    description: '媒体文件设置',
-    settings: [
-      { key: 'maxUploadSize', label: '最大上传大小', type: 'select', options: [
-        { value: '2', label: '2 MB' },
-        { value: '5', label: '5 MB' },
-        { value: '10', label: '10 MB' },
-        { value: '50', label: '50 MB' },
-        { value: '100', label: '100 MB' },
-      ], category: 'upload' },
-      { key: 'allowedFileTypes', label: '允许的文件类型', type: 'checkbox', options: [
-        { value: 'images', label: '图片', checked: true },
-        { value: 'documents', label: '文档', checked: true },
-        { value: 'videos', label: '视频', checked: false },
-        { value: 'audio', label: '音频', checked: false },
-      ], category: 'upload' },
-      { key: 'autoResizeImages', label: '自动调整图片大小', type: 'toggle', defaultValue: true, category: 'image' },
-      { key: 'maxImageWidth', label: '图片最大宽度', type: 'number', min: 800, max: 4000, defaultValue: 1920, category: 'image' },
-      { key: 'maxImageHeight', label: '图片最大高度', type: 'number', min: 600, max: 3000, defaultValue: 1080, category: 'image' },
-      { key: 'imageQuality', label: '图片质量', type: 'range', min: 50, max: 100, defaultValue: 85, category: 'image' },
-      { key: 'generateThumbnails', label: '自动生成缩略图', type: 'toggle', defaultValue: true, category: 'image' },
-    ]
-  },
-  {
-    id: 'email',
-    label: '邮件',
-    icon: Mail,
-    description: 'SMTP邮件服务',
-    settings: [
-      { key: 'smtpHost', label: 'SMTP 主机', type: 'text', placeholder: 'smtp.example.com', category: 'smtp' },
-      { key: 'smtpPort', label: 'SMTP 端口', type: 'select', options: [
-        { value: '25', label: '25' },
-        { value: '587', label: '587 (推荐)' },
-        { value: '465', label: '465 (SSL)' },
-      ], category: 'smtp' },
-      { key: 'smtpUser', label: 'SMTP 用户名', type: 'text', placeholder: 'user@example.com', category: 'smtp' },
-      { key: 'smtpPass', label: 'SMTP 密码', type: 'password', placeholder: '输入密码', category: 'smtp' },
-      { key: 'smtpSecure', label: '启用SSL/TLS', type: 'toggle', defaultValue: false, category: 'smtp' },
-      { key: 'smtpFrom', label: '发件人地址', type: 'email', placeholder: 'no-reply@yourdomain.com', category: 'smtp' },
-    ]
-  },
-  {
-    id: 'performance',
-    label: '性能',
-    icon: Zap,
-    description: '缓存和优化',
-    settings: [
-      { key: 'enableCaching', label: '启用缓存', type: 'toggle', defaultValue: true, category: 'cache' },
-      { key: 'cacheDuration', label: '缓存时长', type: 'select', options: [
-        { value: '3600', label: '1小时' },
-        { value: '21600', label: '6小时' },
-        { value: '86400', label: '24小时' },
-        { value: '604800', label: '7天' },
-      ], category: 'cache' },
-      { key: 'minifyHTML', label: '压缩HTML', type: 'toggle', defaultValue: true, category: 'optimization' },
-      { key: 'minifyCSS', label: '压缩CSS', type: 'toggle', defaultValue: true, category: 'optimization' },
-      { key: 'minifyJS', label: '压缩JS', type: 'toggle', defaultValue: true, category: 'optimization' },
-      { key: 'lazyLoadImages', label: '图片懒加载', type: 'toggle', defaultValue: true, category: 'optimization' },
-      { key: 'enableGzip', label: '启用Gzip压缩', type: 'toggle', defaultValue: true, category: 'optimization' },
-    ]
-  },
-  {
-    id: 'seo',
-    label: 'SEO',
-    icon: Search,
-    description: '搜索引擎优化',
-    settings: [
-      { key: 'metaTitle', label: 'Meta 标题', type: 'text', placeholder: '网站标题', category: 'meta' },
-      { key: 'metaDescription', label: 'Meta 描述', type: 'textarea', placeholder: '网站描述', category: 'meta' },
-      { key: 'metaKeywords', label: 'Meta 关键词', type: 'text', placeholder: '关键词1, 关键词2', category: 'meta' },
-      { key: 'canonicalUrl', label: '规范URL', type: 'url', placeholder: 'https://example.com', category: 'meta' },
-      { key: 'twitterCard', label: 'Twitter 卡片类型', type: 'select', options: [
-        { value: 'summary', label: '摘要' },
-        { value: 'summary_large_image', label: '大图摘要' },
-      ], category: 'social' },
-      { key: 'twitterSite', label: 'Twitter 账号', type: 'text', placeholder: '@username', category: 'social' },
-      { key: 'twitterCreator', label: 'Twitter 创建者', type: 'text', placeholder: '@username', category: 'social' },
-      { key: 'ogTitle', label: 'Open Graph 标题', type: 'text', placeholder: '分享标题', category: 'social' },
-      { key: 'ogDescription', label: 'Open Graph 描述', type: 'textarea', placeholder: '分享描述', category: 'social' },
-      { key: 'ogType', label: 'Open Graph 类型', type: 'select', options: [
-        { value: 'website', label: '网站' },
-        { value: 'article', label: '文章' },
-        { value: 'product', label: '产品' },
-      ], category: 'social' },
-      { key: 'ogImage', label: 'Open Graph 图片', type: 'url', placeholder: 'https://example.com/image.jpg', category: 'social' },
-    ]
-  },
-  {
-    id: 'integrations',
-    label: '集成',
-    icon: Share2,
-    description: '第三方服务集成',
-    settings: [
-      { key: 'googleAnalytics', label: 'Google Analytics ID', type: 'text', placeholder: 'UA-XXXXX-X', category: 'tracking' },
-      { key: 'googleTagManager', label: 'Google Tag Manager ID', type: 'text', placeholder: 'GTM-XXXXX', category: 'tracking' },
-      { key: 'hotjar', label: 'Hotjar ID', type: 'text', placeholder: '123456', category: 'tracking' },
-      { key: 'matomo', label: 'Matomo URL', type: 'url', placeholder: 'https://analytics.example.com', category: 'tracking' },
-    ]
-  },
-  {
-    id: 'backup',
-    label: '备份',
-    icon: Database,
-    description: '数据备份设置',
-    settings: [
-      { key: 'enableBackup', label: '启用自动备份', type: 'toggle', defaultValue: true, category: 'backup' },
-      { key: 'backupSchedule', label: '备份频率', type: 'select', options: [
-        { value: 'daily', label: '每天' },
-        { value: 'weekly', label: '每周' },
-        { value: 'monthly', label: '每月' },
-      ], category: 'backup' },
-      { key: 'backupRetention', label: '备份保留', type: 'select', options: [
-        { value: '7', label: '7天' },
-        { value: '30', label: '30天' },
-        { value: '90', label: '90天' },
-        { value: '365', label: '一年' },
-      ], category: 'backup' },
-    ]
-  },
+const tabs = [
+  { id: 'general', label: '常规设置', icon: SettingsIcon },
+  { id: 'appearance', label: '外观', icon: Palette },
+  { id: 'content', label: '内容', icon: FileText },
+  { id: 'users', label: '用户', icon: User },
+  { id: 'security', label: '安全', icon: Shield },
+  { id: 'notifications', label: '通知', icon: Bell },
+  { id: 'media', label: '媒体', icon: ImageIcon },
+  { id: 'email', label: '邮件', icon: Mail },
+  { id: 'performance', label: '性能', icon: Zap },
+  { id: 'seo', label: 'SEO', icon: Search },
+  { id: 'integrations', label: '集成', icon: Share2 },
+  { id: 'customCode', label: '自定义代码', icon: Code },
+  { id: 'backup', label: '备份恢复', icon: Database },
+  { id: 'logs', label: '日志中心', icon: Server },
 ];
 
-export default function Settings({ settings, posts, pages, categories, tags, onSave }) {
-  const { clearAllData } = useData();
+const settingCategories = {
+  general: [
+    { key: 'siteName', label: '网站名称', type: 'text', placeholder: '我的网站' },
+    { key: 'siteDescription', label: '网站描述', type: 'textarea', placeholder: '这是一个很棒的网站' },
+    { key: 'siteUrl', label: '网站URL', type: 'url', placeholder: 'https://example.com' },
+    { key: 'tagline', label: '网站标语', type: 'text', placeholder: '简单而强大' },
+    { key: 'adminEmail', label: '管理员邮箱', type: 'email', placeholder: 'admin@example.com' },
+    { key: 'timezone', label: '时区', type: 'select', options: [
+      { value: 'Asia/Shanghai', label: 'Asia/Shanghai (UTC+8)' },
+      { value: 'Asia/Tokyo', label: 'Asia/Tokyo (UTC+9)' },
+      { value: 'America/New_York', label: 'America/New_York (UTC-5)' },
+      { value: 'Europe/London', label: 'Europe/London (UTC+0)' },
+    ]},
+    { key: 'language', label: '语言', type: 'select', options: [
+      { value: 'zh-CN', label: '简体中文' },
+      { value: 'zh-TW', label: '繁体中文' },
+      { value: 'en-US', label: 'English (US)' },
+      { value: 'ja-JP', label: '日本語' },
+    ]},
+  ],
+  appearance: [
+    { key: 'theme', label: '主题', type: 'select', options: [
+      { value: 'default', label: '默认主题' },
+      { value: 'dark', label: '深色主题' },
+      { value: 'light', label: '浅色主题' },
+      { value: 'ocean', label: '海洋蓝' },
+      { value: 'forest', label: '森林绿' },
+    ]},
+    { key: 'primaryColor', label: '主色调', type: 'color', defaultValue: '#3b82f6' },
+    { key: 'secondaryColor', label: '次要色', type: 'color', defaultValue: '#8b5cf6' },
+    { key: 'accentColor', label: '强调色', type: 'color', defaultValue: '#ec4899' },
+    { key: 'fontFamily', label: '字体', type: 'select', options: [
+      { value: 'system', label: '系统默认' },
+      { value: 'serif', label: '宋体/Serif' },
+      { value: 'sans-serif', label: '黑体/Sans-serif' },
+    ]},
+    { key: 'fontSize', label: '字体大小', type: 'range', min: 12, max: 24, defaultValue: 16 },
+    { key: 'layout', label: '布局', type: 'select', options: [
+      { value: 'wide', label: '宽屏' },
+      { value: 'boxed', label: '盒装' },
+      { value: 'full', label: '全宽' },
+    ]},
+    { key: 'sidebarPosition', label: '侧边栏位置', type: 'select', options: [
+      { value: 'left', label: '左侧' },
+      { value: 'right', label: '右侧' },
+    ]},
+  ],
+  content: [
+    { key: 'postsPerPage', label: '每页文章数', type: 'number', min: 5, max: 100, defaultValue: 10 },
+    { key: 'excerptLength', label: '摘要长度', type: 'number', min: 50, max: 500, defaultValue: 150 },
+    { key: 'enableComments', label: '启用评论', type: 'toggle', defaultValue: true },
+    { key: 'commentsModeration', label: '评论审核', type: 'toggle', defaultValue: true },
+    { key: 'enableRevisions', label: '启用文章修订', type: 'toggle', defaultValue: true },
+    { key: 'revisionLimit', label: '保留修订数量', type: 'number', min: 0, max: 100, defaultValue: 25 },
+  ],
+  users: [
+    { key: 'registrationEnabled', label: '开放注册', type: 'toggle', defaultValue: false },
+    { key: 'defaultRole', label: '新用户默认角色', type: 'select', options: [
+      { value: 'subscriber', label: '订阅者' },
+      { value: 'author', label: '作者' },
+      { value: 'editor', label: '编辑' },
+    ]},
+    { key: 'emailVerification', label: '邮箱验证', type: 'toggle', defaultValue: true },
+    { key: 'enableAvatars', label: '启用头像', type: 'toggle', defaultValue: true },
+  ],
+  security: [
+    { key: 'twoFactorAuth', label: '两步验证', type: 'toggle', defaultValue: false },
+    { key: 'loginLimit', label: '登录限制', type: 'select', options: [
+      { value: 'none', label: '无限制' },
+      { value: '5', label: '5次/分钟' },
+      { value: '10', label: '10次/分钟' },
+    ]},
+    { key: 'sessionTimeout', label: '会话超时', type: 'select', options: [
+      { value: '1', label: '1小时' },
+      { value: '6', label: '6小时' },
+      { value: '24', label: '24小时' },
+      { value: '168', label: '7天' },
+    ]},
+    { key: 'enableSSL', label: '强制HTTPS', type: 'toggle', defaultValue: false },
+  ],
+  notifications: [
+    { key: 'notifyNewComment', label: '新评论通知', type: 'toggle', defaultValue: true },
+    { key: 'notifyNewUser', label: '新用户注册通知', type: 'toggle', defaultValue: true },
+    { key: 'notifyPostApproval', label: '文章待审核通知', type: 'toggle', defaultValue: true },
+    { key: 'notifyUpdates', label: '系统更新通知', type: 'toggle', defaultValue: true },
+    { key: 'emailFromName', label: '发件人名称', type: 'text', placeholder: '网站名称' },
+    { key: 'emailFromAddress', label: '发件人邮箱', type: 'email', placeholder: 'no-reply@example.com' },
+  ],
+  media: [
+    { key: 'maxUploadSize', label: '最大上传大小', type: 'select', options: [
+      { value: '2', label: '2 MB' },
+      { value: '5', label: '5 MB' },
+      { value: '10', label: '10 MB' },
+      { value: '50', label: '50 MB' },
+    ]},
+    { key: 'autoResizeImages', label: '自动调整图片大小', type: 'toggle', defaultValue: true },
+    { key: 'maxImageWidth', label: '图片最大宽度', type: 'number', min: 800, max: 4000, defaultValue: 1920 },
+    { key: 'imageQuality', label: '图片质量', type: 'range', min: 50, max: 100, defaultValue: 85 },
+    { key: 'generateThumbnails', label: '自动生成缩略图', type: 'toggle', defaultValue: true },
+  ],
+  email: [
+    { key: 'smtpHost', label: 'SMTP 主机', type: 'text', placeholder: 'smtp.example.com' },
+    { key: 'smtpPort', label: 'SMTP 端口', type: 'select', options: [
+      { value: '25', label: '25' },
+      { value: '587', label: '587 (推荐)' },
+      { value: '465', label: '465 (SSL)' },
+    ]},
+    { key: 'smtpUser', label: 'SMTP 用户名', type: 'text', placeholder: 'user@example.com' },
+    { key: 'smtpPass', label: 'SMTP 密码', type: 'password', placeholder: '输入密码' },
+    { key: 'smtpSecure', label: '启用SSL/TLS', type: 'toggle', defaultValue: false },
+    { key: 'smtpFrom', label: '发件人地址', type: 'email', placeholder: 'no-reply@yourdomain.com' },
+  ],
+  performance: [
+    { key: 'enableCaching', label: '启用缓存', type: 'toggle', defaultValue: true },
+    { key: 'cacheDuration', label: '缓存时长', type: 'select', options: [
+      { value: '3600', label: '1小时' },
+      { value: '21600', label: '6小时' },
+      { value: '86400', label: '24小时' },
+    ]},
+    { key: 'minifyHTML', label: '压缩HTML', type: 'toggle', defaultValue: true },
+    { key: 'minifyCSS', label: '压缩CSS', type: 'toggle', defaultValue: true },
+    { key: 'minifyJS', label: '压缩JS', type: 'toggle', defaultValue: true },
+    { key: 'lazyLoadImages', label: '图片懒加载', type: 'toggle', defaultValue: true },
+  ],
+  seo: [
+    { key: 'metaTitle', label: 'Meta 标题', type: 'text', placeholder: '网站标题' },
+    { key: 'metaDescription', label: 'Meta 描述', type: 'textarea', placeholder: '网站描述' },
+    { key: 'metaKeywords', label: 'Meta 关键词', type: 'text', placeholder: '关键词1, 关键词2' },
+    { key: 'canonicalUrl', label: '规范URL', type: 'url', placeholder: 'https://example.com' },
+    { key: 'ogTitle', label: 'Open Graph 标题', type: 'text', placeholder: '分享标题' },
+    { key: 'ogDescription', label: 'Open Graph 描述', type: 'textarea', placeholder: '分享描述' },
+    { key: 'ogImage', label: 'Open Graph 图片', type: 'url', placeholder: 'https://example.com/image.jpg' },
+    { key: 'twitterCard', label: 'Twitter 卡片类型', type: 'select', options: [
+      { value: 'summary', label: '摘要' },
+      { value: 'summary_large_image', label: '大图摘要' },
+    ]},
+    { key: 'twitterSite', label: 'Twitter 账号', type: 'text', placeholder: '@username' },
+  ],
+  integrations: [
+    { key: 'googleAnalytics', label: 'Google Analytics ID', type: 'text', placeholder: 'UA-XXXXX-X 或 G-XXXXXXX' },
+    { key: 'googleTagManager', label: 'Google Tag Manager ID', type: 'text', placeholder: 'GTM-XXXXX' },
+    { key: 'hotjar', label: 'Hotjar ID', type: 'text', placeholder: '123456' },
+    { key: 'matomo', label: 'Matomo URL', type: 'url', placeholder: 'https://analytics.example.com' },
+  ],
+  customCode: [
+    { key: 'customCSS', label: '自定义 CSS', type: 'code', language: 'css', placeholder: '/* 在此添加自定义CSS */\n.my-class {\n  color: red;\n}' },
+    { key: 'customJS', label: '自定义 JavaScript', type: 'code', language: 'javascript', placeholder: '// 在此添加自定义JavaScript\nconsole.log("Hello!");' },
+    { key: 'headCode', label: '头部代码 (<head>)', type: 'code', language: 'html', placeholder: '<!-- 在此添加头部代码 -->' },
+    { key: 'footerCode', label: '底部代码 (</body>)', type: 'code', language: 'html', placeholder: '<!-- 在此添加底部代码 -->' },
+  ],
+};
+
+export default function Settings() {
+  const { settings, updateSettings, posts, comments } = useData();
+  const [notifications, setNotifications] = useState([]);
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
+  
   const [activeTab, setActiveTab] = useState(() => {
     const saved = localStorage.getItem('settingsActiveTab');
     return saved || 'general';
   });
   const [searchQuery, setSearchQuery] = useState('');
-  const [formData, setFormData] = useState(() => {
-    const filteredSettings = filterSettings(settings);
-    if (!filteredSettings.theme) {
-      filteredSettings.theme = {
-        colors: {
-          primary: '#3b82f6',
-          secondary: '#64748b',
-          accent: '#8b5cf6',
-          background: '#ffffff',
-          text: '#1f2937',
-        },
-        font: 'system',
-        layout: 'wide',
-      };
-    }
-    return filteredSettings;
-  });
-
+  const [formData, setFormData] = useState(() => filterSettings(settings));
   const [hasChanges, setHasChanges] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState({});
   const [smtpTestResult, setSmtpTestResult] = useState(null);
   const [isTestingSmtp, setIsTestingSmtp] = useState(false);
+  const [customCSS, setCustomCSS] = useState(formData.customCSS || '');
+  const [customJS, setCustomJS] = useState(formData.customJS || '');
+  const [headCode, setHeadCode] = useState(formData.headCode || '');
+  const [footerCode, setFooterCode] = useState(formData.footerCode || '');
+  const [logFilter, setLogFilter] = useState('all');
+  const [logSearch, setLogSearch] = useState('');
 
   useEffect(() => {
     localStorage.setItem('settingsActiveTab', activeTab);
   }, [activeTab]);
 
-  const activeCategory = settingCategories.find(cat => cat.id === activeTab);
-
-  const filteredSettings = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return activeCategory?.settings || [];
+  const loadNotifications = async () => {
+    try {
+      const response = await notificationsAPI.getAll();
+      setNotifications(response.data || []);
+    } catch (error) {
+      console.error('加载通知失败:', error);
     }
-    const query = searchQuery.toLowerCase();
-    return settingCategories.flatMap(cat => 
-      cat.settings.filter(setting => 
-        setting.label.toLowerCase().includes(query) ||
-        setting.key.toLowerCase().includes(query)
-      )
-    );
-  }, [searchQuery, activeCategory, activeTab]);
-
-  const groupedSettings = useMemo(() => {
-    const groups = {};
-    filteredSettings.forEach(setting => {
-      const category = setting.category || 'other';
-      if (!groups[category]) {
-        groups[category] = [];
-      }
-      groups[category].push(setting);
-    });
-    return groups;
-  }, [filteredSettings]);
-
-  const categoryLabels = {
-    basic: '基本信息',
-    contact: '联系方式',
-    theme: '主题',
-    colors: '颜色',
-    typography: '排版',
-    layout: '布局',
-    posts: '文章',
-    discussion: '讨论',
-    registration: '注册',
-    profile: '个人资料',
-    password: '密码',
-    security: '安全',
-    advanced: '高级',
-    email: '邮件',
-    upload: '上传',
-    image: '图片',
-    smtp: 'SMTP',
-    cache: '缓存',
-    optimization: '优化',
-    meta: 'Meta标签',
-    social: '社交',
-    tracking: '跟踪',
-    services: '服务',
-    accounts: '账号',
-    general: '常规',
-    google: 'Google',
-    backup: '备份',
-    other: '其他',
   };
 
-  const toggleGroup = (group) => {
-    setExpandedGroups(prev => ({
-      ...prev,
-      [group]: !prev[group]
-    }));
+  const deleteNotification = async (id) => {
+    try {
+      await notificationsAPI.delete(id);
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch (error) {
+      console.error('删除通知失败:', error);
+    }
   };
+
+  useEffect(() => {
+    if (activeTab === 'logs') {
+      loadNotifications();
+    }
+  }, [activeTab]);
 
   const handleChange = (key, value) => {
-    setFormData(prevFormData => ({ ...prevFormData, [key]: value }));
-    setHasChanges(true);
-  };
-
-  const handleNestedChange = (parentKey, key, value) => {
-    setFormData(prevFormData => ({
-      ...prevFormData,
-      [parentKey]: {
-        ...prevFormData[parentKey],
-        [key]: value,
-      },
-    }));
+    setFormData(prev => ({ ...prev, [key]: value }));
     setHasChanges(true);
   };
 
   const handleSave = async () => {
-    if (!onSave) return;
-    
     try {
-      const settingsToSave = filterSettings(formData);
-      await onSave(settingsToSave);
+      const settingsToSave = {
+        ...filterSettings(formData),
+        customCSS,
+        customJS,
+        headCode,
+        footerCode,
+      };
+      await updateSettings(settingsToSave);
       setHasChanges(false);
       showToast('设置已保存！', 'success');
     } catch (error) {
       console.error('保存设置失败:', error);
-      showToast('保存设置时发生错误，请重试', 'error');
+      showToast('保存设置时发生错误', 'error');
     }
   };
 
@@ -466,13 +286,49 @@ export default function Settings({ settings, posts, pages, categories, tags, onS
     }
   };
 
+  const handleExportData = () => {
+    const data = {
+      settings: formData,
+      posts: posts,
+      exportDate: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('数据导出成功！', 'success');
+  };
+
+  const handleImportData = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        if (data.settings) {
+          setFormData(data.settings);
+          setHasChanges(true);
+          showToast('数据导入成功！请保存设置。', 'success');
+        }
+      } catch (error) {
+        showToast('导入失败：文件格式错误', 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const handleClearAllData = async () => {
     const confirmed = await confirm({
       title: '清除所有数据',
-      message: '警告：这将删除所有数据，包括文章、页面、用户、媒体文件和设置。此操作不可恢复！确定要继续吗？',
+      message: '警告：这将删除所有数据，包括文章、页面、用户、媒体文件和设置。此操作不可恢复！',
     });
     if (confirmed) {
-      clearAllData();
+      localStorage.clear();
       showToast('数据已清除！', 'success');
       window.location.reload();
     }
@@ -487,7 +343,6 @@ export default function Settings({ settings, posts, pages, categories, tags, onS
       case 'email':
         return (
           <input
-            key={setting.key}
             type={setting.type}
             value={value || ''}
             onChange={(e) => handleChange(setting.key, e.target.value)}
@@ -499,7 +354,6 @@ export default function Settings({ settings, posts, pages, categories, tags, onS
       case 'textarea':
         return (
           <textarea
-            key={setting.key}
             value={value || ''}
             onChange={(e) => handleChange(setting.key, e.target.value)}
             placeholder={setting.placeholder}
@@ -511,7 +365,6 @@ export default function Settings({ settings, posts, pages, categories, tags, onS
       case 'number':
         return (
           <input
-            key={setting.key}
             type="number"
             value={value || setting.defaultValue || ''}
             onChange={(e) => handleChange(setting.key, parseInt(e.target.value))}
@@ -524,7 +377,6 @@ export default function Settings({ settings, posts, pages, categories, tags, onS
       case 'password':
         return (
           <input
-            key={setting.key}
             type="password"
             value={value || ''}
             onChange={(e) => handleChange(setting.key, e.target.value)}
@@ -536,7 +388,6 @@ export default function Settings({ settings, posts, pages, categories, tags, onS
       case 'select':
         return (
           <select
-            key={setting.key}
             value={value || setting.defaultValue || ''}
             onChange={(e) => handleChange(setting.key, e.target.value)}
             className="w-full max-w-md px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -549,7 +400,7 @@ export default function Settings({ settings, posts, pages, categories, tags, onS
 
       case 'color':
         return (
-          <div key={setting.key} className="flex gap-3 items-center">
+          <div className="flex gap-3 items-center">
             <input
               type="color"
               value={value || setting.defaultValue || '#3b82f6'}
@@ -567,7 +418,7 @@ export default function Settings({ settings, posts, pages, categories, tags, onS
 
       case 'range':
         return (
-          <div key={setting.key} className="w-full max-w-md">
+          <div className="w-full max-w-md">
             <div className="flex items-center gap-4">
               <input
                 type="range"
@@ -589,7 +440,6 @@ export default function Settings({ settings, posts, pages, categories, tags, onS
         const toggleValue = value ?? setting.defaultValue ?? false;
         return (
           <button
-            key={setting.key}
             onClick={() => handleChange(setting.key, !toggleValue)}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               toggleValue ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
@@ -603,35 +453,25 @@ export default function Settings({ settings, posts, pages, categories, tags, onS
           </button>
         );
 
-      case 'checkbox':
-        const checkboxValue = value || {};
+      case 'code':
+        const codeValue = setting.key === 'customCSS' ? customCSS : 
+                         setting.key === 'customJS' ? customJS :
+                         setting.key === 'headCode' ? headCode : footerCode;
+        const setCodeValue = setting.key === 'customCSS' ? setCustomCSS :
+                            setting.key === 'customJS' ? setCustomJS :
+                            setting.key === 'headCode' ? setHeadCode : setFooterCode;
         return (
-          <div key={setting.key} className="space-y-2">
-            {setting.options.map(option => {
-              const isChecked = checkboxValue[option.value] ?? option.checked ?? false;
-              return (
-                <label key={option.value} className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={(e) => {
-                      setFormData(prevFormData => {
-                        const prevValue = prevFormData[setting.key] || {};
-                        const newValue = {
-                          ...prevValue,
-                          [option.value]: e.target.checked
-                        };
-                        return { ...prevFormData, [setting.key]: newValue };
-                      });
-                      setHasChanges(true);
-                    }}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700 dark:text-gray-300">{option.label}</span>
-                </label>
-              );
-            })}
-          </div>
+          <textarea
+            value={codeValue || ''}
+            onChange={(e) => {
+              setCodeValue(e.target.value);
+              setHasChanges(true);
+            }}
+            placeholder={setting.placeholder}
+            rows={10}
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-900 text-green-400 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            spellCheck={false}
+          />
         );
 
       default:
@@ -639,11 +479,36 @@ export default function Settings({ settings, posts, pages, categories, tags, onS
     }
   };
 
+  const filteredLogs = (notifications || []).filter(log => {
+    const matchesFilter = logFilter === 'all' || log.type === logFilter;
+    const matchesSearch = !logSearch || 
+      log.title?.toLowerCase().includes(logSearch.toLowerCase()) ||
+      log.message?.toLowerCase().includes(logSearch.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('zh-CN');
+  };
+
+  const getLogTypeColor = (type) => {
+    const colors = {
+      error: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      warning: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      info: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      success: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+      register_request: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      comment: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+    };
+    return colors[type] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+  };
+
   return (
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">设置</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">设置中心</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">管理您网站的所有设置选项</p>
         </div>
         <div className="flex gap-3">
@@ -669,297 +534,262 @@ export default function Settings({ settings, posts, pages, categories, tags, onS
         </div>
       </div>
 
-      <div className="mb-6">
-        <div className="relative max-w-xl">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索设置..."
-            className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full"
-            >
-              <X className="w-4 h-4 text-gray-400" />
-            </button>
-          )}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-1">
+          <nav className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-2">
+            {tabs.map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-colors mb-1 last:mb-0 ${
+                    isActive
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="text-sm font-medium">{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="lg:col-span-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+            {activeTab !== 'backup' && activeTab !== 'logs' && (
+              <div className="space-y-6">
+                {settingCategories[activeTab]?.map(setting => (
+                  <div key={setting.key} className="flex items-start justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <div className="flex-1 pr-4">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {setting.label}
+                      </label>
+                    </div>
+                    <div className="flex-shrink-0">
+                      {renderSetting(setting)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === 'email' && (
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <h3 className="font-medium text-blue-800 dark:text-blue-200 mb-3 flex items-center gap-2">
+                    <TestTube className="w-5 h-5" />
+                    测试SMTP配置
+                  </h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
+                    点击下方按钮测试当前表单中的SMTP配置（无需先保存）。
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleTestSmtp}
+                      disabled={isTestingSmtp}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {isTestingSmtp ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          测试中...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          测试连接
+                        </>
+                      )}
+                    </button>
+                    {smtpTestResult && (
+                      <div className={`px-3 py-2 rounded-lg text-sm ${
+                        smtpTestResult.success 
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                      }`}>
+                        {smtpTestResult.success ? (
+                          <span className="flex items-center gap-1">
+                            <Check className="w-4 h-4" />
+                            {smtpTestResult.message}
+                          </span>
+                        ) : (
+                          <span>{smtpTestResult.message}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'backup' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{(posts || []).length}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">文章</div>
+                  </div>
+                  <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{(comments || []).length}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">评论</div>
+                  </div>
+                  <div className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{(notifications || []).length}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">通知</div>
+                  </div>
+                  <div className="p-4 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">1</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">数据库</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-xl">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Download className="w-6 h-6 text-blue-500" />
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">导出数据</h3>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      将所有网站数据导出为JSON文件，可用于备份或迁移。
+                    </p>
+                    <button
+                      onClick={handleExportData}
+                      className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      导出数据
+                    </button>
+                  </div>
+
+                  <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-xl">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Upload className="w-6 h-6 text-green-500" />
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">导入数据</h3>
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      从JSON文件导入数据，将覆盖当前设置。
+                    </p>
+                    <label className="w-full px-4 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                      <Upload className="w-4 h-4" />
+                      选择文件
+                      <input
+                        type="file"
+                        accept=".json"
+                        onChange={handleImportData}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <AlertTriangle className="w-6 h-6 text-red-500" />
+                    <h3 className="text-lg font-semibold text-red-700 dark:text-red-400">危险区域</h3>
+                  </div>
+                  <p className="text-sm text-red-600 dark:text-red-400 mb-4">
+                    以下操作将永久删除数据，请谨慎操作。
+                  </p>
+                  <button
+                    onClick={handleClearAllData}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    清除所有数据
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'logs' && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="搜索日志..."
+                      value={logSearch}
+                      onChange={(e) => setLogSearch(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <select
+                    value={logFilter}
+                    onChange={(e) => setLogFilter(e.target.value)}
+                    className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">全部类型</option>
+                    <option value="error">错误</option>
+                    <option value="warning">警告</option>
+                    <option value="info">信息</option>
+                    <option value="register_request">注册请求</option>
+                    <option value="comment">评论</option>
+                  </select>
+                  <button
+                    onClick={loadNotifications}
+                    className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    刷新
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {filteredLogs.length === 0 ? (
+                    <div className="py-12 text-center">
+                      <Server className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500 dark:text-gray-400">暂无日志记录</p>
+                    </div>
+                  ) : (
+                    filteredLogs.map(log => (
+                      <div
+                        key={log.id}
+                        className={`p-4 rounded-lg border ${
+                          log.is_read
+                            ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-100 dark:border-gray-600'
+                            : 'bg-white dark:bg-gray-800 border-blue-200 dark:border-blue-700'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-gray-900 dark:text-white">{log.title}</span>
+                              <span className={`px-2 py-0.5 rounded-full text-xs ${getLogTypeColor(log.type)}`}>
+                                {log.type}
+                              </span>
+                              {!log.is_read && (
+                                <span className="w-2 h-2 bg-blue-500 rounded-full" />
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{log.message}</p>
+                            <div className="flex items-center gap-4 text-xs text-gray-400">
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {formatDate(log.created_at)}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => deleteNotification(log.id)}
+                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {searchQuery ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Search className="w-5 h-5 text-gray-500" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              搜索结果 ({filteredSettings.length})
-            </h2>
-          </div>
-          
-          {filteredSettings.length > 0 ? (
-            <div className="space-y-6">
-              {Object.entries(groupedSettings).map(([group, groupSettings]) => (
-                <div key={group} className="border-b border-gray-200 dark:border-gray-700 pb-6 last:border-0">
-                  <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-4">
-                    {categoryLabels[group] || group}
-                  </h3>
-                  <div className="space-y-4">
-                    {groupSettings.map(setting => (
-                      <div key={setting.key} className="flex items-start justify-between py-2">
-                        <div className="flex-1">
-                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {setting.label}
-                          </label>
-                        </div>
-                        <div className="flex-shrink-0">
-                          {renderSetting(setting)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-8">
-              没有找到匹配的设置
-            </p>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1">
-            <nav className="space-y-1">
-              {settingCategories.map(category => {
-                const Icon = category.icon;
-                const isActive = activeTab === category.id;
-                return (
-                  <button
-                    key={category.id}
-                    onClick={() => setActiveTab(category.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      isActive
-                        ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <div>
-                      <div className="font-medium">{category.label}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">{category.description}</div>
-                    </div>
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-
-          <div className="lg:col-span-3">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-              <div className="mb-6">
-                <div className="flex items-center gap-3 mb-2">
-                  {(() => {
-                    const Icon = activeCategory?.icon || SettingsIcon;
-                    return <Icon className="w-6 h-6 text-gray-600 dark:text-gray-400" />;
-                  })()}
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {activeCategory?.label}
-                  </h2>
-                </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {activeCategory?.description}
-                </p>
-              </div>
-
-              {activeTab === 'data' ? (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{posts?.length || 0}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">文章</div>
-                    </div>
-                    <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">{pages?.length || 0}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">页面</div>
-                    </div>
-                    <div className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{categories?.length || 0}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">分类</div>
-                    </div>
-                    <div className="p-4 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
-                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{tags?.length || 0}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">标签</div>
-                    </div>
-                  </div>
-
-                  {Object.entries(groupedSettings).map(([group, groupSettings]) => (
-                    <div key={group} className="border-b border-gray-200 dark:border-gray-700 pb-6 last:border-0">
-                      <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-4">
-                        {categoryLabels[group] || group}
-                      </h3>
-                      <div className="space-y-4">
-                        {groupSettings.map(setting => (
-                          <div key={setting.key} className="flex items-start justify-between py-2">
-                            <div className="flex-1">
-                              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {setting.label}
-                              </label>
-                            </div>
-                            <div className="flex-shrink-0">
-                              {renderSetting(setting)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-
-                  {activeTab === 'email' && (
-                    <div className="pt-6">
-                      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                        <h3 className="font-medium text-blue-800 dark:text-blue-200 mb-3 flex items-center gap-2">
-                          <TestTube className="w-5 h-5" />
-                          测试SMTP配置
-                        </h3>
-                        <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
-                          点击下方按钮测试当前表单中的SMTP配置（无需先保存）。
-                        </p>
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={handleTestSmtp}
-                            disabled={isTestingSmtp}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
-                          >
-                            {isTestingSmtp ? (
-                              <>
-                                <RefreshCw className="w-4 h-4 animate-spin" />
-                                测试中...
-                              </>
-                            ) : (
-                              <>
-                                <TestTube className="w-4 h-4" />
-                                测试连接
-                              </>
-                            )}
-                          </button>
-                          {smtpTestResult && (
-                            <div className={`px-3 py-2 rounded-lg text-sm ${
-                              smtpTestResult.success 
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                            }`}>
-                              {smtpTestResult.success ? (
-                                <span className="flex items-center gap-1">
-                                  <Check className="w-4 h-4" />
-                                  {smtpTestResult.message}
-                                </span>
-                              ) : (
-                                <span>{smtpTestResult.message}</span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="pt-6">
-                    <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                      <h3 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">危险区域</h3>
-                      <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-4">
-                        以下操作将永久删除数据，请谨慎操作。
-                      </p>
-                      <button
-                        onClick={handleClearAllData}
-                        className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center gap-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        清除所有数据
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {Object.entries(groupedSettings).map(([group, groupSettings]) => (
-                    <div key={group} className="border-b border-gray-200 dark:border-gray-700 pb-6 last:border-0">
-                      <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-4">
-                        {categoryLabels[group] || group}
-                      </h3>
-                      <div className="space-y-4">
-                        {groupSettings.map(setting => (
-                          <div key={setting.key} className="flex items-start justify-between py-2">
-                            <div className="flex-1">
-                              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {setting.label}
-                              </label>
-                            </div>
-                            <div className="flex-shrink-0">
-                              {renderSetting(setting)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-
-                  {activeTab === 'email' && (
-                    <div className="pt-6">
-                      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                        <h3 className="font-medium text-blue-800 dark:text-blue-200 mb-3 flex items-center gap-2">
-                          <TestTube className="w-5 h-5" />
-                          测试SMTP配置
-                        </h3>
-                        <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
-                          点击下方按钮测试当前表单中的SMTP配置（无需先保存）。
-                        </p>
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={handleTestSmtp}
-                            disabled={isTestingSmtp}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
-                          >
-                            {isTestingSmtp ? (
-                              <>
-                                <RefreshCw className="w-4 h-4 animate-spin" />
-                                测试中...
-                              </>
-                            ) : (
-                              <>
-                                <TestTube className="w-4 h-4" />
-                                测试连接
-                              </>
-                            )}
-                          </button>
-                          {smtpTestResult && (
-                            <div className={`px-3 py-2 rounded-lg text-sm ${
-                              smtpTestResult.success 
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                            }`}>
-                              {smtpTestResult.success ? (
-                                <span className="flex items-center gap-1">
-                                  <Check className="w-4 h-4" />
-                                  {smtpTestResult.message}
-                                </span>
-                              ) : (
-                                <span>{smtpTestResult.message}</span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       <Modal
         isOpen={isModalOpen}

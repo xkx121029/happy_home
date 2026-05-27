@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+
 import { Check, Palette, Type, Layout, Sparkles, RotateCcw } from 'lucide-react';
 
 const fontOptions = ['Inter', 'Roboto', 'Georgia', 'Times New Roman', 'Arial', 'Verdana'];

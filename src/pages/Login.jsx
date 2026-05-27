@@ -45,13 +45,50 @@ export default function Login() {
     }
   };
 
+  const handleGetRegisterCode = async () => {
+    if (!email) {
+      setError('请先输入邮箱地址');
+      return;
+    }
+
+    setResendLoading(true);
+    try {
+      const result = await authAPI.sendRegisterCode({ email });
+      if (result.success) {
+        setError('');
+        setCodeButtonText('60秒后重新获取');
+        setCodeButtonDisabled(true);
+        setCodeCountdown(60);
+        
+        const timer = setInterval(() => {
+          setCodeCountdown(prev => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              setCodeButtonText('获取验证码');
+              setCodeButtonDisabled(false);
+              return 0;
+            }
+            setCodeButtonText(`${prev - 1}秒后重新获取`);
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      setError(err.message || '发送失败');
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    if (!username || !email || !password || !confirmPassword) {
-      setError('请填写所有字段');
+    if (!username || !email || !password || !confirmPassword || !verificationCode) {
+      setError('请填写所有字段，包括验证码');
       setLoading(false);
       return;
     }
@@ -69,12 +106,10 @@ export default function Login() {
     }
 
     try {
-      const result = await authAPI.register({ username, email, password });
+      const result = await authAPI.register({ username, email, password, code: verificationCode });
       if (result.success) {
-        setUserId(result.userId);
-        setVerificationMessage(`验证邮件已发送到 ${result.email}，请在10分钟内完成验证`);
-        setShowVerification(true);
-        setError('');
+        await login({ token: result.token });
+        navigate('/admin');
       } else {
         setError(result.message);
       }
@@ -284,6 +319,28 @@ export default function Login() {
                   placeholder="请再次输入密码"
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">验证码</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  placeholder="请输入邮箱验证码"
+                  className="w-full pl-10 pr-32 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleGetRegisterCode}
+                  disabled={codeButtonDisabled || resendLoading}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {resendLoading ? '发送中...' : codeButtonText}
+                </button>
               </div>
             </div>
 

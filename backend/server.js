@@ -90,12 +90,31 @@ app.post('/api/auth/send-register-code', async (req, res) => {
     saveDatabase();
 
     const mailer = require('./mailer');
+    let mailSent = false;
     
     try {
-      await mailer.sendVerificationEmail(email, '用户', verificationCode);
-      console.log(`注册验证码已发送到 ${email}`);
+      const result = await mailer.sendVerificationEmail(email, '用户', verificationCode);
+      if (result.success) {
+        mailSent = true;
+        console.log(`注册验证码已发送到 ${email}`);
+      } else {
+        console.warn('发送验证邮件失败:', result.message);
+      }
     } catch (mailError) {
       console.warn('发送验证邮件失败:', mailError.message);
+    }
+
+    db.run(
+      'INSERT INTO notifications (id, user_id, type, title, message, link) VALUES (?, ?, ?, ?, ?, ?)',
+      [uuidv4(), null, 'register_request', '新用户注册请求', `用户请求注册，邮箱：${email}，邮件发送：${mailSent ? '成功' : '失败'}`, '/admin/users']
+    );
+    saveDatabase();
+
+    if (!mailSent) {
+      return res.status(500).json({ 
+        success: false, 
+        message: '邮件发送失败，请稍后重试或联系管理员' 
+      });
     }
 
     res.json({
@@ -724,6 +743,46 @@ app.delete('/api/tags/:id', authenticateToken, (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: '服务器错误' });
+  }
+});
+
+app.post('/api/comments', authenticateToken, (req, res) => {
+  try {
+    const db = getDb();
+    const { postId, parentId, author, email, content } = req.body;
+    
+    if (!author || !email || !content) {
+      return res.status(400).json({ success: false, message: '请填写所有必填字段' });
+    }
+
+    const newComment = {
+      id: uuidv4(),
+      post_id: postId || null,
+      parent_id: parentId || null,
+      author,
+      email,
+      content,
+      status: 'pending',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    db.run(
+      'INSERT INTO comments (id, post_id, parent_id, author, email, content, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [newComment.id, newComment.post_id, newComment.parent_id, newComment.author, newComment.email, newComment.content, newComment.status, newComment.created_at, newComment.updated_at]
+    );
+    saveDatabase();
+
+    db.run(
+      'INSERT INTO notifications (id, user_id, type, title, message, link) VALUES (?, ?, ?, ?, ?, ?)',
+      [uuidv4(), null, 'comment', '新评论', `用户 ${author} 发表了新评论`, '/admin/comments']
+    );
+    saveDatabase();
+
+    res.json({ success: true, data: newComment, message: '评论已添加' });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: false, message: '添加评论失败' });
   }
 });
 
@@ -1479,6 +1538,18 @@ app.delete('/api/notifications/:id', authenticateToken, (req, res) => {
     db.run('DELETE FROM notifications WHERE id = ?', [req.params.id]);
     saveDatabase();
     res.json({ success: true, message: '通知已删除' });
+  } catch (error) {
+    console.error(error);
+    res.json({ success: true, message: '通知表不存在' });
+  }
+});
+
+app.delete('/api/notifications/clear', authenticateToken, (req, res) => {
+  try {
+    const db = getDb();
+    db.run('DELETE FROM notifications');
+    saveDatabase();
+    res.json({ success: true, message: '所有通知已清空' });
   } catch (error) {
     console.error(error);
     res.json({ success: true, message: '通知表不存在' });

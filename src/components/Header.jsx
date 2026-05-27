@@ -1,4 +1,4 @@
-import { Search, Bell, Settings, User, Sun, Moon, ExternalLink, LogOut, Check, Trash2, Info, AlertCircle, CheckCircle, MessageSquare, FileText, Plus } from 'lucide-react';
+import { Search, Bell, User, Sun, Moon, LogOut, Check, Trash2, Info, AlertCircle, CheckCircle, MessageSquare, FileText, Plus } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
@@ -131,14 +131,6 @@ export default function Header({ darkMode, onDarkModeToggle }) {
         </div>
 
         <div className="flex items-center gap-4">
-          <Link
-            to="/"
-            className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="访问前台"
-          >
-            <ExternalLink className="w-5 h-5" />
-          </Link>
-
           <button
             onClick={onDarkModeToggle}
             className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
@@ -246,10 +238,6 @@ export default function Header({ darkMode, onDarkModeToggle }) {
               </div>
             )}
           </div>
-
-          <button className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-            <Settings className="w-5 h-5" />
-          </button>
 
           <div className="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-gray-700">
             <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">

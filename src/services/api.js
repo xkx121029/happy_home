@@ -213,6 +213,10 @@ export const commentsAPI = {
     const queryString = new URLSearchParams(params).toString();
     return apiRequest(`/comments${queryString ? '?' + queryString : ''}`);
   },
+  create: (data) => apiRequest('/comments', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
   updateStatus: (id, status) => apiRequest(`/comments/${id}/status`, {
     method: 'PUT',
     body: JSON.stringify({ status }),
@@ -287,6 +291,9 @@ export const notificationsAPI = {
     method: 'PUT',
   }),
   delete: (id) => apiRequest(`/notifications/${id}`, {
+    method: 'DELETE',
+  }),
+  clearAll: () => apiRequest('/notifications/clear', {
     method: 'DELETE',
   }),
   getCount: () => apiRequest('/notifications/count'),
