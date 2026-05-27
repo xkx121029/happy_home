@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowLeft, Send, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import PasswordStrength from '../components/PasswordStrength';
@@ -14,6 +14,7 @@ export default function ForgotPassword() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [countdown, setCountdown] = useState(0);
+  const timerRef = useRef(null);
 
   const handleSendCode = () => {
     setError('');
@@ -33,16 +34,31 @@ export default function ForgotPassword() {
     setStep(2);
     setCountdown(60);
 
-    const timer = setInterval(() => {
+    // 清除之前的定时器
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    timerRef.current = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
-          clearInterval(timer);
+          clearInterval(timerRef.current);
+          timerRef.current = null;
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
   };
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
 
   const handleVerifyCode = () => {
     setError('');

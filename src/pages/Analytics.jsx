@@ -32,7 +32,7 @@ const generateAnalyticsData = () => {
     },
     monthlyViews: {
       labels: months,
-      data: [8500, 9200, 11000, 10500, 12500, 14000, 13200, 11800, 12580],
+      data: [8500, 9200, 11000, 10500, 12500, 14000, 13200, 11800, 12580, 13800, 15200, 16500],
     },
     topPosts: [
       { title: '欢迎使用 HappyHome 建站平台', views: 2340, change: 15 },
@@ -113,7 +113,7 @@ export default function Analytics() {
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="card p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">总访问量</p>
@@ -135,7 +135,7 @@ export default function Analytics() {
           </div>
         </div>
 
-        <div className="card p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">独立访客</p>
@@ -157,7 +157,7 @@ export default function Analytics() {
           </div>
         </div>
 
-        <div className="card p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">文章总数</p>
@@ -179,7 +179,7 @@ export default function Analytics() {
           </div>
         </div>
 
-        <div className="card p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">平均停留时间</p>
@@ -204,7 +204,7 @@ export default function Analytics() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Daily Views Chart */}
-        <div className="card p-6 lg:col-span-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 lg:col-span-2">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-semibold text-gray-900 dark:text-white">每日访问量趋势</h3>
             <div className="flex items-center gap-2">
@@ -227,7 +227,7 @@ export default function Analytics() {
         </div>
 
         {/* Traffic Sources */}
-        <div className="card p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-6">流量来源</h3>
           <div className="space-y-4">
             {data.trafficSources.map((source) => (
@@ -251,7 +251,7 @@ export default function Analytics() {
         </div>
 
         {/* Top Posts */}
-        <div className="card p-6 lg:col-span-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 lg:col-span-2">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-6">热门文章</h3>
           <div className="space-y-4">
             {data.topPosts.map((post, index) => (
@@ -284,7 +284,7 @@ export default function Analytics() {
         </div>
 
         {/* Engagement Metrics */}
-        <div className="card p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-6">用户参与度</h3>
           <div className="space-y-6">
             <div>
@@ -336,7 +336,7 @@ export default function Analytics() {
         </div>
 
         {/* Visitor Countries */}
-        <div className="card p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-6">访客地域分布</h3>
           <div className="space-y-3">
             {data.visitorCountries.map((country) => (
@@ -351,7 +351,7 @@ export default function Analytics() {
         </div>
 
         {/* Monthly Trend */}
-        <div className="card p-6 lg:col-span-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 lg:col-span-2">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-6">月度访问趋势</h3>
           <div className="flex items-end justify-between h-48 gap-2">
             {data.monthlyViews.data.map((value, index) => (

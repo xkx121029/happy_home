@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Plus, Search, Edit, Trash2, FolderOpen, ChevronRight, X } from 'lucide-react';
 
 export default function Categories({ categories, onSave, onDelete }) {
@@ -167,10 +167,10 @@ export default function Categories({ categories, onSave, onDelete }) {
       : filteredCategories.filter(cat => cat.parent === parentId);
     
     return items.map(category => (
-      <>
+      <React.Fragment key={category.id}>
         {renderCategoryRow(category, level)}
         {renderTree(category.id, level + 1)}
-      </>
+      </React.Fragment>
     ));
   };
 

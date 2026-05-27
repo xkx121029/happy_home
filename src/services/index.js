@@ -1,0 +1,14 @@
+export { createCRUDServices } from './baseService';
+export { createUsersService } from './usersService';
+export { createPostsService } from './postsService';
+export { createPagesService } from './pagesService';
+export { createCategoriesService } from './categoriesService';
+export { createTagsService } from './tagsService';
+export { createMenusService } from './menusService';
+export { createCommentsService } from './commentsService';
+export { createWidgetsService } from './widgetsService';
+export { createSettingsService } from './settingsService';
+export { createBackupService } from './backupService';
+export { createRevisionsService } from './revisionsService';
+export { createMediaService } from './mediaService';
+export { createCustomCSSService } from './customCSSService';

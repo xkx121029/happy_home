@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { Plus, Search, Edit, Trash2, Tag, X, Grid, Layers } from 'lucide-react';
+import Modal, { Toast } from '../components/Modal';
+import { useModal, useToast } from '../hooks/useModal';
 
 export default function Tags({ tags, onSave, onDelete }) {
+  const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
+  const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingTag, setEditingTag] = useState(null);
@@ -60,43 +64,50 @@ export default function Tags({ tags, onSave, onDelete }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      alert('请输入标签名称');
+      await alert('请输入标签名称', 'warning');
       return;
     }
     
     if (!formData.slug.trim()) {
-      alert('请输入标签slug');
+      await alert('请输入标签slug', 'warning');
       return;
     }
 
     // 检查 slug 是否重复
     const existingSlug = tags.find(t => t.slug === formData.slug && t.id !== editingTag?.id);
     if (existingSlug) {
-      alert('该slug已存在，请使用不同的slug');
+      await alert('该slug已存在，请使用不同的slug', 'warning');
       return;
     }
 
     if (editingTag) {
       onSave({ ...editingTag, ...formData });
+      showToast('标签更新成功', 'success');
     } else {
       onSave(formData);
+      showToast('标签创建成功', 'success');
     }
     
     handleCloseModal();
   };
 
-  const handleDelete = (tag) => {
+  const handleDelete = async (tag) => {
     if (tag.count > 0) {
-      alert(`该标签下有 ${tag.count} 篇文章，无法删除`);
+      await alert(`该标签下有 ${tag.count} 篇文章，无法删除`, 'warning');
       return;
     }
     
-    if (window.confirm(`确定要删除标签"${tag.name}"吗？`)) {
+    const confirmed = await confirm({
+      title: '确认删除',
+      message: `确定要删除标签"${tag.name}"吗？`,
+    });
+    if (confirmed) {
       onDelete(tag.id);
+      showToast('标签删除成功', 'success');
     }
   };
 
@@ -300,6 +311,26 @@ export default function Tags({ tags, onSave, onDelete }) {
           </div>
         </div>
       )}
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        onConfirm={modalConfig.onConfirm}
+        showCancel={modalConfig.showCancel}
+      />
+
+      <Toast
+        isOpen={isToastOpen}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        onClose={closeToast}
+        duration={toastConfig.duration}
+      />
     </div>
   );
 }

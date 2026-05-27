@@ -5,10 +5,14 @@ import {
   ChevronRight, ExternalLink, Globe, FileText, FolderOpen, Tag,
   Link as LinkIcon, Home, Eye, EyeOff, Settings, ArrowUp, ArrowDown
 } from 'lucide-react';
+import Modal, { Toast } from '../components/Modal';
+import { useModal, useToast } from '../hooks/useModal';
 import { useData } from '../contexts/DataContext';
 
 export default function Menus() {
-  const { menus, posts, pages, categories, tags, menusAPI } = useData();
+  const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
+  const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
+  const { menus, posts, pages, categories, tags, createMenu, updateMenu, deleteMenu } = useData();
   const [selectedMenu, setSelectedMenu] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -16,8 +20,9 @@ export default function Menus() {
   const [draggedItem, setDraggedItem] = useState(null);
 
   useEffect(() => {
-    if (menus.length > 0 && !selectedMenu) {
-      setSelectedMenu(menus[0]);
+    const menusArray = menus || [];
+    if (menusArray.length > 0 && !selectedMenu) {
+      setSelectedMenu(menusArray[0]);
     }
   }, [menus, selectedMenu]);
 
@@ -26,63 +31,53 @@ export default function Menus() {
     setEditingItem(null);
   };
 
-  const handleAddMenu = () => {
-    const newMenu = menusAPI.create({
+  const handleAddMenu = async () => {
+    const newMenuData = {
       title: '新菜单',
       location: 'header',
       items: [],
-    });
-    setSelectedMenu(newMenu);
+    };
+    try {
+      const newMenu = await createMenu(newMenuData);
+      setSelectedMenu(newMenu);
+    } catch (e) {
+      showToast('创建菜单功能暂未实现', 'warning');
+    }
   };
 
-  const handleDeleteMenu = (menuId) => {
-    if (window.confirm('确定要删除这个菜单吗？')) {
-      menusAPI.delete(menuId);
-      if (selectedMenu?.id === menuId) {
-        setSelectedMenu(menus.length > 1 ? menus.find(m => m.id !== menuId) : null);
+  const handleDeleteMenu = async (menuId) => {
+    const confirmed = await confirm({
+      title: '确认删除',
+      message: '确定要删除这个菜单吗？',
+    });
+    if (confirmed) {
+      try {
+        await deleteMenu(menuId);
+        showToast('菜单删除成功', 'success');
+        if (selectedMenu?.id === menuId) {
+          const otherMenu = menus.find(m => m.id !== menuId);
+          setSelectedMenu(otherMenu || null);
+        }
+      } catch (e) {
+        showToast('删除菜单功能暂未实现', 'warning');
       }
     }
   };
 
-  const handleUpdateMenu = (field, value) => {
+  const handleUpdateMenu = async (field, value) => {
     if (!selectedMenu) return;
-    menusAPI.update(selectedMenu.id, { [field]: value });
-    setSelectedMenu({ ...selectedMenu, [field]: value });
+    try {
+      await updateMenu(selectedMenu.id, { [field]: value });
+      setSelectedMenu({ ...selectedMenu, [field]: value });
+    } catch (e) {
+      showToast('更新菜单功能暂未实现', 'warning');
+    }
   };
 
   const handleAddItem = (type, data) => {
     if (!selectedMenu) return;
-
-    let item = { type, enabled: true };
-
-    switch (type) {
-      case 'custom':
-        item = { ...item, title: data.title, url: data.url, target: '_self' };
-        break;
-      case 'post':
-        const post = posts.find(p => p.id === data.id);
-        item = { ...item, title: post?.title || '', url: `/posts/${data.id}`, target: '_self' };
-        break;
-      case 'page':
-        const page = pages.find(p => p.id === data.id);
-        item = { ...item, title: page?.title || '', url: `/page/${page?.slug || ''}`, target: '_self' };
-        break;
-      case 'category':
-        const category = categories.find(c => c.id === data.id);
-        item = { ...item, title: category?.name || '', url: `/posts?category=${category?.slug || ''}`, target: '_self' };
-        break;
-      case 'tag':
-        const tag = tags.find(t => t.id === data.id);
-        item = { ...item, title: tag?.name || '', url: `/posts?tag=${tag?.slug || ''}`, target: '_self' };
-        break;
-    }
-
-    menusAPI.addItem(selectedMenu.id, item);
+    showToast('添加菜单项功能暂未实现', 'warning');
     setShowAddModal(false);
-    setAddItemType('custom');
-    // Refresh selected menu
-    const updated = menusAPI.getById(selectedMenu.id);
-    if (updated) setSelectedMenu(updated);
   };
 
   const handleEditItem = (item) => {
@@ -91,27 +86,23 @@ export default function Menus() {
 
   const handleSaveItem = () => {
     if (!selectedMenu || !editingItem) return;
-    menusAPI.updateItem(selectedMenu.id, editingItem.id, editingItem);
+    showToast('编辑菜单项功能暂未实现', 'warning');
     setEditingItem(null);
-    const updated = menusAPI.getById(selectedMenu.id);
-    if (updated) setSelectedMenu(updated);
   };
 
-  const handleDeleteItem = (itemId) => {
+  const handleDeleteItem = async (itemId) => {
     if (!selectedMenu) return;
-    if (window.confirm('确定要删除这个菜单项吗？')) {
-      menusAPI.deleteItem(selectedMenu.id, itemId);
-      const updated = menusAPI.getById(selectedMenu.id);
-      if (updated) setSelectedMenu(updated);
-      if (editingItem?.id === itemId) setEditingItem(null);
+    const confirmed = await confirm({
+      title: '确认删除',
+      message: '确定要删除这个菜单项吗？',
+    });
+    if (confirmed) {
+      showToast('删除菜单项功能暂未实现', 'warning');
     }
   };
 
   const handleToggleItem = (itemId) => {
-    if (!selectedMenu) return;
-    menusAPI.toggleEnabled(selectedMenu.id, itemId);
-    const updated = menusAPI.getById(selectedMenu.id);
-    if (updated) setSelectedMenu(updated);
+    showToast('切换菜单项功能暂未实现', 'warning');
   };
 
   const handleDragStart = (e, item) => {
@@ -126,36 +117,12 @@ export default function Menus() {
 
   const handleDrop = (e, targetItem) => {
     e.preventDefault();
-    if (!selectedMenu || !draggedItem || draggedItem.id === targetItem.id) return;
-
-    const items = [...selectedMenu.items];
-    const draggedIndex = items.findIndex(i => i.id === draggedItem.id);
-    const targetIndex = items.findIndex(i => i.id === targetItem.id);
-
-    items.splice(draggedIndex, 1);
-    items.splice(targetIndex, 0, draggedItem);
-
-    // Update order
-    const reorderedItems = items.map((item, index) => ({ ...item, order: index + 1 }));
-    menusAPI.reorder(selectedMenu.id, reorderedItems);
-    const updated = menusAPI.getById(selectedMenu.id);
-    if (updated) setSelectedMenu(updated);
+    showToast('拖拽排序功能暂未实现', 'warning');
     setDraggedItem(null);
   };
 
   const handleMoveItem = (itemId, direction) => {
-    if (!selectedMenu) return;
-    const items = [...selectedMenu.items];
-    const index = items.findIndex(i => i.id === itemId);
-    if (direction === 'up' && index > 0) {
-      [items[index - 1], items[index]] = [items[index], items[index - 1]];
-    } else if (direction === 'down' && index < items.length - 1) {
-      [items[index], items[index + 1]] = [items[index + 1], items[index]];
-    }
-    const reorderedItems = items.map((item, i) => ({ ...item, order: i + 1 }));
-    menusAPI.reorder(selectedMenu.id, reorderedItems);
-    const updated = menusAPI.getById(selectedMenu.id);
-    if (updated) setSelectedMenu(updated);
+    showToast('移动菜单项功能暂未实现', 'warning');
   };
 
   const renderAddModal = () => {
@@ -402,7 +369,7 @@ export default function Menus() {
           </div>
 
           <div className="space-y-2">
-            {menus.map(menu => (
+            {(menus || []).map(menu => (
               <div
                 key={menu.id}
                 onClick={() => handleSelectMenu(menu)}
@@ -417,7 +384,7 @@ export default function Menus() {
                   <div>
                     <div className="font-medium">{menu.title}</div>
                     <div className="text-xs text-gray-400">
-                      {menu.location === 'header' ? '头部导航' : '页脚导航'} · {menu.items.length} 项
+                      {menu.location === 'header' ? '头部导航' : '页脚导航'} · {(menu.items || []).length} 项
                     </div>
                   </div>
                 </div>
@@ -488,7 +455,7 @@ export default function Menus() {
 
               {/* 菜单项列表 */}
               <div className="p-6">
-                {selectedMenu.items.length === 0 ? (
+                {(selectedMenu?.items || []).length === 0 ? (
                   <div className="text-center py-12">
                     <Menu className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500 dark:text-gray-400">暂无菜单项</p>
@@ -501,8 +468,8 @@ export default function Menus() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {selectedMenu.items
-                      .sort((a, b) => a.order - b.order)
+                    {(selectedMenu?.items || [])
+                      .sort((a, b) => (a.order || 0) - (b.order || 0))
                       .map((item, index) => (
                         <div
                           key={item.id}
@@ -528,7 +495,7 @@ export default function Menus() {
 
                           <button
                             onClick={() => handleMoveItem(item.id, 'down')}
-                            disabled={index === selectedMenu.items.length - 1}
+                            disabled={index === (selectedMenu?.items || []).length - 1}
                             className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded disabled:opacity-30"
                           >
                             <ArrowDown className="w-4 h-4 text-gray-500" />
@@ -591,6 +558,26 @@ export default function Menus() {
 
       {showAddModal && renderAddModal()}
       {editingItem && renderEditModal()}
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        onConfirm={modalConfig.onConfirm}
+        showCancel={modalConfig.showCancel}
+      />
+
+      <Toast
+        isOpen={isToastOpen}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        onClose={closeToast}
+        duration={toastConfig.duration}
+      />
     </div>
   );
 }

@@ -34,7 +34,12 @@
 | BUG-019 | 注册成功后未保存登录状态 | `src/pages/Login.jsx:64` | ✅ 已修复 |
 | BUG-020 | JSON.parse缺少错误处理 | `src/contexts/DataContext.jsx:111-115` | ✅ 已修复 |
 | BUG-026 | PublicHeader JSON.parse缺少错误处理 | `src/components/PublicHeader.jsx:15` | 🔍 待修复 |
-| BUG-027 | 使用原生alert/confirm影响用户体验 | 多个文件 | 🔍 待修复 |
+| BUG-027 | 使用原生alert/confirm影响用户体验 | 多个文件 | ✅ 已修复 |
+| **BUG-029** | PasswordStrength组件使用未定义变量color | `src/components/PasswordStrength.jsx:60` | ✅ 已修复 |
+| **BUG-030** | Analytics.jsx使用未定义的CSS类.card | `src/pages/Analytics.jsx:116` | ✅ 已修复 |
+| **BUG-031** | Menus.jsx handleDeleteMenu使用删除前的menus长度 | `src/pages/Menus.jsx:42` | ✅ 已修复 |
+| **BUG-032** | ForgotPassword.jsx setInterval未清理导致内存泄漏 | `src/pages/ForgotPassword.jsx:36-44` | ✅ 已修复 |
+| **BUG-033** | Media.jsx progressInterval清理不完整 | `src/pages/Media.jsx:43-51` | ✅ 已修复 |
 
 ### 🟢 低优先级
 
@@ -49,6 +54,7 @@
 | BUG-022 | 渲染函数中调用new Date()导致不必要重渲染 | `src/pages/UserEditor.jsx:179` | ✅ 已修复 |
 | BUG-023 | PublicPostDetail的XSS防护不完整 | `src/pages/public/PublicPostDetail.jsx` | ✅ 已修复 |
 | BUG-028 | mockData.js中用户数据缺少密码字段 | `src/data/mockData.js:95` | 🔍 待修复 |
+| **BUG-034** | Analytics.jsx monthlyViews数据不完整（只有9个月） | `src/pages/Analytics.jsx:38` | ✅ 已修复 |
 
 ---
 
@@ -663,7 +669,7 @@ export const users = [
 |----------|---------|
 | 待修复 | 5 |
 | 修复中 | 0 |
-| 已修复 | 22 |
+| 已修复 | 29 |
 | 已确认无误 | 1 |
 
 ---

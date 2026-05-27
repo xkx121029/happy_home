@@ -1,90 +1,129 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Lock, Mail, Eye, EyeOff, LogIn, UserPlus, Zap } from 'lucide-react';
+import { User, Lock, Mail, Eye, EyeOff, LogIn, UserPlus, Zap, RefreshCw, CheckCircle } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
-
-// 简单的用户验证（硬编码）
-const validateLogin = (username, password) => {
-  const validUsers = [
-    { username: 'admin', password: 'admin123', role: 'administrator', email: 'admin@example.com' },
-    { username: 'editor', password: 'editor123', role: 'editor', email: 'editor@example.com' },
-    { username: 'author', password: 'author123', role: 'author', email: 'author@example.com' },
-    { username: 'contributor', password: 'contributor123', role: 'contributor', email: 'contributor@example.com' },
-    { username: 'subscriber', password: 'subscriber123', role: 'subscriber', email: 'subscriber@example.com' },
-  ];
-  
-  const user = validUsers.find(u => u.username === username && u.password === password);
-  if (user) {
-    const { password: _, ...userWithoutPassword } = user;
-    return { success: true, user: userWithoutPassword };
-  }
-  return { success: false, message: '用户名或密码错误' };
-};
+import { authAPI } from '../services/api';
 
 export default function Login() {
-  const { settings } = useData();
+  const { settings, login } = useData();
   const [isLogin, setIsLogin] = useState(true);
+  const [showVerification, setShowVerification] = useState(false);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [userId, setUserId] = useState('');
+  const [verificationMessage, setVerificationMessage] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [codeButtonText, setCodeButtonText] = useState('获取验证码');
+  const [codeButtonDisabled, setCodeButtonDisabled] = useState(false);
+  const [codeCountdown, setCodeCountdown] = useState(0);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     if (!username || !password) {
       setError('请输入用户名和密码');
+      setLoading(false);
       return;
     }
 
-    const result = validateLogin(username, password);
-    if (result.success) {
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('currentUser', JSON.stringify(result.user));
+    try {
+      await login({ username, password });
       navigate('/admin');
-    } else {
-      setError(result.message);
+    } catch (err) {
+      setError(err.message || '登录失败');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     if (!username || !email || !password || !confirmPassword) {
       setError('请填写所有字段');
+      setLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
       setError('两次输入的密码不一致');
+      setLoading(false);
       return;
     }
 
     if (password.length < 6) {
       setError('密码长度至少6位');
+      setLoading(false);
       return;
     }
 
-    const result = usersAPI.create({
-      username,
-      email,
-      password,
-      role: 'author',
-      status: 'active',
-    });
+    try {
+      const result = await authAPI.register({ username, email, password });
+      if (result.success) {
+        setUserId(result.userId);
+        setVerificationMessage(`验证邮件已发送到 ${result.email}，请在10分钟内完成验证`);
+        setShowVerification(true);
+        setError('');
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      setError(err.message || '注册失败');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    if (result.success) {
-      // 注册成功后保存登录状态
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('currentUser', JSON.stringify(result.user));
-      navigate('/admin');
-    } else {
-      setError(result.message);
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!verificationCode) {
+      setError('请输入验证码');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await authAPI.verify({ userId, code: verificationCode });
+      if (result.success) {
+        await login({ token: result.token });
+        navigate('/admin');
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      setError(err.message || '验证失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    try {
+      const result = await authAPI.resendVerification({ userId });
+      if (result.success) {
+        setVerificationMessage('验证邮件已重新发送，请查收邮箱');
+        setError('');
+      } else {
+        setError(result.message);
+      }
+    } catch (err) {
+      setError(err.message || '发送失败');
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -254,6 +293,61 @@ export default function Login() {
             >
               <UserPlus className="w-5 h-5" />
               注册
+            </button>
+          </form>
+        )}
+
+        {showVerification && (
+          <form onSubmit={handleVerify} className="space-y-4">
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm text-green-800 font-medium">注册成功！</p>
+                  <p className="text-xs text-green-600 mt-1">{verificationMessage}</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">验证码</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  placeholder="请输入邮箱中的验证码"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+            >
+              <CheckCircle className="w-5 h-5" />
+              完成验证
+            </button>
+
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={resendLoading}
+              className="w-full py-3 bg-gray-100 text-gray-600 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {resendLoading ? (
+                <>
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  发送中...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-5 h-5" />
+                  重新发送验证码
+                </>
+              )}
             </button>
           </form>
         )}

@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import { Plus, Search, Filter, Edit, Trash2, Eye, Pin, Clock, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Modal, { Toast } from '../components/Modal';
+import { useModal, useToast } from '../hooks/useModal';
 import { categories } from '../data/mockData';
 import { useData } from '../contexts/DataContext';
 
 export default function Posts({ posts, onDelete }) {
+  const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
+  const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
   const { postsAPI } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -40,10 +44,15 @@ export default function Posts({ posts, onDelete }) {
     postsAPI.update(post.id, { sticky: !post.sticky });
   };
 
-  const handleCancelScheduled = (post, e) => {
+  const handleCancelScheduled = async (post, e) => {
     e.stopPropagation();
-    if (window.confirm('确定要取消定时发布吗？')) {
+    const confirmed = await confirm({
+      title: '确认取消',
+      message: '确定要取消定时发布吗？',
+    });
+    if (confirmed) {
       postsAPI.update(post.id, { status: 'draft', publishDate: null });
+      showToast('已取消定时发布', 'success');
     }
   };
 
@@ -210,6 +219,26 @@ export default function Posts({ posts, onDelete }) {
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        onConfirm={modalConfig.onConfirm}
+        showCancel={modalConfig.showCancel}
+      />
+
+      <Toast
+        isOpen={isToastOpen}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        onClose={closeToast}
+        duration={toastConfig.duration}
+      />
     </div>
   );
 }

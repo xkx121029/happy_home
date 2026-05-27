@@ -1,17 +1,31 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Upload, X, Download, Image as ImageIcon, FileIcon } from 'lucide-react';
+import Modal, { Toast } from '../components/Modal';
+import { useModal, useToast } from '../hooks/useModal';
 
 export default function Media({ media, onUpload, onDelete }) {
+  const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
+  const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [showUpload, setShowUpload] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const progressIntervalRef = useRef(null);
 
   const filteredMedia = media.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, []);
 
   const handleFileSelect = (e) => {
     const files = e.target.files;
@@ -26,24 +40,30 @@ export default function Media({ media, onUpload, onDelete }) {
     // 验证文件类型
     const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      alert('请上传 JPG、PNG、GIF 或 WebP 格式的图片');
+      await alert('请上传 JPG、PNG、GIF 或 WebP 格式的图片', 'warning');
       return;
     }
 
     // 验证文件大小（2MB）
     if (file.size > 2 * 1024 * 1024) {
-      alert('图片大小不能超过 2MB');
+      await alert('图片大小不能超过 2MB', 'warning');
       return;
     }
 
     setIsUploading(true);
     setUploadProgress(0);
 
+    // 清除之前的定时器
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+    }
+
     // 模拟上传进度
-    const progressInterval = setInterval(() => {
+    progressIntervalRef.current = setInterval(() => {
       setUploadProgress((prev) => {
         if (prev >= 90) {
-          clearInterval(progressInterval);
+          clearInterval(progressIntervalRef.current);
+          progressIntervalRef.current = null;
           return 90;
         }
         return prev + 10;
@@ -54,7 +74,8 @@ export default function Media({ media, onUpload, onDelete }) {
       // 读取文件并创建URL
       const reader = new FileReader();
       reader.onload = (e) => {
-        clearInterval(progressInterval);
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
         setUploadProgress(100);
         
         // 创建本地URL
@@ -77,8 +98,9 @@ export default function Media({ media, onUpload, onDelete }) {
       };
       reader.readAsDataURL(file);
     } catch (error) {
-      clearInterval(progressInterval);
-      alert('上传失败，请重试');
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+      await alert('上传失败，请重试', 'error');
       setIsUploading(false);
       setUploadProgress(0);
     }
@@ -103,10 +125,15 @@ export default function Media({ media, onUpload, onDelete }) {
     }
   };
 
-  const handleDelete = (id, name) => {
-    if (window.confirm(`确定要删除 "${name}" 吗？此操作不可撤销。`)) {
+  const handleDelete = async (id, name) => {
+    const confirmed = await confirm({
+      title: '确认删除',
+      message: `确定要删除 "${name}" 吗？此操作不可撤销。`,
+    });
+    if (confirmed) {
       if (onDelete) {
         onDelete(id);
+        showToast('文件删除成功', 'success');
       }
     }
   };
@@ -300,6 +327,26 @@ export default function Media({ media, onUpload, onDelete }) {
           </div>
         </div>
       )}
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        onConfirm={modalConfig.onConfirm}
+        showCancel={modalConfig.showCancel}
+      />
+
+      <Toast
+        isOpen={isToastOpen}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        onClose={closeToast}
+        duration={toastConfig.duration}
+      />
     </div>
   );
 }

@@ -7,7 +7,7 @@ import {
 import { useData } from '../contexts/DataContext';
 
 export default function Backup() {
-  const { backups, backupAPI, posts, pages, comments } = useData();
+  const { backups, posts, pages, comments } = useData();
   const [activeTab, setActiveTab] = useState('backups');
   const [selectedBackups, setSelectedBackups] = useState([]);
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(null);
@@ -30,82 +30,37 @@ export default function Backup() {
   };
 
   const handleCreateFullBackup = () => {
-    backupAPI.createFullBackup();
+    alert('备份功能暂未实现');
   };
 
   const handleCreateCustomBackup = (type) => {
-    const name = prompt('请输入备份名称：');
-    if (!name) return;
-
-    let data = {};
-    switch (type) {
-      case 'posts':
-        data = { posts };
-        break;
-      case 'pages':
-        data = { pages };
-        break;
-      case 'users':
-        data = { users: [] };
-        break;
-      case 'settings':
-        data = { settings: {} };
-        break;
-      case 'comments':
-        data = { comments };
-        break;
-      default:
-        return;
-    }
-    backupAPI.createCustomBackup(name, type, data);
+    alert('自定义备份功能暂未实现');
   };
 
   const handleRestore = (id) => {
-    const result = backupAPI.restore(id);
-    if (result.success) {
-      alert('备份恢复成功！');
-      window.location.reload();
-    } else {
-      alert('恢复失败：' + result.message);
-    }
+    alert('恢复功能暂未实现');
     setShowRestoreConfirm(null);
   };
 
   const handleDelete = (id) => {
-    backupAPI.delete(id);
+    alert('删除备份功能暂未实现');
     setShowDeleteConfirm(null);
   };
 
   const handleDownload = (id) => {
-    backupAPI.download(id);
+    alert('下载备份功能暂未实现');
   };
 
   const handleExport = (type) => {
-    backupAPI.exportData(type);
+    alert('导出功能暂未实现');
   };
 
   const handleExportMarkdown = (postId) => {
-    backupAPI.exportPostsAsMarkdown(postId);
+    alert('导出 Markdown 功能暂未实现');
   };
 
   const handleImport = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsImporting(true);
-    setImportResult(null);
-
-    try {
-      const result = await backupAPI.importData(file);
-      setImportResult({ type: 'success', message: result.message });
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } catch (error) {
-      setImportResult({ type: 'error', message: error.message });
-    } finally {
-      setIsImporting(false);
-    }
+    alert('导入功能暂未实现');
   };
 
   const toggleSection = (section) => {
@@ -124,7 +79,7 @@ export default function Backup() {
   const handleBulkDelete = () => {
     if (selectedBackups.length === 0) return;
     if (window.confirm(`确定要删除选中的 ${selectedBackups.length} 个备份吗？`)) {
-      selectedBackups.forEach(id => backupAPI.delete(id));
+      alert('批量删除备份功能暂未实现');
       setSelectedBackups([]);
     }
   };
@@ -246,7 +201,7 @@ export default function Backup() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
             <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                备份列表 ({backups.length})
+                备份列表 ({(backups || []).length})
               </h2>
               {selectedBackups.length > 0 && (
                 <button
@@ -259,7 +214,7 @@ export default function Backup() {
               )}
             </div>
 
-            {backups.length === 0 ? (
+            {(backups || []).length === 0 ? (
               <div className="p-12 text-center">
                 <Archive className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500 dark:text-gray-400">暂无备份记录</p>
@@ -267,7 +222,7 @@ export default function Backup() {
               </div>
             ) : (
               <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                {backups.map(backup => (
+                {(backups || []).map(backup => (
                   <div
                     key={backup.id}
                     className={`p-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
@@ -391,7 +346,7 @@ export default function Backup() {
             </div>
 
             <div className="divide-y divide-gray-100 dark:divide-gray-700 max-h-96 overflow-y-auto">
-              {posts.map(post => (
+              {(posts || []).map(post => (
                 <div key={post.id} className="p-4 flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-gray-900 dark:text-white truncate">
@@ -412,7 +367,7 @@ export default function Backup() {
               ))}
             </div>
 
-            {posts.length === 0 && (
+            {(posts || []).length === 0 && (
               <div className="p-8 text-center text-gray-500">
                 暂无文章可导出
               </div>

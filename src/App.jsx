@@ -44,7 +44,13 @@ import PrivateRoute from './components/PrivateRoute';
 function AppContent() {
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [darkMode, setDarkMode] = useState(false);
-  const { posts, pages, users, media, categories, tags, settings, postsAPI, pagesAPI, usersAPI, mediaAPI, categoriesAPI, tagsAPI, settingsAPI, clearAllData } = useData();
+  const { 
+    posts, pages, users, mediaItems, categories, tags, settings, updateSettings,
+    createPost, updatePost, deletePost,
+    createPage, updatePage, deletePage,
+    createCategory, updateCategory, deleteCategory,
+    createTag, updateTag, deleteTag
+  } = useData();
 
   useEffect(() => {
     const checkScheduledPosts = () => {
@@ -62,7 +68,7 @@ function AppContent() {
     checkScheduledPosts();
     const interval = setInterval(checkScheduledPosts, 60000);
     return () => clearInterval(interval);
-  }, [posts, postsAPI]);
+  }, [posts]);
 
   const handleDarkModeToggle = useCallback(() => {
     setDarkMode(prev => {
@@ -72,93 +78,83 @@ function AppContent() {
     });
   }, []);
 
-  const handleSavePost = useCallback((postData) => {
+  const handleSavePost = useCallback(async (postData) => {
     if (postData.id) {
-      postsAPI.update(postData.id, postData);
+      await updatePost(postData.id, postData);
     } else {
-      postsAPI.create(postData);
+      await createPost(postData);
     }
-  }, [postsAPI]);
+  }, [updatePost, createPost]);
 
-  const handleDeletePost = useCallback((id) => {
+  const handleDeletePost = useCallback(async (id) => {
     if (window.confirm('确定要删除这篇文章吗？')) {
-      postsAPI.delete(id);
+      await deletePost(id);
     }
-  }, [postsAPI]);
+  }, [deletePost]);
 
-  const handleSavePage = useCallback((pageData) => {
+  const handleSavePage = useCallback(async (pageData) => {
     if (pageData.id) {
-      pagesAPI.update(pageData.id, pageData);
+      await updatePage(pageData.id, pageData);
     } else {
-      pagesAPI.create(pageData);
+      await createPage(pageData);
     }
-  }, [pagesAPI]);
+  }, [updatePage, createPage]);
 
-  const handleDeletePage = useCallback((id) => {
+  const handleDeletePage = useCallback(async (id) => {
     if (window.confirm('确定要删除这个页面吗？')) {
-      pagesAPI.delete(id);
+      await deletePage(id);
     }
-  }, [pagesAPI]);
+  }, [deletePage]);
 
   const handleSaveUser = useCallback((userData) => {
-    if (userData.id) {
-      usersAPI.update(userData.id, userData);
-    } else {
-      usersAPI.create(userData);
-    }
-  }, [usersAPI]);
+    console.log('handleSaveUser not implemented', userData);
+  }, []);
 
   const handleDeleteUser = useCallback((id) => {
-    if (window.confirm('确定要删除这个用户吗？')) {
-      usersAPI.delete(id);
-    }
-  }, [usersAPI]);
+    console.log('handleDeleteUser not implemented', id);
+  }, []);
 
   const handleUploadMedia = useCallback((file, url) => {
-    mediaAPI.upload(file, url);
-  }, [mediaAPI]);
+    console.log('handleUploadMedia not implemented', file, url);
+  }, []);
 
   const handleDeleteMedia = useCallback((id) => {
-    if (window.confirm('确定要删除这个媒体文件吗？')) {
-      mediaAPI.delete(id);
-    }
-  }, [mediaAPI]);
+    console.log('handleDeleteMedia not implemented', id);
+  }, []);
 
-  const handleSaveCategory = useCallback((categoryData) => {
+  const handleSaveCategory = useCallback(async (categoryData) => {
     if (categoryData.id) {
-      categoriesAPI.update(categoryData.id, categoryData);
+      await updateCategory(categoryData.id, categoryData);
     } else {
-      categoriesAPI.create(categoryData);
+      await createCategory(categoryData);
     }
-  }, [categoriesAPI]);
+  }, [updateCategory, createCategory]);
 
-  const handleDeleteCategory = useCallback((id) => {
-    categoriesAPI.delete(id);
-  }, [categoriesAPI]);
+  const handleDeleteCategory = useCallback(async (id) => {
+    await deleteCategory(id);
+  }, [deleteCategory]);
 
-  const handleSaveTag = useCallback((tagData) => {
+  const handleSaveTag = useCallback(async (tagData) => {
     if (tagData.id) {
-      tagsAPI.update(tagData.id, tagData);
+      await updateTag(tagData.id, tagData);
     } else {
-      tagsAPI.create(tagData);
+      await createTag(tagData);
     }
-  }, [tagsAPI]);
+  }, [updateTag, createTag]);
 
-  const handleDeleteTag = useCallback((id) => {
-    tagsAPI.delete(id);
-  }, [tagsAPI]);
+  const handleDeleteTag = useCallback(async (id) => {
+    await deleteTag(id);
+  }, [deleteTag]);
 
-  const handleSaveSettings = useCallback((newSettings) => {
-    settingsAPI.update(newSettings);
-    alert('设置已保存！');
-  }, [settingsAPI]);
+  const handleSaveSettings = useCallback(async (newSettings) => {
+    await updateSettings(newSettings);
+  }, [updateSettings]);
 
   const handleClearAllData = useCallback(() => {
     if (window.confirm('警告：这将删除所有数据！确定要继续吗？')) {
-      clearAllData();
-      alert('数据已清除！');
+      alert('数据清除功能暂时不可用！');
     }
-  }, [clearAllData]);
+  }, []);
 
   const renderAdminLayout = (content) => {
     return (
@@ -206,7 +202,7 @@ function AppContent() {
   };
 
   const AdminDashboard = () => renderAdminLayout(
-    <Dashboard posts={posts} pages={pages} media={media} users={users} />
+    <Dashboard posts={posts} pages={pages} media={mediaItems} users={users} />
   );
 
   const AdminPosts = () => renderAdminLayout(
@@ -216,19 +212,7 @@ function AppContent() {
     />
   );
 
-  const AdminPostEditor = () => {
-    return (
-      <div className={darkMode ? 'dark' : ''}>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-          <Header
-            darkMode={darkMode}
-            onDarkModeToggle={handleDarkModeToggle}
-          />
-          <PostEditor onSave={handleSavePost} />
-        </div>
-      </div>
-    );
-  };
+  const AdminPostEditor = () => renderAdminLayout(<PostEditor onSave={handleSavePost} />);
 
   const AdminPages = () => renderAdminLayout(
     <Pages
@@ -253,7 +237,7 @@ function AppContent() {
 
   const AdminMedia = () => renderAdminLayout(
     <Media
-      media={media}
+      media={mediaItems}
       onUpload={handleUploadMedia}
       onDelete={handleDeleteMedia}
     />

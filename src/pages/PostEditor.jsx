@@ -1,14 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Save, Eye, Calendar, Tag, Pin, Clock, History, RotateCcw, Trash2, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
 import ContentPreview from '../components/ContentPreview';
+import Modal, { Toast } from '../components/Modal';
+import { useModal, useToast } from '../hooks/useModal';
 import { categories } from '../data/mockData';
 import { useData } from '../contexts/DataContext';
 
 export default function PostEditor({ onSave }) {
+  const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
+  const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
   const { id } = useParams();
-  const { postsAPI, revisionsAPI } = useData();
+  const { posts, getPost } = useData();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [excerpt, setExcerpt] = useState('');
@@ -28,8 +32,17 @@ export default function PostEditor({ onSave }) {
 
   useEffect(() => {
     if (id) {
-      const fetchedPost = postsAPI.getById(parseInt(id));
+      const postIdNum = parseInt(id);
+      console.log('Editing post with ID:', id, 'Parsed:', postIdNum);
+      console.log('Available posts:', posts.length);
+      
+      const fetchedPost = posts.find(p => {
+        const postId = typeof p.id === 'string' ? parseInt(p.id) : p.id;
+        return postId === postIdNum;
+      });
+      
       if (fetchedPost) {
+        console.log('Found post:', fetchedPost.title);
         setPostId(fetchedPost.id);
         setTitle(fetchedPost.title || '');
         setContent(fetchedPost.content || '');
@@ -42,11 +55,11 @@ export default function PostEditor({ onSave }) {
           setPublishType('scheduled');
           setPublishDate(fetchedPost.publishDate || '');
         }
-        const postRevisions = revisionsAPI.getByPostId(fetchedPost.id);
-        setRevisions(postRevisions);
+      } else {
+        console.log('Post not found in local posts array');
       }
     }
-  }, [id, postsAPI, revisionsAPI]);
+  }, [id, posts]);
 
   const handleAddTag = (e) => {
     if (e.key === 'Enter' && newTag.trim()) {
@@ -63,14 +76,7 @@ export default function PostEditor({ onSave }) {
   };
 
   const createRevisionIfNeeded = () => {
-    if (postId) {
-      revisionsAPI.create(postId, {
-        title,
-        content,
-        excerpt,
-        author: 'admin',
-      });
-    }
+    // 修订功能暂未实现
   };
 
   const handleSaveDraft = () => {
@@ -93,17 +99,17 @@ export default function PostEditor({ onSave }) {
     navigate('/admin/posts');
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!title.trim()) {
-      alert('请输入文章标题');
+      await alert('请输入文章标题', 'warning');
       return;
     }
     if (!content.trim()) {
-      alert('请输入文章内容');
+      await alert('请输入文章内容', 'warning');
       return;
     }
     if (publishType === 'scheduled' && !publishDate) {
-      alert('请选择定时发布时间');
+      await alert('请选择定时发布时间', 'warning');
       return;
     }
 
@@ -126,21 +132,18 @@ export default function PostEditor({ onSave }) {
     navigate('/admin/posts');
   };
 
-  const handleRestoreRevision = (revision) => {
-    if (window.confirm('确定要恢复到该修订版本吗？当前内容将被保存为新修订。')) {
+  const handleRestoreRevision = async (revision) => {
+    const confirmed = await confirm({
+      title: '确认恢复',
+      message: '确定要恢复到该修订版本吗？',
+    });
+    if (confirmed) {
       setTitle(revision.title);
       setContent(revision.content);
       setExcerpt(revision.excerpt);
-      revisionsAPI.create(postId, {
-        title: revision.title,
-        content: revision.content,
-        excerpt: revision.excerpt,
-        author: revision.author,
-      });
-      const postRevisions = revisionsAPI.getByPostId(postId);
-      setRevisions(postRevisions);
       setSelectedRevision(null);
       setShowRevisions(false);
+      showToast('修订功能暂未实现', 'warning');
     }
   };
 
@@ -443,6 +446,26 @@ export default function PostEditor({ onSave }) {
           </div>
         </div>
       )}
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        onConfirm={modalConfig.onConfirm}
+        showCancel={modalConfig.showCancel}
+      />
+
+      <Toast
+        isOpen={isToastOpen}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        onClose={closeToast}
+        duration={toastConfig.duration}
+      />
     </div>
   );
 }

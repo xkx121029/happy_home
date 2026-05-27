@@ -3,37 +3,36 @@ import { History, RotateCcw, Trash2, Eye, Search, FileText } from 'lucide-react'
 import { useData } from '../contexts/DataContext';
 
 export default function Revisions() {
-  const { posts, revisions, revisionsAPI } = useData();
+  const { posts } = useData();
   const [selectedPost, setSelectedPost] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRevision, setSelectedRevision] = useState(null);
 
-  const filteredPosts = posts.filter(post =>
-    post.title.toLowerCase().includes(searchQuery.toLowerCase())
+  // 确保 posts 是一个数组
+  const postsArray = posts || [];
+  const filteredPosts = postsArray.filter(post =>
+    post?.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const postRevisions = selectedPost
-    ? revisionsAPI.getByPostId(selectedPost.id)
-    : [];
+  // 模拟修订数据，因为这个功能还没实现
+  const postRevisions = [];
 
   const handleRestore = (revision) => {
     if (window.confirm('确定要恢复到该修订版本吗？')) {
-      revisionsAPI.restore(revision.id);
-      alert('恢复成功');
+      alert('修订功能暂未实现');
     }
   };
 
   const handleDelete = (revisionId) => {
     if (window.confirm('确定要删除该修订记录吗？')) {
-      revisionsAPI.delete(revisionId);
+      alert('修订功能暂未实现');
       setSelectedRevision(null);
     }
   };
 
   const handleDeleteOld = (postId) => {
     if (window.confirm('确定要删除旧修订（保留最近5条）吗？')) {
-      const deleted = revisionsAPI.deleteOldRevisions(postId, 5);
-      alert(`已删除 ${deleted} 条旧修订`);
+      alert('修订功能暂未实现');
     }
   };
 
@@ -65,7 +64,7 @@ export default function Revisions() {
               {filteredPosts.length > 0 ? (
                 <div className="divide-y divide-gray-100 dark:divide-gray-700">
                   {filteredPosts.map((post) => {
-                    const revisionCount = revisions.filter(r => r.postId === post.id).length;
+                    const revisionCount = 0;
                     return (
                       <button
                         key={post.id}
