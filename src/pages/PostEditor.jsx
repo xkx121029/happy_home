@@ -5,18 +5,17 @@ import RichTextEditor from '../components/RichTextEditor';
 import ContentPreview from '../components/ContentPreview';
 import Modal, { Toast } from '../components/Modal';
 import { useModal, useToast } from '../hooks/useModal';
-import { categories } from '../data/mockData';
 import { useData } from '../contexts/DataContext';
 
 export default function PostEditor({ onSave }) {
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
   const { id } = useParams();
-  const { posts, getPost } = useData();
+  const { posts, getPost, categories } = useData();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [excerpt, setExcerpt] = useState('');
-  const [category, setCategory] = useState(categories[0]);
+  const [category, setCategory] = useState('');
   const [tags, setTags] = useState([]);
   const [newTag, setNewTag] = useState('');
   const [showPreview, setShowPreview] = useState(false);
@@ -32,17 +31,14 @@ export default function PostEditor({ onSave }) {
 
   useEffect(() => {
     if (id) {
-      const postIdNum = parseInt(id);
-      console.log('Editing post with ID:', id, 'Parsed:', postIdNum);
-      console.log('Available posts:', posts.length);
+      const postIdNum = parseInt(id, 10);
       
       const fetchedPost = posts.find(p => {
-        const postId = typeof p.id === 'string' ? parseInt(p.id) : p.id;
+        const postId = typeof p.id === 'string' ? parseInt(p.id, 10) : p.id;
         return postId === postIdNum;
       });
       
       if (fetchedPost) {
-        console.log('Found post:', fetchedPost.title);
         setPostId(fetchedPost.id);
         setTitle(fetchedPost.title || '');
         setContent(fetchedPost.content || '');
@@ -84,7 +80,7 @@ export default function PostEditor({ onSave }) {
     const postData = {
       title: title || '无标题',
       content,
-      excerpt: excerpt || content.replace(/<[^>]*>/g, '').substring(0, 100) + '...',
+      excerpt: excerpt || content.replace(/<[^>]*>/g, '').slice(0, 100) + '...',
       status: 'draft',
       publishDate: null,
       category,
@@ -117,7 +113,7 @@ export default function PostEditor({ onSave }) {
     const postData = {
       title,
       content,
-      excerpt: excerpt || content.replace(/<[^>]*>/g, '').substring(0, 100) + '...',
+      excerpt: excerpt || content.replace(/<[^>]*>/g, '').slice(0, 100) + '...',
       status: publishType === 'scheduled' ? 'future' : 'published',
       publishDate: publishType === 'scheduled' ? publishDate : null,
       category,
@@ -229,8 +225,9 @@ export default function PostEditor({ onSave }) {
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                  <option value="">选择分类</option>
+                  {(categories || []).map((cat) => (
+                    <option key={cat.id || cat.name} value={cat.name || cat}>{cat.name || cat}</option>
                   ))}
                 </select>
               </div>

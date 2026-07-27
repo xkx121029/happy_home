@@ -243,7 +243,9 @@ async function apiRequestWithRetry(endpoint, options = {}, retryCount = 0) {
       // 检查是否应该重试
       if (shouldRetry(err, retryCount)) {
         const retryDelay = getRetryDelay(retryCount, err);
-        console.log(`[API] Retrying request to ${endpoint} in ${retryDelay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[API] Retrying request to ${endpoint} in ${retryDelay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+        }
         await delay(retryDelay);
         return apiRequestWithRetry(endpoint, options, retryCount + 1);
       }
@@ -546,29 +548,13 @@ export async function processOfflineQueue(notifyProgress) {
 
 /**
  * 离线状态Hook
+ * 注意：此 hook 已废弃，请使用 NetworkContext 中的 useNetwork hook
+ * 保留此函数仅为向后兼容，实际不再注册新的监听器
  */
 export function useOfflineStatus() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [pendingCount, setPendingCount] = useState(0);
-  
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    // 更新待处理请求数
-    const queue = getOfflineQueue();
-    setPendingCount(queue.length);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-  
-  return { isOnline, pendingCount };
+  // 返回默认值，实际网络状态应通过 NetworkContext 获取
+  console.warn('useOfflineStatus is deprecated. Please use useNetwork from NetworkContext instead.');
+  return { isOnline: navigator.onLine, pendingCount: 0 };
 }
 
 // ==================== 导出 ====================

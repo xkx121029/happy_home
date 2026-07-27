@@ -88,10 +88,11 @@ export default function Widgets() {
     const draggedIndex = locationWidgets.findIndex(w => w.id === draggedWidget.id);
     const targetIndex = locationWidgets.findIndex(w => w.id === targetWidget.id);
 
-    locationWidgets.splice(draggedIndex, 1);
-    locationWidgets.splice(targetIndex, 0, draggedWidget);
+    const newWidgets = [...locationWidgets];
+    newWidgets.splice(draggedIndex, 1);
+    newWidgets.splice(targetIndex, 0, draggedWidget);
 
-    const orderedIds = locationWidgets.map(w => w.id);
+    const orderedIds = newWidgets.map(w => w.id);
     widgetsAPI.reorder(location, orderedIds);
     setDraggedWidget(null);
   };
@@ -99,14 +100,15 @@ export default function Widgets() {
   const handleMoveWidget = (widgetId, direction, location) => {
     const locationWidgets = widgets.filter(w => w.location === location).sort((a, b) => a.order - b.order);
     const index = locationWidgets.findIndex(w => w.id === widgetId);
+    const newWidgets = [...locationWidgets];
     if (direction === 'up' && index > 0) {
-      [locationWidgets[index - 1], locationWidgets[index]] = [locationWidgets[index], locationWidgets[index - 1]];
+      [newWidgets[index - 1], newWidgets[index]] = [newWidgets[index], newWidgets[index - 1]];
     } else if (direction === 'down' && index < locationWidgets.length - 1) {
-      [locationWidgets[index], locationWidgets[index + 1]] = [locationWidgets[index + 1], locationWidgets[index]];
+      [newWidgets[index], newWidgets[index + 1]] = [newWidgets[index + 1], newWidgets[index]];
     } else {
       return;
     }
-    const orderedIds = locationWidgets.map(w => w.id);
+    const orderedIds = newWidgets.map(w => w.id);
     widgetsAPI.reorder(location, orderedIds);
   };
 
@@ -209,7 +211,7 @@ export default function Widgets() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">显示数量</label>
                 <select
                   value={configValues.count || 5}
-                  onChange={(e) => setConfigValues({ ...configValues, count: Number(e.target.value) })}
+                  onChange={(e) => setConfigValues({ ...configValues, count: Number(e.target.value) || 5 })}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value={3}>3 篇</option>
@@ -224,7 +226,7 @@ export default function Widgets() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">显示数量</label>
                 <select
                   value={configValues.count || 10}
-                  onChange={(e) => setConfigValues({ ...configValues, count: Number(e.target.value) })}
+                  onChange={(e) => setConfigValues({ ...configValues, count: Number(e.target.value) || 10 })}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value={5}>5 个</option>
@@ -239,7 +241,7 @@ export default function Widgets() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">显示数量</label>
                 <select
                   value={configValues.count || 20}
-                  onChange={(e) => setConfigValues({ ...configValues, count: Number(e.target.value) })}
+                  onChange={(e) => setConfigValues({ ...configValues, count: Number(e.target.value) || 20 })}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value={10}>10 个</option>

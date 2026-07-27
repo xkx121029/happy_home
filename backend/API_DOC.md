@@ -55,6 +55,8 @@ Authorization: Bearer <your_token>
 }
 ```
 
+> **说明**: `username` 字段支持用户名或邮箱登录
+
 响应示例：
 ```json
 {
@@ -98,6 +100,8 @@ Authorization: Bearer <your_token>
 
 **GET** `/api/posts`
 
+需要认证：✅
+
 参数：
 | 参数 | 类型 | 说明 |
 |------|------|------|
@@ -118,6 +122,8 @@ Authorization: Bearer <your_token>
 
 **GET** `/api/posts/:id`
 
+需要认证：✅
+
 ### 6. 创建文章
 
 **POST** `/api/posts`
@@ -131,7 +137,10 @@ Authorization: Bearer <your_token>
   "content": "<p>文章内容</p>",
   "excerpt": "文章摘要",
   "category": "分类",
-  "status": "published"
+  "status": "published",
+  "tags": ["标签1", "标签2"],
+  "author": "作者名",
+  "sticky": false
 }
 ```
 
@@ -140,6 +149,8 @@ Authorization: Bearer <your_token>
 **PUT** `/api/posts/:id`
 
 需要认证：✅
+
+请求体：与创建文章相同，所有字段可选
 
 ### 8. 删除文章
 
@@ -309,9 +320,52 @@ Authorization: Bearer <your_token>
 
 **GET** `/api/public/posts`
 
+参数：
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| search | string | 可选，搜索关键词 |
+
+响应示例：
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "1",
+      "title": "文章标题",
+      "excerpt": "文章摘要...",
+      "category": "分类",
+      "author": "作者",
+      "createdAt": "2024-01-01",
+      "updatedAt": "2024-01-01"
+    }
+  ],
+  "count": 10
+}
+```
+
 ### 25. 获取公开文章详情
 
 **GET** `/api/public/posts/:id`
+
+响应示例：
+```json
+{
+  "success": true,
+  "data": {
+    "id": "1",
+    "title": "文章标题",
+    "content": "<p>文章内容</p>",
+    "excerpt": "文章摘要",
+    "category": "分类",
+    "tags": ["标签1", "标签2"],
+    "author": "作者",
+    "sticky": false,
+    "createdAt": "2024-01-01",
+    "updatedAt": "2024-01-01"
+  }
+}
+```
 
 ### 26. 获取公开页面列表
 
@@ -325,9 +379,197 @@ Authorization: Bearer <your_token>
 
 **GET** `/api/public/settings`
 
+响应示例：
+```json
+{
+  "success": true,
+  "data": {
+    "siteName": "HappyHome",
+    "siteDescription": "网站描述",
+    "siteUrl": "http://localhost:5173",
+    "seo": {
+      "siteTitle": "网站标题",
+      "siteDescription": "SEO描述",
+      "siteKeywords": "关键词1,关键词2"
+    }
+  }
+}
+```
+
 ### 29. 健康检查
 
 **GET** `/api/health`
+
+响应示例：
+```json
+{
+  "success": true,
+  "message": "OK",
+  "timestamp": 1704067200000
+}
+```
+
+---
+
+## 分类管理接口
+
+### 30. 获取分类列表
+
+**GET** `/api/categories`
+
+需要认证：✅
+
+### 31. 创建分类
+
+**POST** `/api/categories`
+
+需要认证：✅
+
+请求体：
+```json
+{
+  "name": "分类名称",
+  "slug": "category-slug",
+  "description": "分类描述"
+}
+```
+
+### 32. 更新分类
+
+**PUT** `/api/categories/:id`
+
+需要认证：✅
+
+### 33. 删除分类
+
+**DELETE** `/api/categories/:id`
+
+需要认证：✅
+
+---
+
+## 标签管理接口
+
+### 34. 获取标签列表
+
+**GET** `/api/tags`
+
+需要认证：✅
+
+### 35. 创建标签
+
+**POST** `/api/tags`
+
+需要认证：✅
+
+请求体：
+```json
+{
+  "name": "标签名称",
+  "slug": "tag-slug"
+}
+```
+
+### 36. 更新标签
+
+**PUT** `/api/tags/:id`
+
+需要认证：✅
+
+### 37. 删除标签
+
+**DELETE** `/api/tags/:id`
+
+需要认证：✅
+
+---
+
+## 评论管理接口
+
+### 38. 获取评论列表
+
+**GET** `/api/comments`
+
+需要认证：✅
+
+参数：
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| postId | string | 可选，按文章ID过滤 |
+| status | string | 可选，过滤状态（approved/pending） |
+
+### 39. 创建评论
+
+**POST** `/api/comments`
+
+请求体：
+```json
+{
+  "postId": "1",
+  "author": "评论者",
+  "email": "email@example.com",
+  "content": "评论内容",
+  "parentId": null
+}
+```
+
+### 40. 更新评论
+
+**PUT** `/api/comments/:id`
+
+需要认证：✅
+
+### 41. 删除评论
+
+**DELETE** `/api/comments/:id`
+
+需要认证：✅
+
+---
+
+## 数据分析接口
+
+### 42. 获取统计数据
+
+**GET** `/api/analytics/stats`
+
+需要认证：✅
+
+响应示例：
+```json
+{
+  "success": true,
+  "data": {
+    "totalPosts": 100,
+    "totalPages": 10,
+    "totalUsers": 50,
+    "totalComments": 200,
+    "totalMedia": 150,
+    "dailyData": [
+      {"date": "2024-01-01", "count": 10},
+      {"date": "2024-01-02", "count": 15}
+    ],
+    "monthlyViews": [
+      {"month": "1月", "views": 1000},
+      {"month": "2月", "views": 1200}
+    ],
+    "topPosts": [...],
+    "topCategories": [...]
+  }
+}
+```
+
+### 43. 跟踪页面访问
+
+**POST** `/api/analytics/track`
+
+请求体：
+```json
+{
+  "page": "/posts/1",
+  "referrer": "https://example.com"
+}
+```
 
 ---
 

@@ -2,14 +2,27 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Check, Trash2, Reply, MessageSquare, User, Mail, AlertTriangle } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useNotification } from '../components/Notification';
+import Modal from '../components/Modal';
 
 export default function Comments() {
   const { comments, posts, deleteComment, updateCommentStatus, createComment } = useData();
+  const { warning, success, error } = useNotification();
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedComments, setSelectedComments] = useState([]);
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyForm, setReplyForm] = useState({ author: '', email: '', content: '' });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+
+  const getCommentField = (comment, field) => {
+    const mapping = {
+      postId: comment.post_id,
+      parentId: comment.parent_id,
+      createdAt: comment.created_at,
+    };
+    return mapping[field];
+  };
 
   const tabs = [
     { id: 'all', label: '全部', count: comments.length },
@@ -54,20 +67,11 @@ export default function Comments() {
     return post ? post.title : '未知文章';
   };
 
-  const getCommentField = (comment, field) => {
-    const mapping = {
-      postId: comment.post_id,
-      parentId: comment.parent_id,
-      createdAt: comment.created_at,
-      updatedAt: comment.updated_at
-    };
-    return mapping[field] !== undefined ? mapping[field] : comment[field];
-  };
-
   const getAvatar = (author) => {
+    const initial = (author || '').charAt(0).toUpperCase() || '?';
     return (
       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-medium">
-        {author.charAt(0).toUpperCase()}
+        {initial}
       </div>
     );
   };
@@ -87,15 +91,21 @@ export default function Comments() {
   };
 
   const handleTrash = (id) => {
-    if (window.confirm('确定要将这条评论移到回收站吗？')) {
-      updateCommentStatus(id, 'trash');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: '确认移到回收站',
+      message: '确定要将这条评论移到回收站吗？',
+      onConfirm: () => updateCommentStatus(id, 'trash')
+    });
   };
 
   const handleDelete = (id) => {
-    if (window.confirm('确定要永久删除这条评论及其回复吗？')) {
-      deleteComment(id);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: '确认删除',
+      message: '确定要永久删除这条评论及其回复吗？',
+      onConfirm: () => deleteComment(id)
+    });
   };
 
   const handleBulkApprove = () => {
@@ -104,10 +114,15 @@ export default function Comments() {
   };
 
   const handleBulkDelete = () => {
-    if (window.confirm(`确定要永久删除选中的 ${selectedComments.length} 条评论吗？`)) {
-      selectedComments.forEach(id => deleteComment(id));
-      setSelectedComments([]);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: '确认批量删除',
+      message: `确定要永久删除选中的 ${selectedComments.length} 条评论吗？`,
+      onConfirm: () => {
+        selectedComments.forEach(id => deleteComment(id));
+        setSelectedComments([]);
+      }
+    });
   };
 
   const handleReply = (commentId) => {
@@ -118,7 +133,7 @@ export default function Comments() {
   const handleReplySubmit = (e) => {
     e.preventDefault();
     if (!replyForm.author || !replyForm.email || !replyForm.content) {
-      alert('请填写所有字段');
+      warning('请填写所有字段');
       return;
     }
     const parentComment = comments.find(c => c.id === replyingTo);
@@ -440,5 +455,14 @@ export default function Comments() {
         )}
       </div>
     </div>
+    
+    <Modal
+      isOpen={confirmModal.isOpen}
+      onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+      title={confirmModal.title}
+      message={confirmModal.message}
+      type="confirm"
+      onConfirm={confirmModal.onConfirm}
+    />
   );
 }

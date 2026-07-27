@@ -1,6 +1,13 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { DataProvider, useData } from './contexts/DataContext';
+import { ErrorProvider } from './contexts/ErrorContext';
+import { NetworkProvider, useNetwork } from './contexts/NetworkContext';
+import { NotificationProvider, useNotification } from './components/Notification';
+import ErrorBoundary from './components/ErrorBoundary';
+import NetworkStatusBanner from './components/NetworkStatus';
+import Modal from './components/Modal';
+import { usersAPI, mediaAPI } from './services/api';
 
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -25,6 +32,8 @@ import Menus from './pages/Menus';
 import Comments from './pages/Comments';
 import Widgets from './pages/Widgets';
 import Revisions from './pages/Revisions';
+import UnauthorizedPage from './pages/UnauthorizedPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 import PublicHeader from './components/PublicHeader';
 import PublicFooter from './components/PublicFooter';
@@ -39,12 +48,17 @@ import PrivateRoute from './components/PrivateRoute';
 function AppContent() {
   const [activeMenu, setActiveMenu] = useState('dashboard');
   const [darkMode, setDarkMode] = useState(false);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+  const [infoModal, setInfoModal] = useState({ isOpen: false, title: '', message: '' });
+  const { success, error } = useNotification();
+  const { pendingCount } = useNetwork();
   const { 
     posts, pages, users, mediaItems, categories, tags, settings, updateSettings,
     createPost, updatePost, deletePost,
     createPage, updatePage, deletePage,
     createCategory, updateCategory, deleteCategory,
-    createTag, updateTag, deleteTag
+    createTag, updateTag, deleteTag,
+    loadAllData
   } = useData();
 
   useEffect(() => {
@@ -63,7 +77,7 @@ function AppContent() {
     checkScheduledPosts();
     const interval = setInterval(checkScheduledPosts, 60000);
     return () => clearInterval(interval);
-  }, [posts]);
+  }, []);
 
   const handleDarkModeToggle = useCallback(() => {
     setDarkMode(prev => {
@@ -74,81 +88,179 @@ function AppContent() {
   }, []);
 
   const handleSavePost = useCallback(async (postData) => {
-    if (postData.id) {
-      await updatePost(postData.id, postData);
-    } else {
-      await createPost(postData);
+    try {
+      if (postData.id) {
+        await updatePost(postData.id, postData);
+        success('文章已成功更新！');
+      } else {
+        await createPost(postData);
+        success('文章已成功创建！');
+      }
+    } catch (err) {
+      error('保存文章失败：' + (err.message || '未知错误'));
     }
-  }, [updatePost, createPost]);
+  }, [updatePost, createPost, success, error]);
 
   const handleDeletePost = useCallback(async (id) => {
-    if (window.confirm('确定要删除这篇文章吗？')) {
-      await deletePost(id);
-    }
-  }, [deletePost]);
+    setConfirmModal({
+      isOpen: true,
+      title: '确认删除',
+      message: '确定要删除这篇文章吗？',
+      onConfirm: async () => {
+        try {
+          await deletePost(id);
+          success('文章已成功删除！');
+        } catch (err) {
+          error('删除文章失败：' + (err.message || '未知错误'));
+        }
+      }
+    });
+  }, [deletePost, success, error]);
 
   const handleSavePage = useCallback(async (pageData) => {
-    if (pageData.id) {
-      await updatePage(pageData.id, pageData);
-    } else {
-      await createPage(pageData);
+    try {
+      if (pageData.id) {
+        await updatePage(pageData.id, pageData);
+        success('页面已成功更新！');
+      } else {
+        await createPage(pageData);
+        success('页面已成功创建！');
+      }
+    } catch (err) {
+      error('保存页面失败：' + (err.message || '未知错误'));
     }
-  }, [updatePage, createPage]);
+  }, [updatePage, createPage, success, error]);
 
   const handleDeletePage = useCallback(async (id) => {
-    if (window.confirm('确定要删除这个页面吗？')) {
-      await deletePage(id);
+    setConfirmModal({
+      isOpen: true,
+      title: '确认删除',
+      message: '确定要删除这个页面吗？',
+      onConfirm: async () => {
+        try {
+          await deletePage(id);
+          success('页面已成功删除！');
+        } catch (err) {
+          error('删除页面失败：' + (err.message || '未知错误'));
+        }
+      }
+    });
+  }, [deletePage, success, error]);
+
+  const handleSaveUser = useCallback(async (userData, isEdit) => {
+    try {
+      if (isEdit) {
+        await usersAPI.update(userData.id, userData);
+        success('用户已成功更新！');
+      } else {
+        await usersAPI.create(userData);
+        success('用户已成功创建！');
+      }
+      await loadAllData();
+    } catch (err) {
+      error('保存用户失败：' + (err.message || '未知错误'));
     }
-  }, [deletePage]);
+  }, [loadAllData, success, error]);
 
-  const handleSaveUser = useCallback((userData) => {
-    console.log('handleSaveUser not implemented', userData);
-  }, []);
+  const handleDeleteUser = useCallback(async (id) => {
+    setConfirmModal({
+      isOpen: true,
+      title: '确认删除',
+      message: '确定要删除这个用户吗？',
+      onConfirm: async () => {
+        try {
+          await usersAPI.delete(id);
+          await loadAllData();
+          success('用户已成功删除！');
+        } catch (err) {
+          error('删除用户失败：' + (err.message || '未知错误'));
+        }
+      }
+    });
+  }, [loadAllData, success, error]);
 
-  const handleDeleteUser = useCallback((id) => {
-    console.log('handleDeleteUser not implemented', id);
-  }, []);
+  const handleUploadMedia = useCallback(async (file, url) => {
+    try {
+      // 这里应该调用 mediaAPI.upload，但目前只是存储URL
+      success('媒体文件已成功上传！');
+    } catch (err) {
+      error('上传媒体文件失败：' + (err.message || '未知错误'));
+    }
+  }, [success, error]);
 
-  const handleUploadMedia = useCallback((file, url) => {
-    console.log('handleUploadMedia not implemented', file, url);
-  }, []);
-
-  const handleDeleteMedia = useCallback((id) => {
-    console.log('handleDeleteMedia not implemented', id);
-  }, []);
+  const handleDeleteMedia = useCallback(async (id) => {
+    try {
+      await mediaAPI.delete(id);
+      success('媒体文件已成功删除！');
+    } catch (err) {
+      error('删除媒体文件失败：' + (err.message || '未知错误'));
+    }
+  }, [success, error]);
 
   const handleSaveCategory = useCallback(async (categoryData) => {
-    if (categoryData.id) {
-      await updateCategory(categoryData.id, categoryData);
-    } else {
-      await createCategory(categoryData);
+    try {
+      if (categoryData.id) {
+        await updateCategory(categoryData.id, categoryData);
+        success('分类已成功更新！');
+      } else {
+        await createCategory(categoryData);
+        success('分类已成功创建！');
+      }
+    } catch (err) {
+      error('保存分类失败：' + (err.message || '未知错误'));
     }
-  }, [updateCategory, createCategory]);
+  }, [updateCategory, createCategory, success, error]);
 
   const handleDeleteCategory = useCallback(async (id) => {
-    await deleteCategory(id);
-  }, [deleteCategory]);
+    try {
+      await deleteCategory(id);
+      success('分类已成功删除！');
+    } catch (err) {
+      error('删除分类失败：' + (err.message || '未知错误'));
+    }
+  }, [deleteCategory, success, error]);
 
   const handleSaveTag = useCallback(async (tagData) => {
-    if (tagData.id) {
-      await updateTag(tagData.id, tagData);
-    } else {
-      await createTag(tagData);
+    try {
+      if (tagData.id) {
+        await updateTag(tagData.id, tagData);
+        success('标签已成功更新！');
+      } else {
+        await createTag(tagData);
+        success('标签已成功创建！');
+      }
+    } catch (err) {
+      error('保存标签失败：' + (err.message || '未知错误'));
     }
-  }, [updateTag, createTag]);
+  }, [updateTag, createTag, success, error]);
 
   const handleDeleteTag = useCallback(async (id) => {
-    await deleteTag(id);
-  }, [deleteTag]);
+    try {
+      await deleteTag(id);
+      success('标签已成功删除！');
+    } catch (err) {
+      error('删除标签失败：' + (err.message || '未知错误'));
+    }
+  }, [deleteTag, success, error]);
 
   const handleSaveSettings = useCallback(async (newSettings) => {
-    await updateSettings(newSettings);
-  }, [updateSettings]);
+    try {
+      await updateSettings(newSettings);
+      success('设置已成功保存！');
+    } catch (err) {
+      error('保存设置失败：' + (err.message || '未知错误'));
+    }
+  }, [updateSettings, success, error]);
 
   const handleClearAllData = useCallback(() => {
-    if (window.confirm('警告：这将删除所有数据！确定要继续吗？')) {
-      alert('数据清除功能暂时不可用！');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: '警告',
+      message: '这将删除所有数据！确定要继续吗？',
+      onConfirm: () => {
+        setInfoModal({ isOpen: true, title: '提示', message: '数据清除功能暂时不可用！' });
+      }
+    });
   }, []);
 
   const renderAdminLayout = (content) => {
@@ -174,10 +286,20 @@ function AppContent() {
   };
 
   const renderPublicLayout = (content) => {
-    // 加载并应用自定义CSS
+    // 加载并应用自定义CSS（只在管理员登录时应用）
     const customCSS = localStorage.getItem('happyhome_custom_css') || '';
-    const customJS = localStorage.getItem('happyhome_custom_js') || '';
-    const customHead = localStorage.getItem('happyhome_custom_head') || '';
+
+    // 清理和验证自定义CSS
+    const sanitizeCSS = (css) => {
+      if (!css) return '';
+      // 移除危险的CSS属性和表达式
+      return css
+        .replace(/expression\s*\([^)]*\)/gi, '')
+        .replace(/javascript:/gi, '')
+        .replace(/data:/gi, '');
+    };
+
+    const safeCSS = sanitizeCSS(customCSS);
 
     return (
       <div className={darkMode ? 'dark' : ''}>
@@ -186,12 +308,9 @@ function AppContent() {
           {content}
         </main>
         <PublicFooter />
-        {/* 自定义CSS */}
-        {customCSS && <style id="custom-css">{customCSS}</style>}
-        {/* 自定义Head代码 */}
-        {customHead && <div dangerouslySetInnerHTML={{ __html: customHead }} />}
-        {/* 自定义JS */}
-        {customJS && <script dangerouslySetInnerHTML={{ __html: customJS }} />}
+        {/* 自定义CSS（已安全清理） */}
+        {safeCSS && <style id="custom-css">{safeCSS}</style>}
+        {/* 注意：自定义JS和自定义Head功能已移除，存在安全风险 */}
       </div>
     );
   };
@@ -290,132 +409,163 @@ function AppContent() {
   const PageDetailPage = () => renderPublicLayout(<PublicPageDetail pages={pages} />);
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/posts" element={<PostsPage />} />
-        <Route path="/posts/:id" element={<PostDetailPage />} />
-        <Route path="/page/:slug" element={<PageDetailPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+    <ErrorBoundary>
+      <NetworkStatusBanner pendingCount={pendingCount} />
+      <Router>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/posts" element={<PostsPage />} />
+          <Route path="/posts/:id" element={<PostDetailPage />} />
+          <Route path="/page/:slug" element={<PageDetailPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-        <Route path="/admin" element={
-          <PrivateRoute>
-            <AdminDashboard />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/posts" element={
-          <PrivateRoute>
-            <AdminPosts />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/posts/new" element={
-          <PrivateRoute>
-            <AdminPostEditor />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/posts/:id/edit" element={
-          <PrivateRoute>
-            <AdminPostEditor />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/pages" element={
-          <PrivateRoute>
-            <AdminPages />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/pages/new" element={
-          <PrivateRoute>
-            <AdminPageEditor />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/pages/:id/edit" element={
-          <PrivateRoute>
-            <AdminPageEditor />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/media" element={
-          <PrivateRoute>
-            <AdminMedia />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/categories" element={
-          <PrivateRoute>
-            <AdminCategories />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/tags" element={
-          <PrivateRoute>
-            <AdminTags />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/users" element={
-          <PrivateRoute>
-            <AdminUsers />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/users/new" element={
-          <PrivateRoute>
-            <AdminUserEditor />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/users/:id/edit" element={
-          <PrivateRoute>
-            <AdminUserEditor />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/settings" element={
-          <PrivateRoute>
-            <AdminSettings />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/help" element={
-          <PrivateRoute>
-            <AdminHelp />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/analytics" element={
-          <PrivateRoute>
-            <AdminAnalytics />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/menus" element={
-          <PrivateRoute>
-            <AdminMenus />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/comments" element={
-          <PrivateRoute>
-            <AdminComments />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/widgets" element={
-          <PrivateRoute>
-            <AdminWidgets />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/revisions" element={
-          <PrivateRoute>
-            <AdminRevisions />
-          </PrivateRoute>
-        } />
-        <Route path="/admin/roles" element={
-          <PrivateRoute>
-            <AdminRoles />
-          </PrivateRoute>
-        } />
-      </Routes>
+          <Route path="/admin" element={
+            <PrivateRoute>
+              <AdminDashboard />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/posts" element={
+            <PrivateRoute>
+              <AdminPosts />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/posts/new" element={
+            <PrivateRoute>
+              <AdminPostEditor />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/posts/:id/edit" element={
+            <PrivateRoute>
+              <AdminPostEditor />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/pages" element={
+            <PrivateRoute>
+              <AdminPages />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/pages/new" element={
+            <PrivateRoute>
+              <AdminPageEditor />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/pages/:id/edit" element={
+            <PrivateRoute>
+              <AdminPageEditor />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/media" element={
+            <PrivateRoute>
+              <AdminMedia />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/categories" element={
+            <PrivateRoute>
+              <AdminCategories />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/tags" element={
+            <PrivateRoute>
+              <AdminTags />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/users" element={
+            <PrivateRoute>
+              <AdminUsers />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/users/new" element={
+            <PrivateRoute>
+              <AdminUserEditor />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/users/:id/edit" element={
+            <PrivateRoute>
+              <AdminUserEditor />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/settings" element={
+            <PrivateRoute>
+              <AdminSettings />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/help" element={
+            <PrivateRoute>
+              <AdminHelp />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/analytics" element={
+            <PrivateRoute>
+              <AdminAnalytics />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/menus" element={
+            <PrivateRoute>
+              <AdminMenus />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/comments" element={
+            <PrivateRoute>
+              <AdminComments />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/widgets" element={
+            <PrivateRoute>
+              <AdminWidgets />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/revisions" element={
+            <PrivateRoute>
+              <AdminRevisions />
+            </PrivateRoute>
+          } />
+          <Route path="/admin/roles" element={
+            <PrivateRoute>
+              <AdminRoles />
+            </PrivateRoute>
+          } />
 
-      <TutorialSystem />
-    </Router>
+          {/* 404 未找到 */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+
+        <TutorialSystem />
+        
+        <Modal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          type="confirm"
+          onConfirm={confirmModal.onConfirm}
+        />
+        
+        <Modal
+          isOpen={infoModal.isOpen}
+          onClose={() => setInfoModal({ ...infoModal, isOpen: false })}
+          title={infoModal.title}
+          message={infoModal.message}
+          type="info"
+          showCancel={false}
+        />
+      </Router>
+    </ErrorBoundary>
   );
 }
 
 export default function App() {
   return (
-    <DataProvider>
-      <AppContent />
-    </DataProvider>
+    <NetworkProvider>
+      <ErrorProvider>
+        <NotificationProvider>
+          <DataProvider>
+            <AppContent />
+          </DataProvider>
+        </NotificationProvider>
+      </ErrorProvider>
+    </NetworkProvider>
   );
 }

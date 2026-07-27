@@ -3,6 +3,8 @@ import {
   Code, Save, RotateCcw, Eye, EyeOff, AlertCircle, Check,
   Copy, Trash2, FileText, Terminal, Settings
 } from 'lucide-react';
+import { useNotification } from '../components/Notification';
+import Modal from '../components/Modal';
 
 const cssSnippets = [
   { label: '自定义字体大小', code: `/* 自定义字体大小 */
@@ -117,6 +119,7 @@ console.log('%c HappyHome ', 'background: #3b82f6; color: white; font-size: 20px
 ];
 
 export default function CustomCSS() {
+  const { success } = useNotification();
   const [activeTab, setActiveTab] = useState('css');
   const [customCSS, setCustomCSS] = useState('');
   const [customJS, setCustomJS] = useState('');
@@ -126,6 +129,7 @@ export default function CustomCSS() {
   const [showPreview, setShowPreview] = useState(false);
   const [cssError, setCssError] = useState('');
   const [copiedSnippet, setCopiedSnippet] = useState('');
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
   useEffect(() => {
     const savedCSS = localStorage.getItem('happyhome_custom_css') || '';
@@ -188,15 +192,21 @@ export default function CustomCSS() {
   };
 
   const handleReset = () => {
-    if (window.confirm('确定要重置所有自定义代码吗？')) {
-      setCustomCSS('');
-      setCustomJS('');
-      setCustomHead('');
-      localStorage.removeItem('happyhome_custom_css');
-      localStorage.removeItem('happyhome_custom_js');
-      localStorage.removeItem('happyhome_custom_head');
-      setHasChanges(false);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: '确认重置',
+      message: '确定要重置所有自定义代码吗？',
+      onConfirm: () => {
+        setCustomCSS('');
+        setCustomJS('');
+        setCustomHead('');
+        localStorage.removeItem('happyhome_custom_css');
+        localStorage.removeItem('happyhome_custom_js');
+        localStorage.removeItem('happyhome_custom_head');
+        setHasChanges(false);
+        success('已重置所有自定义代码');
+      }
+    });
   };
 
   const handleInsertSnippet = (snippet) => {
@@ -299,9 +309,9 @@ export default function CustomCSS() {
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {currentSnippets.map((snippet, index) => (
+                {currentSnippets.map((snippet) => (
                   <button
-                    key={index}
+                    key={snippet.label}
                     onClick={() => handleInsertSnippet(snippet)}
                     className="px-3 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
                   >
@@ -410,5 +420,14 @@ export default function CustomCSS() {
         </div>
       </div>
     </div>
+    
+    <Modal
+      isOpen={confirmModal.isOpen}
+      onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+      title={confirmModal.title}
+      message={confirmModal.message}
+      type="confirm"
+      onConfirm={confirmModal.onConfirm}
+    />
   );
 }

@@ -3,17 +3,22 @@ import { Plus, Search, Filter, Edit, Trash2, Eye, Pin, Clock, X } from 'lucide-r
 import { useNavigate } from 'react-router-dom';
 import Modal, { Toast } from '../components/Modal';
 import { useModal, useToast } from '../hooks/useModal';
-import { categories } from '../data/mockData';
 import { useData } from '../contexts/DataContext';
 
 export default function Posts({ posts, onDelete }) {
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
-  const { postsAPI } = useData();
+  const { postsAPI, settings, categories } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
   const navigate = useNavigate();
+
+  // 根据设置获取文章链接
+  const getPostUrl = (post) => {
+    const urlType = settings?.postUrlType || 'slug';
+    return urlType === 'id' ? `/post/${post.id}` : `/post/${post.slug || post.id}`;
+  };
 
   const sortedPosts = [...posts].sort((a, b) => {
     if (a.sticky && !b.sticky) return -1;
@@ -115,8 +120,8 @@ export default function Posts({ posts, onDelete }) {
                 className="px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="all">全部分类</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
+                {(categories || []).map((cat) => (
+                  <option key={cat.id || cat.name} value={cat.name || cat}>{cat.name || cat}</option>
                 ))}
               </select>
             </div>
@@ -190,7 +195,11 @@ export default function Posts({ posts, onDelete }) {
                           <X className="w-4 h-4" />
                         </button>
                       )}
-                      <button className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors">
+                      <button
+                        onClick={() => window.open(getPostUrl(post), '_blank')}
+                        className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors"
+                        title="预览文章"
+                      >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button

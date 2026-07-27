@@ -1,13 +1,15 @@
 import { Search, Bell, User, Sun, Moon, LogOut, Check, Trash2, Info, AlertCircle, CheckCircle, MessageSquare, FileText, Plus } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
 import { notificationsAPI } from '../services/api';
+import Modal from './Modal';
 
 export default function Header({ darkMode, onDarkModeToggle }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
   const notificationRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -49,13 +51,13 @@ export default function Header({ darkMode, onDarkModeToggle }) {
   }, []);
 
   // 点击外部关闭通知面板
+  const handleClickOutside = useCallback((event) => {
+    if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+      setShowNotifications(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
-        setShowNotifications(false);
-      }
-    };
-    
     if (showNotifications) {
       document.addEventListener('mousedown', handleClickOutside);
     }
@@ -63,7 +65,7 @@ export default function Header({ darkMode, onDarkModeToggle }) {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showNotifications]);
+  }, [showNotifications, handleClickOutside]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -73,11 +75,13 @@ export default function Header({ darkMode, onDarkModeToggle }) {
   };
 
   const handleLogout = () => {
-    if (window.confirm('确定要退出登录吗？')) {
-      localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('currentUser');
-      navigate('/login');
-    }
+    setLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('currentUser');
+    navigate('/login');
   };
 
   const getNotificationIcon = (type) => {
@@ -263,5 +267,14 @@ export default function Header({ darkMode, onDarkModeToggle }) {
         </div>
       </div>
     </header>
+    
+    <Modal
+      isOpen={logoutConfirm}
+      onClose={() => setLogoutConfirm(false)}
+      title="确认退出"
+      message="确定要退出登录吗？"
+      type="confirm"
+      onConfirm={confirmLogout}
+    />
   );
 }

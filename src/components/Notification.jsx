@@ -94,6 +94,7 @@ function NotificationItem({ notification, onClose, onAction }) {
   const [progress, setProgress] = useState(100);
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
+  const closeTimeoutRef = useRef(null);
   
   const { id, type, message, title, duration, actions, dismissible = true } = notification;
   const colors = notificationColors[type] || notificationColors[NotificationType.INFO];
@@ -142,9 +143,19 @@ function NotificationItem({ notification, onClose, onAction }) {
     return () => clearTimeout(timeout);
   }, [type, duration]);
   
+  // 清理closeTimeoutRef
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+        closeTimeoutRef.current = null;
+      }
+    };
+  }, []);
+  
   const handleClose = useCallback(() => {
     setIsExiting(true);
-    setTimeout(() => {
+    closeTimeoutRef.current = setTimeout(() => {
       onClose(id);
     }, 300);
   }, [id, onClose]);
@@ -196,9 +207,9 @@ function NotificationItem({ notification, onClose, onAction }) {
             {/* 操作按钮 */}
             {actions && actions.length > 0 && (
               <div className="flex items-center gap-2 mt-3">
-                {actions.map((action, index) => (
+                {actions.map((action) => (
                   <button
-                    key={index}
+                    key={action.label}
                     onClick={() => handleAction(action)}
                     className={`
                       text-sm font-medium px-3 py-1 rounded-lg transition-colors
@@ -377,18 +388,19 @@ export function NotificationProvider({ children }) {
     notifications,
     removeNotification,
     clearAll,
+    addNotification,
   } = useNotification();
   
   // 监听全局通知事件
   useEffect(() => {
     const handleNotification = (event) => {
       const { message, type, ...options } = event.detail;
-      notifications.push({ id: Date.now(), message, type, ...options });
+      addNotification({ message, type, ...options });
     };
     
     window.addEventListener('app:notification', handleNotification);
     return () => window.removeEventListener('app:notification', handleNotification);
-  }, [notifications]);
+  }, [addNotification]);
   
   return (
     <>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Lock, Mail, Eye, EyeOff, LogIn, UserPlus, Zap, RefreshCw, CheckCircle } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
@@ -23,6 +23,16 @@ export default function Login() {
   const [codeButtonDisabled, setCodeButtonDisabled] = useState(false);
   const [codeCountdown, setCodeCountdown] = useState(0);
   const navigate = useNavigate();
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -60,10 +70,11 @@ export default function Login() {
         setCodeButtonDisabled(true);
         setCodeCountdown(60);
         
-        const timer = setInterval(() => {
+        timerRef.current = setInterval(() => {
           setCodeCountdown(prev => {
             if (prev <= 1) {
-              clearInterval(timer);
+              clearInterval(timerRef.current);
+              timerRef.current = null;
               setCodeButtonText('获取验证码');
               setCodeButtonDisabled(false);
               return 0;

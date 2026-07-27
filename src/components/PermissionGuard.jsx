@@ -2,8 +2,13 @@ import { Shield, Lock } from 'lucide-react';
 import { hasPermission } from '../utils/permissions';
 
 export default function PermissionGuard({ permission, children, fallback = null }) {
-  // 从 localStorage 获取当前用户
-  const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  let currentUser = null;
+  try {
+    currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+  } catch (error) {
+    console.error('解析用户信息失败:', error);
+    currentUser = null;
+  }
 
   if (!currentUser) {
     return fallback;

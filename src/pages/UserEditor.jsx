@@ -32,14 +32,17 @@ export default function UserEditor({ user, onSave, onCancel }) {
       id: user?.id || Date.now(),
       username,
       email,
-      password: password || user?.password || '********',
       role,
       status,
       createdAt: user?.createdAt || new Date().toISOString().split('T')[0],
       updatedAt: new Date().toISOString().split('T')[0],
     };
+    // 只有输入了新密码时才添加密码字段
+    if (password) {
+      userData.password = password;
+    }
     if (onSave) {
-      onSave(userData);
+      onSave(userData, !!user); // 传递是否为编辑模式
     }
     navigate('/admin/users');
   };

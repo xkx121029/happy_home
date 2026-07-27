@@ -1,6 +1,35 @@
 import { FileText, FolderOpen, Image, Users, Eye, TrendingUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { analyticsAPI } from '../services/api';
 
 export default function Dashboard({ posts = [], pages = [], media = [], users = [] }) {
+  const [analytics, setAnalytics] = useState({
+    today: 0,
+    week: 0,
+    month: 0,
+    total: 0,
+    trend: 0,
+    dailyData: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, []);
+
+  const loadAnalytics = async () => {
+    try {
+      const response = await analyticsAPI.getStats();
+      if (response.success && response.data) {
+        setAnalytics(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load analytics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const publishedPosts = posts.filter(post => post.status === 'published').length;
   const draftPosts = posts.filter(post => post.status === 'draft').length;
 
@@ -21,10 +50,10 @@ export default function Dashboard({ posts = [], pages = [], media = [], users = 
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        {statCards.map((stat, index) => {
+        {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
-            <div key={index} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
+            <div key={stat.label} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{stat.label}</p>
@@ -76,46 +105,75 @@ export default function Dashboard({ posts = [], pages = [], media = [], users = 
             <TrendingUp className="w-5 h-5 text-blue-500" />
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">访问统计</h2>
           </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-600 dark:text-gray-300">今日访问</span>
-              </div>
-              <span className="font-semibold text-gray-900 dark:text-white">128</span>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-gray-400" />
-                <span className="text-sm text-gray-600 dark:text-gray-300">本周访问</span>
-              </div>
-              <span className="font-semibold text-gray-900 dark:text-white">892</span>
-            </div>
 
-            <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-gray-500 dark:text-gray-400">访问趋势</span>
-                <span className="text-xs text-green-500">+23% 较上周</span>
+          {loading ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Eye className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm text-gray-600 dark:text-gray-300">今日访问</span>
+                </div>
+                <span className="font-semibold text-gray-900 dark:text-white">{analytics.today.toLocaleString()}</span>
               </div>
-              <div className="flex items-end gap-2 h-24">
-                {[40, 60, 45, 80, 55, 90, 70].map((height, index) => (
-                  <div
-                    key={index}
-                    className="flex-1 bg-gradient-to-t from-blue-500 to-blue-300 rounded-t"
-                    style={{ height: `${height}%` }}
-                  ></div>
-                ))}
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm text-gray-600 dark:text-gray-300">本周访问</span>
+                </div>
+                <span className="font-semibold text-gray-900 dark:text-white">{analytics.week.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between mt-2 text-xs text-gray-400">
-                <span>周一</span>
-                <span>周三</span>
-                <span>周五</span>
-                <span>周日</span>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm text-gray-600 dark:text-gray-300">本月访问</span>
+                </div>
+                <span className="font-semibold text-gray-900 dark:text-white">{analytics.month.toLocaleString()}</span>
+              </div>
+
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">访问趋势</span>
+                  <span className={`text-xs ${analytics.trend >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {analytics.trend >= 0 ? '+' : ''}{analytics.trend}% 较上周
+                  </span>
+                </div>
+                <div className="flex items-end gap-2 h-24">
+                  {analytics.dailyData.length > 0 ? (() => {
+                    const maxCount = Math.max(...analytics.dailyData.map(d => d.count), 1);
+                    return analytics.dailyData.map((day, index) => {
+                      const height = (day.count / maxCount) * 100;
+                      return (
+                        <div
+                          key={day.date || index}
+                          className="flex-1 bg-gradient-to-t from-blue-500 to-blue-300 rounded-t transition-all hover:from-blue-600 hover:to-blue-400"
+                          style={{ height: `${Math.max(height, 5)}%` }}
+                          title={`${day.date}: ${day.count} 次访问`}
+                        ></div>
+                      );
+                    });
+                  })() : (
+                    Array(7).fill(0).map((_, index) => (
+                      <div
+                        key={`placeholder-${index}`}
+                        className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-t"
+                        style={{ height: '10%' }}
+                      ></div>
+                    ))
+                  )}
+                </div>
+                <div className="flex justify-between mt-2 text-xs text-gray-400">
+                  <span>{analytics.dailyData.length > 0 ? analytics.dailyData[0]?.date?.slice(5) : '周一'}</span>
+                  <span>{analytics.dailyData.length > 0 ? analytics.dailyData[6]?.date?.slice(5) : '周日'}</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

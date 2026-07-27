@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Wifi, WifiOff, RefreshCw, Loader2 } from 'lucide-react';
+import { useNetwork } from '../contexts/NetworkContext';
 
 /**
  * 网络状态检测组件
@@ -8,33 +9,16 @@ import { Wifi, WifiOff, RefreshCw, Loader2 } from 'lucide-react';
 export function NetworkStatusBanner({ 
   onNetworkChange,
   onSyncComplete,
-  pendingCount = 0,
 }) {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const { isOnline, pendingCount } = useNetwork(); // 使用统一的网络状态
   const [showBanner, setShowBanner] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  
+
+  // 监听网络状态变化（从 NetworkContext 获取）
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      setShowBanner(true);
-      onNetworkChange?.(true);
-    };
-    
-    const handleOffline = () => {
-      setIsOnline(false);
-      setShowBanner(true);
-      onNetworkChange?.(false);
-    };
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [onNetworkChange]);
+    setShowBanner(true);
+    onNetworkChange?.(isOnline);
+  }, [isOnline, onNetworkChange]);
   
   // 网络恢复时自动同步
   useEffect(() => {
@@ -146,36 +130,25 @@ export function NetworkStatusBanner({
 
 /**
  * 网络状态Hook
+ * 注意：此 hook 已废弃，请使用 NetworkContext 中的 useNetwork hook
+ * 保留此函数仅为向后兼容
  */
 export function useNetworkStatus() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  console.warn('useNetworkStatus is deprecated. Please use useNetwork from NetworkContext instead.');
+  const { isOnline } = useNetwork();
   const [wasOffline, setWasOffline] = useState(false);
-  
+
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      if (!wasOffline) {
-        setWasOffline(true);
-        // 触发网络恢复事件
-        window.dispatchEvent(new CustomEvent('network:restored'));
-      }
-    };
-    
-    const handleOffline = () => {
-      setIsOnline(false);
+    if (isOnline && !wasOffline) {
+      setWasOffline(true);
+      // 触发网络恢复事件
+      window.dispatchEvent(new CustomEvent('network:restored'));
+    } else if (!isOnline) {
       // 触发网络断开事件
       window.dispatchEvent(new CustomEvent('network:lost'));
-    };
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [wasOffline]);
-  
+    }
+  }, [isOnline, wasOffline]);
+
   const checkConnection = useCallback(async () => {
     try {
       // 尝试发送一个简单的请求来检测真实连接状态
@@ -188,7 +161,7 @@ export function useNetworkStatus() {
       return false;
     }
   }, []);
-  
+
   return {
     isOnline,
     wasOffline,

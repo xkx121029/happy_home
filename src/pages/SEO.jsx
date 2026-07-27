@@ -344,8 +344,8 @@ export default function SEO() {
             { label: '网站描述', value: seo.siteDescription, warning: seo.siteDescription.length < 50 || seo.siteDescription.length > 160, suggestion: '描述长度建议在50-160字符之间' },
             { label: '关键字', value: seo.siteKeywords, warning: !seo.siteKeywords, suggestion: '建议填写关键字' },
             { label: 'OG图片', value: seo.ogImage, warning: !seo.ogImage, suggestion: '建议设置Open Graph图片以优化社交分享' },
-          ].map((item, index) => (
-            <div key={index} className={`flex items-center gap-3 p-3 rounded-lg ${item.warning ? 'bg-yellow-50 dark:bg-yellow-900/30' : 'bg-green-50 dark:bg-green-900/30'}`}>
+          ].map((item) => (
+            <div key={item.label} className={`flex items-center gap-3 p-3 rounded-lg ${item.warning ? 'bg-yellow-50 dark:bg-yellow-900/30' : 'bg-green-50 dark:bg-green-900/30'}`}>
               {item.warning ? (
                 <AlertCircle className="w-5 h-5 text-yellow-500" />
               ) : (

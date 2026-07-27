@@ -5,9 +5,12 @@ import {
   FolderOpen, Copy, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useNotification } from '../components/Notification';
+import Modal from '../components/Modal';
 
 export default function Backup() {
   const { backups, posts, pages, comments } = useData();
+  const { info, warning } = useNotification();
   const [activeTab, setActiveTab] = useState('backups');
   const [selectedBackups, setSelectedBackups] = useState([]);
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(null);
@@ -15,6 +18,7 @@ export default function Backup() {
   const [importResult, setImportResult] = useState(null);
   const [isImporting, setIsImporting] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
   const formatSize = (bytes) => {
     if (bytes === 0) return '0 B';
@@ -30,37 +34,37 @@ export default function Backup() {
   };
 
   const handleCreateFullBackup = () => {
-    alert('备份功能暂未实现');
+    info('备份功能暂未实现');
   };
 
   const handleCreateCustomBackup = (type) => {
-    alert('自定义备份功能暂未实现');
+    info('自定义备份功能暂未实现');
   };
 
   const handleRestore = (id) => {
-    alert('恢复功能暂未实现');
+    info('恢复功能暂未实现');
     setShowRestoreConfirm(null);
   };
 
   const handleDelete = (id) => {
-    alert('删除备份功能暂未实现');
+    info('删除备份功能暂未实现');
     setShowDeleteConfirm(null);
   };
 
   const handleDownload = (id) => {
-    alert('下载备份功能暂未实现');
+    info('下载备份功能暂未实现');
   };
 
   const handleExport = (type) => {
-    alert('导出功能暂未实现');
+    info('导出功能暂未实现');
   };
 
   const handleExportMarkdown = (postId) => {
-    alert('导出 Markdown 功能暂未实现');
+    info('导出 Markdown 功能暂未实现');
   };
 
   const handleImport = async (e) => {
-    alert('导入功能暂未实现');
+    info('导入功能暂未实现');
   };
 
   const toggleSection = (section) => {
@@ -78,10 +82,15 @@ export default function Backup() {
 
   const handleBulkDelete = () => {
     if (selectedBackups.length === 0) return;
-    if (window.confirm(`确定要删除选中的 ${selectedBackups.length} 个备份吗？`)) {
-      alert('批量删除备份功能暂未实现');
-      setSelectedBackups([]);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: '确认批量删除',
+      message: `确定要删除选中的 ${selectedBackups.length} 个备份吗？`,
+      onConfirm: () => {
+        info('批量删除备份功能暂未实现');
+        setSelectedBackups([]);
+      }
+    });
   };
 
   const getBackupTypeLabel = (type) => {

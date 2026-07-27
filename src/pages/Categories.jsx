@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { Plus, Search, Edit, Trash2, FolderOpen, ChevronRight, X } from 'lucide-react';
+import { useNotification } from '../components/Notification';
+import Modal from '../components/Modal';
 
 export default function Categories({ categories, onSave, onDelete }) {
+  const { warning, error } = useNotification();
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -72,19 +76,19 @@ export default function Categories({ categories, onSave, onDelete }) {
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      alert('请输入分类名称');
+      warning('请输入分类名称');
       return;
     }
     
     if (!formData.slug.trim()) {
-      alert('请输入分类slug');
+      warning('请输入分类slug');
       return;
     }
 
     // 检查 slug 是否重复
     const existingSlug = categories.find(cat => cat.slug === formData.slug && cat.id !== editingCategory?.id);
     if (existingSlug) {
-      alert('该slug已存在，请使用不同的slug');
+      warning('该slug已存在，请使用不同的slug');
       return;
     }
 
@@ -99,19 +103,22 @@ export default function Categories({ categories, onSave, onDelete }) {
 
   const handleDelete = (category) => {
     if (category.count > 0) {
-      alert(`该分类下有 ${category.count} 篇文章，无法删除`);
+      warning(`该分类下有 ${category.count} 篇文章，无法删除`);
       return;
     }
     
     const children = categories.filter(cat => cat.parent === category.id);
     if (children.length > 0) {
-      alert('该分类下有子分类，请先删除子分类');
+      warning('该分类下有子分类，请先删除子分类');
       return;
     }
     
-    if (window.confirm(`确定要删除分类"${category.name}"吗？`)) {
-      onDelete(category.id);
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: '确认删除',
+      message: `确定要删除分类"${category.name}"吗？`,
+      onConfirm: () => onDelete(category.id)
+    });
   };
 
   const renderCategoryRow = (category, level = 0) => {
@@ -331,5 +338,14 @@ export default function Categories({ categories, onSave, onDelete }) {
         </div>
       )}
     </div>
+    
+    <Modal
+      isOpen={confirmModal.isOpen}
+      onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+      title={confirmModal.title}
+      message={confirmModal.message}
+      type="confirm"
+      onConfirm={confirmModal.onConfirm}
+    />
   );
 }

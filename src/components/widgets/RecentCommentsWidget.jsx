@@ -31,7 +31,7 @@ export default function RecentCommentsWidget({ comments, config = {} }) {
           <li key={comment.id}>
             <div className="flex items-start gap-2">
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                {comment.author.charAt(0).toUpperCase()}
+                {(comment.author || '').charAt(0).toUpperCase() || '?'}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">{comment.content}</p>

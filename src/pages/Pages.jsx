@@ -83,7 +83,7 @@ export default function Pages({ pages, onDelete }) {
               </div>
               
               <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-4">
-                {page.content ? page.content.replace(/<[^>]*>/g, '').substring(0, 100) : ''}...
+                {page.content ? page.content.replace(/<[^>]*>/g, '').slice(0, 100) : ''}...
               </p>
               
               <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-600">

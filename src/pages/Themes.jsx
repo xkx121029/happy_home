@@ -225,9 +225,9 @@ export default function Themes({ settings, onSave }) {
                         )}
                       </div>
                       <div className="flex gap-1 mt-2">
-                        {Object.values(theme.colors).slice(0, 4).map((color, index) => (
+                        {Object.values(theme.colors).slice(0, 4).map((color) => (
                           <div
-                            key={index}
+                            key={color}
                             className="w-6 h-6 rounded-full border-2 border-white dark:border-gray-600 shadow-sm"
                             style={{ backgroundColor: color }}
                           />

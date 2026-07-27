@@ -5,6 +5,7 @@ import {
   Undo, Redo, Link2Off, Type, X, Terminal, FolderOpen
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { useNotification } from './Notification';
 
 const toolbarButtons = [
   { icon: Undo, command: 'undo', title: '撤销 (Ctrl+Z)' },
@@ -32,6 +33,7 @@ const toolbarButtons = [
 ];
 
 export default function RichTextEditor({ value, onChange, placeholder = '开始编写内容...' }) {
+  const { warning } = useNotification();
   const editorRef = useRef(null);
   const isFirstRender = useRef(true);
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -82,7 +84,7 @@ export default function RichTextEditor({ value, onChange, placeholder = '开始�
 
   const handleInsertLink = () => {
     if (!linkUrl) {
-      alert('请输入链接地址');
+      warning('请输入链接地址');
       return;
     }
     
@@ -139,7 +141,7 @@ export default function RichTextEditor({ value, onChange, placeholder = '开始�
 
   const handleInsertImage = () => {
     if (!imageUrl) {
-      alert('请输入图片地址');
+      warning('请输入图片地址');
       return;
     }
     

@@ -16,7 +16,7 @@ export default function ForgotPassword() {
   const [countdown, setCountdown] = useState(0);
   const timerRef = useRef(null);
 
-  const handleSendCode = () => {
+  const handleSendCode = async () => {
     setError('');
 
     if (!email) {
@@ -29,26 +29,41 @@ export default function ForgotPassword() {
       return;
     }
 
-    // 模拟发送验证码
-    setSuccess('验证码已发送到您的邮箱');
-    setStep(2);
-    setCountdown(60);
-
-    // 清除之前的定时器
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-
-    timerRef.current = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-          return 0;
-        }
-        return prev - 1;
+    try {
+      const response = await fetch('/api/auth/send-verification-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
       });
-    }, 1000);
+      const result = await response.json();
+      
+      if (result.success) {
+        setSuccess('验证码已发送到您的邮箱');
+        setStep(2);
+        setCountdown(60);
+
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+
+        timerRef.current = setInterval(() => {
+          setCountdown(prev => {
+            if (prev <= 1) {
+              clearInterval(timerRef.current);
+              timerRef.current = null;
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        setError(result.message);
+      }
+    } catch (error) {
+      setError('发送失败，请稍后重试');
+    }
   };
 
   // 清理定时器
@@ -60,7 +75,7 @@ export default function ForgotPassword() {
     };
   }, []);
 
-  const handleVerifyCode = () => {
+  const handleVerifyCode = async () => {
     setError('');
 
     if (!verificationCode) {
@@ -73,11 +88,27 @@ export default function ForgotPassword() {
       return;
     }
 
-    // 模拟验证通过
-    setStep(3);
+    try {
+      const response = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, code: verificationCode }),
+      });
+      const result = await response.json();
+      
+      if (result.success) {
+        setStep(3);
+      } else {
+        setError(result.message);
+      }
+    } catch (error) {
+      setError('验证失败，请稍后重试');
+    }
   };
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     setError('');
 
     if (!newPassword) {
@@ -95,11 +126,27 @@ export default function ForgotPassword() {
       return;
     }
 
-    // 模拟密码重置成功
-    setSuccess('密码重置成功！');
-    setTimeout(() => {
-      navigate('/login');
-    }, 2000);
+    try {
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, code: verificationCode, newPassword }),
+      });
+      const result = await response.json();
+      
+      if (result.success) {
+        setSuccess('密码重置成功！');
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+      } else {
+        setError(result.message);
+      }
+    } catch (error) {
+      setError('重置失败，请稍后重试');
+    }
   };
 
   const handleResendCode = () => {

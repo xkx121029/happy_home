@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { 
   authAPI, postsAPI, pagesAPI, usersAPI, categoriesAPI, tagsAPI,
-  menusAPI, widgetsAPI, mediaAPI, commentsAPI, settingsAPI,
+  menusAPI, widgetsAPI, mediaAPI, commentsAPI, settingsAPI, publicSettingsAPI, publicAPI,
   setAuthToken, getAuthToken
 } from '../services/api';
 
@@ -34,9 +34,12 @@ export const DataProvider = ({ children }) => {
           setCurrentUser(meResponse.user);
           setIsAuthenticated(true);
           await loadAllData();
+        } else {
+          await loadPublicData();
         }
       } catch (error) {
         setAuthToken(null);
+        await loadPublicData();
       } finally {
         setLoading(false);
       }
@@ -78,6 +81,25 @@ export const DataProvider = ({ children }) => {
     }
   }, []);
 
+  // Load public data (for non-authenticated users)
+  const loadPublicData = useCallback(async () => {
+    try {
+      const [
+        postsRes, pagesRes, settingsRes
+      ] = await Promise.all([
+        postsAPI.getPublicAll(),
+        publicAPI.getPages(),
+        publicSettingsAPI.getAll(),
+      ]);
+
+      setPosts(postsRes.data || []);
+      setPages(pagesRes.data || []);
+      setSettings(settingsRes.data || {});
+    } catch (error) {
+      console.error('Error loading public data:', error);
+    }
+  }, []);
+
   // Auth functions
   const login = async (credentials) => {
     const response = await authAPI.login(credentials);
@@ -90,11 +112,12 @@ export const DataProvider = ({ children }) => {
     return response;
   };
 
-  const logout = () => {
+  const logout = async () => {
     setAuthToken(null);
     setCurrentUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('isLoggedIn');
+    await loadPublicData();
   };
 
   // Posts

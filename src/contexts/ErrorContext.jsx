@@ -1,4 +1,5 @@
 import { createContext, useContext, useReducer, useCallback, useEffect, useRef } from 'react';
+import { useNetwork } from './NetworkContext';
 
 /**
  * 错误类型枚举
@@ -188,41 +189,35 @@ const ErrorContext = createContext(null);
 export function ErrorProvider({ children }) {
   const [state, dispatch] = useReducer(errorReducer, initialState);
   const errorQueueRef = useRef([]); // 待处理错误队列
-  
-  // 监听网络状态变化
+  const { isOnline } = useNetwork(); // 使用统一的网络状态
+
+  // 监听网络状态变化（从 NetworkContext 获取）
   useEffect(() => {
-    const handleOnline = () => {
-      dispatch({ type: ActionType.SET_ONLINE_STATUS, payload: { isOnline: true } });
-      // 网络恢复时，可以处理离线队列
+    dispatch({ type: ActionType.SET_ONLINE_STATUS, payload: { isOnline } });
+    // 网络恢复时，处理离线队列
+    if (isOnline) {
       processOfflineQueue();
-    };
-    
-    const handleOffline = () => {
-      dispatch({ type: ActionType.SET_ONLINE_STATUS, payload: { isOnline: false } });
-    };
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
+    }
+  }, [isOnline]);
   
   // 处理离线队列
   const processOfflineQueue = useCallback(async () => {
-    const queue = JSON.parse(localStorage.getItem('offline_queue') || '[]');
+    let queue = [];
+    try {
+      queue = JSON.parse(localStorage.getItem('offline_queue') || '[]');
+    } catch (error) {
+      console.error('解析离线队列失败:', error);
+      queue = [];
+    }
     for (const item of queue) {
       try {
         // 重新执行离线操作
         // await retryRequest(item.config);
-        console.log('[ErrorContext] Processing offline item:', item);
       } catch (error) {
         console.error('[ErrorContext] Failed to process offline item:', error);
       }
     }
-    localStorage.removeItem('offline_queue');
+    localStorage.removeItem('happyhome_offline_queue');
   }, []);
   
   // 添加错误
@@ -376,11 +371,19 @@ export function ErrorProvider({ children }) {
   
   // 记录操作日志
   const logAction = useCallback((action, details = {}) => {
+    let user = {};
+    try {
+      user = JSON.parse(localStorage.getItem('auth_user') || '{}');
+    } catch (error) {
+      console.error('解析用户信息失败:', error);
+      user = {};
+    }
+    
     const log = {
       action,
       details,
       timestamp: new Date().toISOString(),
-      user: JSON.parse(localStorage.getItem('auth_user') || '{}'),
+      user,
     };
     
     // 在开发环境打印

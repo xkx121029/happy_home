@@ -86,6 +86,11 @@ export const postsAPI = {
   delete: (id) => apiRequest(`/posts/${id}`, {
     method: 'DELETE',
   }),
+  getPublicAll: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiRequest(`/public/posts${queryString ? '?' + queryString : ''}`);
+  },
+  getPublicById: (id) => apiRequest(`/public/posts/${id}`),
 };
 
 // Pages
@@ -247,6 +252,11 @@ export const publicAPI = {
   getSettings: () => apiRequest('/public/settings'),
 };
 
+// Settings - 公开版本（无需认证）
+export const publicSettingsAPI = {
+  getAll: () => apiRequest('/public/settings'),
+};
+
 // Health
 export const healthAPI = {
   check: () => apiRequest('/health'),
@@ -299,6 +309,15 @@ export const notificationsAPI = {
   getCount: () => apiRequest('/notifications/count'),
   createDemo: () => apiRequest('/notifications/demo', {
     method: 'POST',
+  }),
+};
+
+// Analytics
+export const analyticsAPI = {
+  getStats: () => apiRequest('/analytics/stats'),
+  track: (data) => apiRequest('/analytics/track', {
+    method: 'POST',
+    body: JSON.stringify(data),
   }),
 };
 

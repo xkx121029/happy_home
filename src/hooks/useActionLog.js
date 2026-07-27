@@ -78,9 +78,15 @@ export function useActionLog(options = {}) {
    * 记录操作
    */
   const logAction = useCallback((action, details = {}, status = ActionStatus.SUCCESS) => {
-    const user = includeUser 
-      ? JSON.parse(localStorage.getItem('auth_user') || '{}') 
-      : null;
+    let user = null;
+    if (includeUser) {
+      try {
+        user = JSON.parse(localStorage.getItem('auth_user') || '{}');
+      } catch (error) {
+        console.error('解析用户信息失败:', error);
+        user = {};
+      }
+    }
     
     const logEntry = {
       id: Date.now() + Math.random(),

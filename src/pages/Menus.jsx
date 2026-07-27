@@ -197,7 +197,7 @@ export default function Menus() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">选择文章</label>
                 <select
                   value={selectedId}
-                  onChange={(e) => setSelectedId(Number(e.target.value))}
+                  onChange={(e) => setSelectedId(Number(e.target.value) || null)}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="">请选择文章</option>
@@ -213,7 +213,7 @@ export default function Menus() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">选择页面</label>
                 <select
                   value={selectedId}
-                  onChange={(e) => setSelectedId(Number(e.target.value))}
+                  onChange={(e) => setSelectedId(Number(e.target.value) || null)}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="">请选择页面</option>
@@ -229,7 +229,7 @@ export default function Menus() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">选择分类</label>
                 <select
                   value={selectedId}
-                  onChange={(e) => setSelectedId(Number(e.target.value))}
+                  onChange={(e) => setSelectedId(Number(e.target.value) || null)}
                   className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="">请选择分类</option>

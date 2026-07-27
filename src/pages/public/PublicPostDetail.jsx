@@ -99,7 +99,7 @@ export default function PublicPostDetail({ posts: propPosts, settings: propSetti
     if (!post) return;
 
     const title = seo.siteTitle || post.title;
-    const description = seo.siteDescription || post.excerpt || post.content?.substring(0, 160);
+    const description = seo.siteDescription || post.excerpt || post.content?.slice(0, 160);
     const keywords = seo.siteKeywords || post.tags?.join(', ') || '';
     const ogImage = seo.ogImage || '';
 
@@ -239,9 +239,10 @@ export default function PublicPostDetail({ posts: propPosts, settings: propSetti
   };
 
   const getAvatar = (author) => {
+    const initial = (author || '').charAt(0).toUpperCase() || '?';
     return (
       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-medium">
-        {author.charAt(0).toUpperCase()}
+        {initial}
       </div>
     );
   };

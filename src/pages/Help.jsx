@@ -304,8 +304,8 @@ export default function Help() {
 
                 {isExpanded && (
                   <div className="border-t border-gray-100 dark:border-gray-700">
-                    {category.articles.map((article, index) => (
-                      <div key={index} className="p-6 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+                    {category.articles.map((article) => (
+                      <div key={article.title} className="p-6 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
                           {article.title}
                         </h3>
@@ -315,7 +315,7 @@ export default function Help() {
                         {article.steps && (
                           <ol className="list-decimal list-inside space-y-2 text-gray-600 dark:text-gray-300">
                             {article.steps.map((step, stepIndex) => (
-                              <li key={stepIndex}>{step.substring(3)}</li>
+                              <li key={stepIndex}>{step.length > 3 ? step.slice(3) : step}</li>
                             ))}
                           </ol>
                         )}

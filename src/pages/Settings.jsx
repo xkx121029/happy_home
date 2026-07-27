@@ -80,6 +80,10 @@ const settingCategories = {
   content: [
     { key: 'postsPerPage', label: '每页文章数', type: 'number', min: 5, max: 100, defaultValue: 10 },
     { key: 'excerptLength', label: '摘要长度', type: 'number', min: 50, max: 500, defaultValue: 150 },
+    { key: 'postUrlType', label: '文章链接格式', type: 'select', options: [
+      { value: 'slug', label: '标题别名（如 /post/my-first-post）' },
+      { value: 'id', label: '文章ID（如 /post/123456）' },
+    ]},
     { key: 'enableComments', label: '启用评论', type: 'toggle', defaultValue: true },
     { key: 'commentsModeration', label: '评论审核', type: 'toggle', defaultValue: true },
     { key: 'enableRevisions', label: '启用文章修订', type: 'toggle', defaultValue: true },
@@ -367,7 +371,7 @@ export default function Settings() {
           <input
             type="number"
             value={value || setting.defaultValue || ''}
-            onChange={(e) => handleChange(setting.key, parseInt(e.target.value))}
+            onChange={(e) => handleChange(setting.key, parseInt(e.target.value, 10))}
             min={setting.min}
             max={setting.max}
             className="w-full max-w-md px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
