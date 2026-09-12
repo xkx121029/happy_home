@@ -241,7 +241,8 @@ export default function Comments() {
   };
 
   return (
-    <div className="p-6">
+    <>
+      <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">评论管理</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">管理用户评论和回复</p>
@@ -464,5 +465,6 @@ export default function Comments() {
       type="confirm"
       onConfirm={confirmModal.onConfirm}
     />
+    </>
   );
 }

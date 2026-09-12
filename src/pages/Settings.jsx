@@ -509,7 +509,8 @@ export default function Settings() {
   };
 
   return (
-    <div className="p-6">
+    <>
+      <div className="p-6">
       <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">设置中心</h1>
@@ -815,5 +816,6 @@ export default function Settings() {
         duration={toastConfig.duration}
       />
     </div>
+    </>
   );
 }

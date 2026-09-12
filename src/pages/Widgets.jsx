@@ -88,11 +88,10 @@ export default function Widgets() {
     const draggedIndex = locationWidgets.findIndex(w => w.id === draggedWidget.id);
     const targetIndex = locationWidgets.findIndex(w => w.id === targetWidget.id);
 
-    const newWidgets = [...locationWidgets];
-    newWidgets.splice(draggedIndex, 1);
-    newWidgets.splice(targetIndex, 0, draggedWidget);
+    locationWidgets.splice(draggedIndex, 1);
+    locationWidgets.splice(targetIndex, 0, draggedWidget);
 
-    const orderedIds = newWidgets.map(w => w.id);
+    const orderedIds = locationWidgets.map(w => w.id);
     widgetsAPI.reorder(location, orderedIds);
     setDraggedWidget(null);
   };
@@ -100,15 +99,14 @@ export default function Widgets() {
   const handleMoveWidget = (widgetId, direction, location) => {
     const locationWidgets = widgets.filter(w => w.location === location).sort((a, b) => a.order - b.order);
     const index = locationWidgets.findIndex(w => w.id === widgetId);
-    const newWidgets = [...locationWidgets];
     if (direction === 'up' && index > 0) {
-      [newWidgets[index - 1], newWidgets[index]] = [newWidgets[index], newWidgets[index - 1]];
+      [locationWidgets[index - 1], locationWidgets[index]] = [locationWidgets[index], locationWidgets[index - 1]];
     } else if (direction === 'down' && index < locationWidgets.length - 1) {
-      [newWidgets[index], newWidgets[index + 1]] = [newWidgets[index + 1], newWidgets[index]];
+      [locationWidgets[index], locationWidgets[index + 1]] = [locationWidgets[index + 1], locationWidgets[index]];
     } else {
       return;
     }
-    const orderedIds = newWidgets.map(w => w.id);
+    const orderedIds = locationWidgets.map(w => w.id);
     widgetsAPI.reorder(location, orderedIds);
   };
 
