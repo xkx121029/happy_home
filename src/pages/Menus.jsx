@@ -18,6 +18,13 @@ export default function Menus() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addItemType, setAddItemType] = useState('custom');
   const [draggedItem, setDraggedItem] = useState(null);
+  // 这三个状态原来声明在 renderAddModal 函数体里（一个普通函数，不是组件）。
+  // 它只在 showAddModal 为真时被调用，于是每次开关弹窗都会改变 hook 数量，
+  // React 会抛出「Rendered more hooks than during the previous render」。
+  // 提到组件顶层即可。
+  const [customTitle, setCustomTitle] = useState('');
+  const [customUrl, setCustomUrl] = useState('');
+  const [selectedId, setSelectedId] = useState('');
 
   useEffect(() => {
     const menusArray = menus || [];
@@ -126,10 +133,6 @@ export default function Menus() {
   };
 
   const renderAddModal = () => {
-    const [customTitle, setCustomTitle] = useState('');
-    const [customUrl, setCustomUrl] = useState('');
-    const [selectedId, setSelectedId] = useState('');
-
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-lg p-6">
