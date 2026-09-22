@@ -7,6 +7,7 @@ import {
   Download, Upload, Cloud, AlertTriangle, Info, CheckCircle,
   Clock, Filter, ExternalLink, Send
 } from 'lucide-react';
+import { useSiteSettings } from '../state/SiteSettingsContext';
 import { useData } from '../contexts/DataContext';
 import { smtpAPI, notificationsAPI } from '../services/api';
 import { filterSettings } from '../utils/allowedSettings';
@@ -187,7 +188,8 @@ const settingCategories = {
 };
 
 export default function Settings() {
-  const { settings, updateSettings, posts, comments } = useData();
+  const { posts, comments } = useData();
+  const { settings, updateSettings } = useSiteSettings();
   const [notifications, setNotifications] = useState([]);
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();

@@ -3,13 +3,15 @@ import { Plus, Search, Filter, Edit, Trash2, Eye, Pin, Clock, X } from 'lucide-r
 import { useNavigate } from 'react-router-dom';
 import Modal, { Toast } from '../components/Modal';
 import { useModal, useToast } from '../hooks/useModal';
+import { useSiteSettings } from '../state/SiteSettingsContext';
 import { useData } from '../contexts/DataContext';
 
 export default function Posts() {
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
   // 原来靠 props 拿 posts / onDelete，现在页面自取 Context
-  const { posts, updatePost, deletePost, settings, categories } = useData();
+  const { posts, updatePost, deletePost, categories } = useData();
+  const { settings } = useSiteSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');

@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useData } from '../contexts/DataContext';
+import { useAuth } from '../state/AuthContext';
 import { LoadingState } from '../components/StateViews';
 import { AUTH_PATHS } from './paths';
 
@@ -15,9 +15,9 @@ import { AUTH_PATHS } from './paths';
  */
 export function RequireAuth() {
   const location = useLocation();
-  const { isAuthenticated, loading } = useData();
+  const { isAuthenticated, initializing } = useAuth();
 
-  if (loading) {
+  if (initializing) {
     return <LoadingState message="正在验证身份..." fullPage />;
   }
 
@@ -40,11 +40,11 @@ export function RequireAuth() {
  * 真正的权限控制在后端 —— 前端隐藏按钮挡不住直接调接口。
  */
 export function RequireRole({ role, children }) {
-  const { currentUser } = useData();
+  const { user } = useAuth();
 
-  if (!currentUser) return null;
+  if (!user) return null;
 
-  if (currentUser.role !== role) {
+  if (user.role !== role) {
     return <Navigate to={AUTH_PATHS.unauthorized} replace />;
   }
 

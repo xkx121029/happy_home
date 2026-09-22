@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Lock, Mail, Eye, EyeOff, LogIn, UserPlus, Zap, RefreshCw, CheckCircle } from 'lucide-react';
-import { useData } from '../contexts/DataContext';
+import { useAuth } from '../state/AuthContext';
+import { useSiteSettings } from '../state/SiteSettingsContext';
 import { authAPI } from '../services/api';
 
 export default function Login() {
-  const { settings, login } = useData();
+  const { settings } = useSiteSettings();
+  const { login, loginWithToken } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [showVerification, setShowVerification] = useState(false);
   const [username, setUsername] = useState('');
@@ -119,7 +121,10 @@ export default function Login() {
     try {
       const result = await authAPI.register({ username, email, password, code: verificationCode });
       if (result.success) {
-        await login({ token: result.token });
+        // 注册成功后端会直接下发 token。原来调的是 login({ token })，
+        // 而 login 会把它当用户名密码去请求 /auth/login（请求体里没有 username），
+        // 后端返回 400 —— 注册完根本进不去。
+        await loginWithToken(result.token);
         navigate('/admin');
       } else {
         setError(result.message);
@@ -144,7 +149,8 @@ export default function Login() {
     try {
       const result = await authAPI.verify({ userId, code: verificationCode });
       if (result.success) {
-        await login({ token: result.token });
+        // 同上：验证通过后端也直接下发 token
+        await loginWithToken(result.token);
         navigate('/admin');
       } else {
         setError(result.message);

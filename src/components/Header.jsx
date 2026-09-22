@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
 import { notificationsAPI } from '../services/api';
-import { useData } from '../contexts/DataContext';
+import { useAuth } from '../state/AuthContext';
 import { useTheme } from '../state/ThemeContext';
 import { formatDate } from '../lib/format';
 import { ADMIN_PATHS } from '../routes/paths';
@@ -33,7 +33,7 @@ export default function Header() {
 
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
-  const { currentUser, logout } = useData();
+  const { user: currentUser, logout } = useAuth();
 
   const {
     notifications,

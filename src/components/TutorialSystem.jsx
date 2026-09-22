@@ -14,13 +14,13 @@ import {
 } from 'lucide-react';
 import { tutorialAPI } from '../lib/tutorialProgress';
 import { ADMIN_PATHS } from '../routes/paths';
-import { useData } from '../contexts/DataContext';
+import { useAuth } from '../state/AuthContext';
 
 export default function TutorialSystem() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [tutorial, setTutorial] = useState(null);
-  const { currentUser } = useData();
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -270,7 +270,7 @@ export default function TutorialSystem() {
 export function PageTutorial({ pageKey, children }) {
   const [showTip, setShowTip] = useState(false);
   const [tutorial, setTutorial] = useState(null);
-  const { currentUser } = useData();
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
     // 检查是否已设置"不再显示"

@@ -1,6 +1,7 @@
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, User, Tag, MessageSquare, Send, Reply, Share2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useSiteSettings } from '../../state/SiteSettingsContext';
 import { useData } from '../../contexts/DataContext';
 import { commentsAPI } from '../../services/api';
 import { sanitizeHtml } from '../../lib/sanitize';
@@ -11,7 +12,8 @@ export default function PublicPostDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   // 数据自取（路由渲染不再传 props）
-  const { posts, settings, categories, tags } = useData();
+  const { posts, categories, tags } = useData();
+  const { settings } = useSiteSettings();
 
   // 原来的写法是 posts.find(p => p.id === Number(id))，但文章的 id 是后端生成的
   // UUID 字符串，Number(uuid) 得到 NaN，条件永远不成立 —— 结果就是无论访问哪篇

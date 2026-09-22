@@ -3,9 +3,12 @@ import { useState, useEffect } from 'react';
 import { Check, Palette, Type, Layout, Sparkles, RotateCcw } from 'lucide-react';
 import { Toast } from '../components/Modal';
 import { useToast } from '../hooks/useModal';
-import { useData } from '../contexts/DataContext';
+import { useSiteSettings } from '../state/SiteSettingsContext';
 
-const fontOptions = ['Inter', 'Roboto', 'Georgia', 'Times New Roman', 'Arial', 'Verdana'];
+// 字体选项改为系统字体栈里的中文友好字体。
+// 原来的 Inter / Roboto 都是英文字体，没有中文字形 —— 选了也不会真的生效，
+// 中文始终回退到系统默认，字形不统一。
+const fontOptions = ['系统默认', '苹方 / 微软雅黑', '思源黑体', '等宽字体'];
 const layoutOptions = [
   { id: 'wide', label: '宽屏布局' },
   { id: 'boxed', label: '盒式布局' },
@@ -63,7 +66,7 @@ const defaultThemes = [
 export default function Themes() {
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
   // 原来靠 props 拿 settings 与保存回调，现在页面自取 Context
-  const { settings, updateSettings } = useData();
+  const { settings, updateSettings } = useSiteSettings();
   const [themes, setThemes] = useState(defaultThemes);
   const [selectedTheme, setSelectedTheme] = useState(defaultThemes[0]);
   const [activeTab, setActiveTab] = useState('presets');

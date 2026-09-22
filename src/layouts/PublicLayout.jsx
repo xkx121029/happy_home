@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import PublicHeader from '../components/PublicHeader';
 import PublicFooter from '../components/PublicFooter';
-import { useData } from '../contexts/DataContext';
+import { useSiteSettings } from '../state/SiteSettingsContext';
 import { sanitizeCss } from '../lib/sanitize';
 import { STORAGE_KEYS, readRaw } from '../lib/storage';
 
@@ -15,7 +15,7 @@ import { STORAGE_KEYS, readRaw } from '../lib/storage';
  * <style> 应该注入 head 而不是挂在 body 上。
  */
 export default function PublicLayout() {
-  const { settings } = useData();
+  const { settings } = useSiteSettings();
   const [customCss, setCustomCss] = useState('');
 
   useEffect(() => {

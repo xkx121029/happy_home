@@ -3,10 +3,10 @@ import {
   Search, Globe, Share2, Shield, Settings, Eye, Save, RotateCcw,
   Check, AlertCircle, Smartphone, Monitor, FileText
 } from 'lucide-react';
-import { useData } from '../contexts/DataContext';
+import { useSiteSettings } from '../state/SiteSettingsContext';
 
 export default function SEO() {
-  const { settings, settingsAPI } = useData();
+  const { settings, updateSettings } = useSiteSettings();
   const [activeTab, setActiveTab] = useState('basic');
   const [seo, setSeo] = useState({
     siteTitle: '',
@@ -35,11 +35,17 @@ export default function SEO() {
     setSaved(false);
   };
 
-  const handleSave = () => {
-    settingsAPI.update({ seo });
-    setHasChanges(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    try {
+      // 后端 PUT /settings 是「合并」语义，只传 seo 不会清掉其它设置项。
+      // 原来这里既不 await 也不处理失败，无论结果如何都显示"已保存"。
+      await updateSettings({ seo });
+      setHasChanges(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error('保存 SEO 设置失败:', err);
+    }
   };
 
   const handleReset = () => {
