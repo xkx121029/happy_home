@@ -1,5 +1,6 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { User, Menu, X, ArrowRight } from 'lucide-react';
+import { sanitizeHtml } from '../lib/sanitize';
 
 export default function PublicSite({ posts, onNavigate }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -98,7 +99,7 @@ export default function PublicSite({ posts, onNavigate }) {
             <p className="text-gray-600 mb-6">{post.excerpt}</p>
             <div 
               className="prose max-w-none text-gray-700"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
             />
             <div className="mt-6 pt-6 border-t border-gray-100">
               <div className="flex items-center gap-3">

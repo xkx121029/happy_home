@@ -1,4 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
+import { sanitizeHtml } from '../../lib/sanitize';
 
 export default function PublicPageDetail({ pages }) {
   const { slug } = useParams();
@@ -37,7 +38,7 @@ export default function PublicPageDetail({ pages }) {
             
             <div 
               className="prose prose-lg dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: page.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content) }}
             />
           </div>
         </article>

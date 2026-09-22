@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Save, Eye, Calendar, Tag, Pin, Clock, History, RotateCcw, Trash2, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
@@ -6,6 +6,7 @@ import ContentPreview from '../components/ContentPreview';
 import Modal, { Toast } from '../components/Modal';
 import { useModal, useToast } from '../hooks/useModal';
 import { useData } from '../contexts/DataContext';
+import { sanitizeHtml } from '../lib/sanitize';
 
 export default function PostEditor({ onSave }) {
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
@@ -422,7 +423,7 @@ export default function PostEditor({ onSave }) {
                       <span>作者: {selectedRevision.author}</span>
                     </div>
                     <div className="prose dark:prose-invert max-w-none">
-                      <div dangerouslySetInnerHTML={{ __html: selectedRevision.content }} />
+                      <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedRevision.content) }} />
                     </div>
                     <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
                       <button

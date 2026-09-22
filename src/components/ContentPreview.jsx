@@ -1,6 +1,11 @@
 import { X, ExternalLink } from 'lucide-react';
+import { sanitizeHtml } from '../lib/sanitize';
 
 export default function ContentPreview({ content, title, onClose, type = 'article' }) {
+  // 这里原先直接把内容塞进 dangerouslySetInnerHTML，没有任何净化。
+  // 预览的是编辑器里正在写的内容，同样可能是从别处粘贴进来的 HTML。
+  const safeContent = sanitizeHtml(content);
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
       <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -22,7 +27,7 @@ export default function ContentPreview({ content, title, onClose, type = 'articl
               <h1 className="text-3xl font-bold text-gray-900 mb-6">{title || '无标题'}</h1>
               <div
                 className="prose max-w-none text-gray-700"
-                dangerouslySetInnerHTML={{ __html: content }}
+                dangerouslySetInnerHTML={{ __html: safeContent }}
               />
             </article>
           )}
@@ -32,7 +37,7 @@ export default function ContentPreview({ content, title, onClose, type = 'articl
               <h1 className="text-3xl font-bold text-gray-900 mb-6">{title || '无标题'}</h1>
               <div
                 className="prose max-w-none text-gray-700"
-                dangerouslySetInnerHTML={{ __html: content }}
+                dangerouslySetInnerHTML={{ __html: safeContent }}
               />
             </div>
           )}

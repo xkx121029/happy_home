@@ -1,6 +1,7 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { History, RotateCcw, Trash2, Eye, Search, FileText } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { sanitizeHtml } from '../lib/sanitize';
 
 export default function Revisions() {
   const { posts } = useData();
@@ -211,7 +212,7 @@ export default function Revisions() {
                           {selectedRevision.title}
                         </h4>
                         <div className="prose dark:prose-invert max-w-none">
-                          <div dangerouslySetInnerHTML={{ __html: selectedRevision.content }} />
+                          <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedRevision.content) }} />
                         </div>
                       </div>
                       <div className="p-6 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
