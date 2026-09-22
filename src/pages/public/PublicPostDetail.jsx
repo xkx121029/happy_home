@@ -7,13 +7,11 @@ import { sanitizeHtml } from '../../lib/sanitize';
 import SidebarWidgets from '../../components/SidebarWidgets';
 import SocialShare from '../../components/SocialShare';
 
-export default function PublicPostDetail({ posts: propPosts, settings: propSettings }) {
+export default function PublicPostDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { posts: contextPosts, settings: contextSettings, categories, tags, widgets } = useData();
-
-  const posts = propPosts || contextPosts;
-  const settings = propSettings || contextSettings;
+  // 数据自取（路由渲染不再传 props）
+  const { posts, settings, categories, tags } = useData();
 
   // 原来的写法是 posts.find(p => p.id === Number(id))，但文章的 id 是后端生成的
   // UUID 字符串，Number(uuid) 得到 NaN，条件永远不成立 —— 结果就是无论访问哪篇
@@ -504,11 +502,9 @@ export default function PublicPostDetail({ posts: propPosts, settings: propSetti
             {/* Sidebar */}
             <aside className="lg:w-80">
               <SidebarWidgets
-                widgets={widgets}
                 posts={posts}
                 categories={categories}
                 tags={tags}
-                comments={comments}
                 settings={settings}
               />
             </aside>
