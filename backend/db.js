@@ -468,13 +468,15 @@ const dbHelpers = {
         console.warn(`Setting ${key} is too large (${strValue.length} characters), skipping`);
         return;
       }
-      
-      const exists = db.exec(`SELECT key FROM settings WHERE key = '${key.replace(/'/g, "''")}'`);
+
+      // 原来是字符串拼接 SQL（靠手工转义单引号）。改成参数化绑定，
+      // 既消除注入面，也避免值里出现反斜杠等字符时的边界情况。
+      const exists = db.exec('SELECT key FROM settings WHERE key = ?', [key]);
       
       if (exists.length > 0 && exists[0].values.length > 0) {
-        db.run(`UPDATE settings SET value = '${strValue.replace(/'/g, "''")}', updated_at = datetime('now') WHERE key = '${key.replace(/'/g, "''")}'`);
+        db.run("UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?", [strValue, key]);
       } else {
-        db.run(`INSERT INTO settings (key, value) VALUES ('${key.replace(/'/g, "''")}', '${strValue.replace(/'/g, "''")}')`);
+        db.run('INSERT INTO settings (key, value) VALUES (?, ?)', [key, strValue]);
       }
     });
     
@@ -488,5 +490,7 @@ module.exports = {
   getDb: () => db,
   getSql: () => SQL,
   dbHelpers,
-  saveDatabase
+  saveDatabase,
+  runMigrations,
+  backupDatabaseFile
 };
