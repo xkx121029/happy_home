@@ -62,11 +62,17 @@ function authenticateToken(req, res, next) {
   });
 }
 
+// 只允许指定角色访问。
+// 原实现是 `user.role !== role && user.role !== 'administrator'`：当调用方传入的
+// role 恰好就是 'administrator' 时，第二个条件恒为假，导致整个表达式恒为假 ——
+// 也就是任何已登录用户都能通过 requireRole('administrator')，管理员权限形同虚设。
+// 现在改为严格匹配；若将来需要「管理员是任意角色的超集」，
+// 必须由调用点显式声明多个角色，而不是靠隐式放行。
 function requireRole(role) {
   return (req, res, next) => {
     const db = getDb();
     const user = getSingle(db, 'SELECT * FROM users WHERE id = ?', [req.user.id]);
-    if (!user || (user.role !== role && user.role !== 'administrator')) {
+    if (!user || user.role !== role) {
       return res.status(403).json({ success: false, message: '权限不足' });
     }
     next();
@@ -1140,6 +1146,12 @@ app.get('/api/users', authenticateToken, requireRole('administrator'), (req, res
 app.get('/api/users/:id', authenticateToken, (req, res) => {
   try {
     const db = getDb();
+    // 原来只校验了登录，任何用户都能用 id 遍历出他人的资料。
+    // 这里限制为「本人或管理员」，管理员判定直接查库而不信 token 里的角色。
+    const requester = getSingle(db, 'SELECT role FROM users WHERE id = ?', [req.user.id]);
+    if (req.user.id !== req.params.id && requester?.role !== 'administrator') {
+      return res.status(403).json({ success: false, message: '权限不足' });
+    }
     const user = getSingle(db, 'SELECT id, username, email, role, status, created_at, updated_at FROM users WHERE id = ?', [req.params.id]);
     if (!user) {
       return res.status(404).json({ success: false, message: '用户不存在' });
