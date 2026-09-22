@@ -1387,7 +1387,11 @@ function optionalAuth(req, res, next) {
 
 // 极简内存限流：按 IP 与邮箱双维度计数。
 // 公开写接口没有限流等于开放刷库通道，所以它与端点必须同时存在。
-const COMMENT_RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 10 };
+// 阈值可通过环境变量调整：本地反复跑冒烟测试时可以把上限调高。
+const COMMENT_RATE_LIMIT = {
+  windowMs: Number(process.env.COMMENT_RATE_LIMIT_WINDOW_MS) || 10 * 60 * 1000,
+  max: Number(process.env.COMMENT_RATE_LIMIT_MAX) || 10,
+};
 const commentRateBuckets = new Map();
 
 function checkCommentRate(key) {

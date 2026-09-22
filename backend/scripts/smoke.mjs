@@ -6,6 +6,9 @@
  *   node scripts/smoke.mjs            运行并校验（存在基线时自动 diff）
  *   node scripts/smoke.mjs --save     运行并把当前响应存为基线
  *   node scripts/smoke.mjs --verbose  打印完整响应体
+ *   node scripts/smoke.mjs --rate-limit
+ *       额外验证访客评论限流真的会触发 429。默认不跑，因为它会把当前 IP 的
+ *       限流额度打满，导致紧接着的正常用例全部被限。跑完后需要等待窗口过期。
  *
  * 环境变量：
  *   API_BASE         默认 http://localhost:3002/api
@@ -41,6 +44,7 @@ const ADMIN_PASS = process.env.ADMIN_PASS || fileEnv.SMOKE_ADMIN_PASS || 'admin1
 const ARGS = new Set(process.argv.slice(2));
 const SAVE = ARGS.has('--save');
 const VERBOSE = ARGS.has('--verbose');
+const CHECK_RATE_LIMIT = ARGS.has('--rate-limit');
 
 const MARK = `smoke-${Date.now()}`;
 const results = [];
@@ -451,7 +455,31 @@ async function main() {
     expect: 401,
   }));
 
-  // 10. 清理，放在最后（用户要在评论等资源之前删掉）
+  // 10. 限流（按需）：连发到超过配置上限，确认会出现 429。
+  //     默认不跑 —— 它会把当前 IP 的额度打满，让紧接着的用例全部被限流。
+  if (CHECK_RATE_LIMIT && targetPostId) {
+    const max = Number(fileEnv.COMMENT_RATE_LIMIT_MAX) || 10;
+    let got429 = false;
+    for (let i = 0; i < max + 2; i += 1) {
+      const res = await call('POST', '/public/comments', {
+        body: { postId: targetPostId, author: '限流测试', email: `rl-${i}-${MARK}@example.com`, content: 'x' },
+      });
+      if (res.status === 429) {
+        got429 = true;
+        break;
+      }
+      if (res.body?.data?.id) cleanup.push(['delete', `/comments/${res.body.data.id}`, token]);
+    }
+    results.push({
+      name: `限流：超过 ${max} 次应返回 429`,
+      status: got429 ? 429 : 200,
+      expect: 429,
+      pass: got429,
+      shape: 'n/a',
+    });
+  }
+
+  // 11. 清理，放在最后（评论等资源要在用户之前删掉）
   for (const [method, path, tk] of cleanup) {
     await call(method === 'delete' ? 'DELETE' : 'GET', path, { token: tk });
   }
