@@ -75,40 +75,23 @@ async function call(method, path, { body, token, headers = {} } = {}) {
 // -------------------------------------------------------------- 契约归一化
 
 /**
- * 把响应体压成「契约形状」：保留 success 与结构，叶子值只留类型。
- * 这样 diff 能捕捉到「字段消失 / 字段改名 / 类型变了」，但不会被
- * 每次运行都不同的 id、时间戳、计数干扰。
+ * 把响应体压成「契约形状」：保留 success 与字段结构，叶子值只留类型。
+ * 这样 diff 能捕捉到「字段消失 / 字段改名 / 类型变了」。
+ *
+ * 数组一律折叠成 'array' 而不去采样首元素：
+ * 列表响应的首元素会随数据变化（比如通知列表里既有带 link 的也有不带 link 的行），
+ * 采样它会让契约校验随机抖动，产生假报警。
+ * 字段级校验交给 POST/PUT 返回的单条记录形状 —— 那才是能稳定断言的地方。
  */
-function shape(value, depth = 0) {
-  if (depth > 6) return '…';
-  if (value === null) return 'null';
-  if (Array.isArray(value)) {
-    return value.length === 0 ? ['[]'] : [shape(value[0], depth + 1)];
-  }
-  if (typeof value === 'object') {
-    const out = {};
-    for (const key of Object.keys(value).sort()) {
-      out[key] = shape(value[key], depth + 1);
-    }
-    return out;
-  }
-  if (typeof value === 'boolean') return `bool:${value}`;
-  return typeof value;
-}
-
-const VOLATILE_KEYS = new Set(['__nonJson', '__transportError']);
-
 function stableShape(value) {
-  if (value && typeof value === 'object' && !Array.isArray(value)) {
+  if (Array.isArray(value)) return 'array';
+  if (value && typeof value === 'object') {
     const out = {};
     for (const key of Object.keys(value).sort()) {
       if (VOLATILE_KEYS.has(key)) continue;
       out[key] = stableShape(value[key]);
     }
     return out;
-  }
-  if (Array.isArray(value)) {
-    return value.length === 0 ? [] : [stableShape(value[0])];
   }
   if (typeof value === 'boolean') return `bool:${value}`;
   if (value === null) return 'null';
