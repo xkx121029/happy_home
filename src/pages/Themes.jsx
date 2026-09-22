@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 
 import { Check, Palette, Type, Layout, Sparkles, RotateCcw } from 'lucide-react';
+import { Toast } from '../components/Modal';
+import { useToast } from '../hooks/useModal';
+import { useData } from '../contexts/DataContext';
 
 const fontOptions = ['Inter', 'Roboto', 'Georgia', 'Times New Roman', 'Arial', 'Verdana'];
 const layoutOptions = [
@@ -57,7 +60,10 @@ const defaultThemes = [
   },
 ];
 
-export default function Themes({ settings, onSave }) {
+export default function Themes() {
+  const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
+  // 原来靠 props 拿 settings 与保存回调，现在页面自取 Context
+  const { settings, updateSettings } = useData();
   const [themes, setThemes] = useState(defaultThemes);
   const [selectedTheme, setSelectedTheme] = useState(defaultThemes[0]);
   const [activeTab, setActiveTab] = useState('presets');
@@ -103,7 +109,7 @@ export default function Themes({ settings, onSave }) {
     setHasChanges(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const activePreset = themes.find(t => t.active);
     let colorsToSave;
     
@@ -121,9 +127,13 @@ export default function Themes({ settings, onSave }) {
         colors: colorsToSave,
       },
     };
-    if (onSave) {
-      onSave(newSettings);
+    // 原来保存走 props.onSave 回调，现在页面自取 Context 的 updateSettings
+    try {
+      await updateSettings(newSettings);
       setHasChanges(false);
+      showToast('主题已保存', 'success');
+    } catch (err) {
+      showToast(err.message || '保存主题失败', 'error');
     }
   };
 
@@ -143,6 +153,7 @@ export default function Themes({ settings, onSave }) {
   };
 
   return (
+    <>
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -356,5 +367,14 @@ export default function Themes({ settings, onSave }) {
         </div>
       </div>
     </div>
+
+    <Toast
+      isOpen={isToastOpen}
+      message={toastConfig.message}
+      type={toastConfig.type}
+      onClose={closeToast}
+      duration={toastConfig.duration}
+    />
+    </>
   );
 }

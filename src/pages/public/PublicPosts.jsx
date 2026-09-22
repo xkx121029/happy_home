@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
 import { FileText, Calendar, User, Search, Pin } from 'lucide-react';
 import { useState } from 'react';
+import { useData } from '../../contexts/DataContext';
 
-export default function PublicPosts({ posts }) {
+export default function PublicPosts() {
+  // 原来靠 App.jsx 通过 props 下发数据，路由重构后页面自取 Context
+  const { posts } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 

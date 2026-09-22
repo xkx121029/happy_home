@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ArrowLeft, Save, User, Mail, Shield } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useData } from '../contexts/DataContext';
 
 const roleOptions = [
   { id: 'administrator', label: '管理员', color: 'bg-red-100 text-red-700' },
@@ -16,7 +17,11 @@ const statusOptions = [
   { id: 'inactive', label: '已禁用', color: 'bg-gray-100 text-gray-700' },
 ];
 
-export default function UserEditor({ user, onSave, onCancel }) {
+export default function UserEditor() {
+  const { id } = useParams();
+  // 原来靠 props 拿到待编辑用户与保存/取消回调，现在页面自取 Context
+  const { users, usersAPI, loadAllData } = useData();
+  const user = id ? users.find(u => u.id === id) : null;
   const [username, setUsername] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
   const [password, setPassword] = useState('');
@@ -27,7 +32,7 @@ export default function UserEditor({ user, onSave, onCancel }) {
   // 使用useMemo缓存当前日期，避免每次渲染都重新计算
   const currentDate = useMemo(() => new Date().toISOString().split('T')[0], []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const userData = {
       id: user?.id || Date.now(),
       username,
@@ -41,16 +46,21 @@ export default function UserEditor({ user, onSave, onCancel }) {
     if (password) {
       userData.password = password;
     }
-    if (onSave) {
-      onSave(userData, !!user); // 传递是否为编辑模式
+    // 原来保存走 props.onSave 回调，现在页面自取 Context 的用户接口
+    try {
+      if (user) {
+        await usersAPI.update(user.id, userData);
+      } else {
+        await usersAPI.create(userData);
+      }
+      await loadAllData();
+      navigate('/admin/users');
+    } catch (err) {
+      console.error('保存用户失败:', err);
     }
-    navigate('/admin/users');
   };
 
   const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    }
     navigate('/admin/users');
   };
 

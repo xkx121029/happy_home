@@ -1,8 +1,11 @@
 import { useParams, Link } from 'react-router-dom';
 import { sanitizeHtml } from '../../lib/sanitize';
+import { useData } from '../../contexts/DataContext';
 
-export default function PublicPageDetail({ pages }) {
+export default function PublicPageDetail() {
   const { slug } = useParams();
+  // 原来靠 App.jsx 通过 props 下发数据，路由重构后页面自取 Context
+  const { pages } = useData();
   
   const page = pages.find(p => p.slug === slug && p.status === 'published');
   

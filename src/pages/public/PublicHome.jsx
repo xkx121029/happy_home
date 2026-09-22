@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
 import { FileText, Clock, User, Calendar, ExternalLink, Pin } from 'lucide-react';
 import { useEffect } from 'react';
+import { useData } from '../../contexts/DataContext';
 
-export default function PublicHome({ posts, pages, settings }) {
+export default function PublicHome() {
+  // 原来靠 App.jsx 通过 props 下发数据，路由重构后页面自取 Context
+  const { posts, pages, settings } = useData();
   const publishedPosts = posts.filter(post => post.status === 'published');
   const sortedPosts = [...publishedPosts].sort((a, b) => {
     if (a.sticky && !b.sticky) return -1;
