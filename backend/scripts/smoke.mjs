@@ -408,6 +408,11 @@ async function main() {
       expect: 200,
     }));
 
+    await record('GET  /public/comments/recent', async () => ({
+      res: await call('GET', '/public/comments/recent?limit=5'),
+      expect: 200,
+    }));
+
     // 定时发布字段是否真的能落库（历史上 posts 表根本没有这一列）
     await record('PUT  /posts/:id 写入 publishDate', async () => ({
       res: await call('PUT', `/posts/${targetPostId}`, {
