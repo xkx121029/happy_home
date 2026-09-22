@@ -2,10 +2,11 @@ import { useState, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { DataProvider, useData } from './contexts/DataContext';
 import { ErrorProvider } from './contexts/ErrorContext';
-import { NetworkProvider, useNetwork } from './contexts/NetworkContext';
+import { NetworkProvider } from './contexts/NetworkContext';
 import { NotificationProvider, useNotification } from './components/Notification';
 import ErrorBoundary from './components/ErrorBoundary';
 import NetworkStatusBanner from './components/NetworkStatus';
+import Modal from './components/Modal';
 import { usersAPI, mediaAPI } from './services/api';
 
 import Header from './components/Header';
@@ -50,7 +51,6 @@ function AppContent() {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const [infoModal, setInfoModal] = useState({ isOpen: false, title: '', message: '' });
   const { success, error } = useNotification();
-  const { pendingCount } = useNetwork();
   const { 
     posts, pages, users, mediaItems, categories, tags, settings, updateSettings,
     createPost, updatePost, deletePost,
@@ -398,7 +398,7 @@ function AppContent() {
 
   return (
     <ErrorBoundary>
-      <NetworkStatusBanner pendingCount={pendingCount} />
+      <NetworkStatusBanner />
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
