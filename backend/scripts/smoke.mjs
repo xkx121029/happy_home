@@ -6,9 +6,11 @@
  *   node scripts/smoke.mjs            运行并校验（存在基线时自动 diff）
  *   node scripts/smoke.mjs --save     运行并把当前响应存为基线
  *   node scripts/smoke.mjs --verbose  打印完整响应体
- *   node scripts/smoke.mjs --rate-limit
- *       额外验证访客评论限流真的会触发 429。默认不跑，因为它会把当前 IP 的
- *       限流额度打满，导致紧接着的正常用例全部被限。跑完后需要等待窗口过期。
+ *
+ * 访客评论限流（429）不在这里覆盖：验证它必须把当前 IP 的额度打满，
+ * 之后所有用例都会被限流，破坏本脚本的可重复性。
+ * 需要验证时用低阈值临时启动一次后端再手工连发：
+ *   COMMENT_RATE_LIMIT_MAX=3 node server.js
  *
  * 环境变量：
  *   API_BASE         默认 http://localhost:3002/api
@@ -44,7 +46,6 @@ const ADMIN_PASS = process.env.ADMIN_PASS || fileEnv.SMOKE_ADMIN_PASS || 'admin1
 const ARGS = new Set(process.argv.slice(2));
 const SAVE = ARGS.has('--save');
 const VERBOSE = ARGS.has('--verbose');
-const CHECK_RATE_LIMIT = ARGS.has('--rate-limit');
 
 const MARK = `smoke-${Date.now()}`;
 const results = [];
