@@ -5,10 +5,11 @@ import Modal, { Toast } from '../components/Modal';
 import { useModal, useToast } from '../hooks/useModal';
 import { useData } from '../contexts/DataContext';
 
-export default function Posts({ posts, onDelete }) {
+export default function Posts() {
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
-  const { updatePost, settings, categories } = useData();
+  // 原来靠 props 拿 posts / onDelete，现在页面自取 Context
+  const { posts, updatePost, deletePost, settings, categories } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
@@ -81,6 +82,18 @@ export default function Posts({ posts, onDelete }) {
 
   const handleNewPost = () => {
     navigate('/admin/posts/new');
+  };
+
+  // 原来删除走 props.onDelete 回调，现在页面自取 Context 的 deletePost
+  const handleDelete = async (post) => {
+    const confirmed = await confirm({ title: '确认删除', message: `确定要删除《${post.title}》吗？` });
+    if (!confirmed) return;
+    try {
+      await deletePost(post.id);
+      showToast('文章已删除', 'success');
+    } catch (err) {
+      showToast(err.message || '删除失败', 'error');
+    }
   };
 
   return (
@@ -224,7 +237,7 @@ export default function Posts({ posts, onDelete }) {
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => onDelete(post.id)}
+                        onClick={() => handleDelete(post)}
                         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />

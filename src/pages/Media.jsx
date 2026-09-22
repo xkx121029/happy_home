@@ -2,10 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Upload, X, Download, Image as ImageIcon, FileIcon } from 'lucide-react';
 import Modal, { Toast } from '../components/Modal';
 import { useModal, useToast } from '../hooks/useModal';
+import { useData } from '../contexts/DataContext';
 
-export default function Media({ media, onUpload, onDelete }) {
+export default function Media() {
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
+  // 原来靠 props 拿媒体列表与上传/删除回调，现在页面自取 Context
+  const { mediaItems, uploadMedia, deleteMedia } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [showUpload, setShowUpload] = useState(false);
   const [dragOver, setDragOver] = useState(false);
@@ -14,7 +17,7 @@ export default function Media({ media, onUpload, onDelete }) {
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
 
-  const filteredMedia = media.filter((item) =>
+  const filteredMedia = mediaItems.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -73,7 +76,7 @@ export default function Media({ media, onUpload, onDelete }) {
     try {
       // 读取文件并创建URL
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
         setUploadProgress(100);
@@ -81,9 +84,17 @@ export default function Media({ media, onUpload, onDelete }) {
         // 创建本地URL
         const url = e.target.result;
         
-        // 调用上传回调
-        if (onUpload) {
-          onUpload(file, url);
+        // 原来这里调用的是 props.onUpload（App 里的那个回调其实什么都没做），
+        // 现在页面自取 Context 的 uploadMedia，真正写库
+        try {
+          await uploadMedia({
+            name: file.name,
+            url,
+            size: `${Math.max(1, Math.round(file.size / 1024))} KB`,
+            type: file.type,
+          });
+        } catch (err) {
+          await alert(err.message || '上传失败，请重试', 'error');
         }
         
         // 重置状态
@@ -125,15 +136,18 @@ export default function Media({ media, onUpload, onDelete }) {
     }
   };
 
+  // 原来删除走 props.onDelete 回调，现在页面自取 Context 的 deleteMedia
   const handleDelete = async (id, name) => {
     const confirmed = await confirm({
       title: '确认删除',
       message: `确定要删除 "${name}" 吗？此操作不可撤销。`,
     });
     if (confirmed) {
-      if (onDelete) {
-        onDelete(id);
+      try {
+        await deleteMedia(id);
         showToast('文件删除成功', 'success');
+      } catch (err) {
+        showToast(err.message || '删除失败', 'error');
       }
     }
   };
@@ -145,7 +159,7 @@ export default function Media({ media, onUpload, onDelete }) {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">媒体库</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            管理您网站的所有媒体文件 · 共 {media.length} 个文件
+            管理您网站的所有媒体文件 · 共 {mediaItems.length} 个文件
           </p>
         </div>
         <button

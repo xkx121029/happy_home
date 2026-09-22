@@ -1,8 +1,15 @@
 import { useState } from 'react';
 import { Plus, Search, Edit, Trash2, Eye, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Modal, { Toast } from '../components/Modal';
+import { useModal, useToast } from '../hooks/useModal';
+import { useData } from '../contexts/DataContext';
 
-export default function Pages({ pages, onDelete }) {
+export default function Pages() {
+  const { confirm, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
+  const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
+  // 原来靠 props 拿 pages / onDelete，现在页面自取 Context
+  const { pages, deletePage } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
@@ -26,6 +33,18 @@ export default function Pages({ pages, onDelete }) {
     navigate('/admin/pages/new');
   };
 
+  // 原来删除走 props.onDelete 回调，现在页面自取 Context 的 deletePage
+  const handleDelete = async (page) => {
+    const confirmed = await confirm({ title: '确认删除', message: `确定要删除《${page.title}》吗？` });
+    if (!confirmed) return;
+    try {
+      await deletePage(page.id);
+      showToast('页面已删除', 'success');
+    } catch (err) {
+      showToast(err.message || '删除失败', 'error');
+    }
+  };
+
   const handlePreviewPage = (page) => {
     if (page.status === 'published') {
       // 已发布的页面跳转到前台
@@ -37,6 +56,7 @@ export default function Pages({ pages, onDelete }) {
   };
 
   return (
+    <>
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -103,7 +123,7 @@ export default function Pages({ pages, onDelete }) {
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => onDelete(page.id)}
+                    onClick={() => handleDelete(page)}
                     className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -121,5 +141,26 @@ export default function Pages({ pages, onDelete }) {
         )}
       </div>
     </div>
+
+    <Modal
+      isOpen={isModalOpen}
+      onClose={closeModal}
+      title={modalConfig.title}
+      message={modalConfig.message}
+      type={modalConfig.type}
+      confirmText={modalConfig.confirmText}
+      cancelText={modalConfig.cancelText}
+      onConfirm={modalConfig.onConfirm}
+      showCancel={modalConfig.showCancel}
+    />
+
+    <Toast
+      isOpen={isToastOpen}
+      message={toastConfig.message}
+      type={toastConfig.type}
+      onClose={closeToast}
+      duration={toastConfig.duration}
+    />
+    </>
   );
 }

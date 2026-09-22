@@ -1,8 +1,11 @@
 import { FileText, FolderOpen, Image, Users, Eye, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { analyticsAPI } from '../services/api';
+import { useData } from '../contexts/DataContext';
 
-export default function Dashboard({ posts = [], pages = [], media = [], users = [] }) {
+export default function Dashboard() {
+  // 原来靠 App.jsx 通过 props 下发数据，路由重构后页面自取 Context
+  const { posts, pages, mediaItems, users } = useData();
   const [analytics, setAnalytics] = useState({
     today: 0,
     week: 0,
@@ -38,7 +41,7 @@ export default function Dashboard({ posts = [], pages = [], media = [], users = 
     { label: '已发布', value: publishedPosts, icon: FileText, color: 'bg-green-500' },
     { label: '草稿', value: draftPosts, icon: FileText, color: 'bg-yellow-500' },
     { label: '页面', value: pages.length, icon: FolderOpen, color: 'bg-purple-500' },
-    { label: '媒体文件', value: media.length, icon: Image, color: 'bg-pink-500' },
+    { label: '媒体文件', value: mediaItems.length, icon: Image, color: 'bg-pink-500' },
     { label: '用户', value: users.length, icon: Users, color: 'bg-indigo-500' },
   ];
 

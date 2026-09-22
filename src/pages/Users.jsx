@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Plus, Search, Edit, Trash2, User, Mail, Shield, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Modal from '../components/Modal';
+import { useModal } from '../hooks/useModal';
+import { useData } from '../contexts/DataContext';
 
 const roleOptions = [
   { id: 'administrator', label: '管理员', color: 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300' },
@@ -16,7 +19,10 @@ const statusOptions = [
   { id: 'inactive', label: '已禁用', color: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300' },
 ];
 
-export default function Users({ users, onEdit, onDelete, onNew }) {
+export default function Users() {
+  const { confirm, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
+  // 原来靠 props 拿 users 与各种回调，现在页面自取 Context
+  const { users, usersAPI, loadAllData } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState('');
   const navigate = useNavigate();
@@ -48,16 +54,30 @@ export default function Users({ users, onEdit, onDelete, onNew }) {
   };
 
   const handleEditUser = (user) => {
-    onEdit(user);
     navigate(`/admin/users/${user.id}/edit`);
   };
 
   const handleNewUser = () => {
-    onNew();
     navigate('/admin/users/new');
   };
 
+  // 原来删除走 props.onDelete 回调，现在页面自取 Context 的用户接口
+  const handleDelete = async (user) => {
+    const confirmed = await confirm({
+      title: '确认删除',
+      message: `确定要删除用户「${user.username}」吗？`,
+    });
+    if (!confirmed) return;
+    try {
+      await usersAPI.delete(user.id);
+      await loadAllData();
+    } catch (err) {
+      console.error('删除用户失败:', err);
+    }
+  };
+
   return (
+    <>
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -158,7 +178,7 @@ export default function Users({ users, onEdit, onDelete, onNew }) {
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => onDelete(user.id)}
+                        onClick={() => handleDelete(user)}
                         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -179,5 +199,18 @@ export default function Users({ users, onEdit, onDelete, onNew }) {
         )}
       </div>
     </div>
+
+    <Modal
+      isOpen={isModalOpen}
+      onClose={closeModal}
+      title={modalConfig.title}
+      message={modalConfig.message}
+      type={modalConfig.type}
+      confirmText={modalConfig.confirmText}
+      cancelText={modalConfig.cancelText}
+      onConfirm={modalConfig.onConfirm}
+      showCancel={modalConfig.showCancel}
+    />
+    </>
   );
 }

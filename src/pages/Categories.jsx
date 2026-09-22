@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Plus, Search, Edit, Trash2, FolderOpen, ChevronRight, X } from 'lucide-react';
 import { useNotification } from '../components/Notification';
+import { useData } from '../contexts/DataContext';
 import Modal from '../components/Modal';
 
-export default function Categories({ categories, onSave, onDelete }) {
-  const { warning, error } = useNotification();
+export default function Categories() {
+  const { success, warning, error } = useNotification();
+  // 原来靠 props 拿 categories 与保存/删除回调，现在页面自取 Context
+  const { categories, createCategory, updateCategory, deleteCategory } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -72,6 +75,21 @@ export default function Categories({ categories, onSave, onDelete }) {
     }
   };
 
+  // 原来保存走 props.onSave 回调，现在页面自取 Context 的语义化方法
+  const handleSave = async (data) => {
+    try {
+      if (data.id) {
+        await updateCategory(data.id, data);
+        success('分类更新成功');
+      } else {
+        await createCategory(data);
+        success('分类创建成功');
+      }
+    } catch (err) {
+      error(err.message || '保存分类失败');
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -93,9 +111,9 @@ export default function Categories({ categories, onSave, onDelete }) {
     }
 
     if (editingCategory) {
-      onSave({ ...editingCategory, ...formData });
+      handleSave({ ...editingCategory, ...formData });
     } else {
-      onSave(formData);
+      handleSave(formData);
     }
     
     handleCloseModal();
@@ -117,7 +135,15 @@ export default function Categories({ categories, onSave, onDelete }) {
       isOpen: true,
       title: '确认删除',
       message: `确定要删除分类"${category.name}"吗？`,
-      onConfirm: () => onDelete(category.id)
+      // 原来删除走 props.onDelete 回调，现在页面自取 Context 的 deleteCategory
+      onConfirm: async () => {
+        try {
+          await deleteCategory(category.id);
+          success('分类删除成功');
+        } catch (err) {
+          error(err.message || '删除分类失败');
+        }
+      }
     });
   };
 

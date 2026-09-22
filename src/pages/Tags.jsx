@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { Plus, Search, Edit, Trash2, Tag, X, Grid, Layers } from 'lucide-react';
 import Modal, { Toast } from '../components/Modal';
 import { useModal, useToast } from '../hooks/useModal';
+import { useData } from '../contexts/DataContext';
 
-export default function Tags({ tags, onSave, onDelete }) {
+export default function Tags() {
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
+  // 原来靠 props 拿 tags 与保存/删除回调，现在页面自取 Context
+  const { tags, createTag, updateTag, deleteTag } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingTag, setEditingTag] = useState(null);
@@ -64,6 +67,21 @@ export default function Tags({ tags, onSave, onDelete }) {
     }
   };
 
+  // 原来保存/删除走 props 回调，现在页面自取 Context 的语义化方法
+  const handleSave = async (data) => {
+    try {
+      if (data.id) {
+        await updateTag(data.id, data);
+        showToast('标签更新成功', 'success');
+      } else {
+        await createTag(data);
+        showToast('标签创建成功', 'success');
+      }
+    } catch (err) {
+      showToast(err.message || '保存失败', 'error');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -85,11 +103,9 @@ export default function Tags({ tags, onSave, onDelete }) {
     }
 
     if (editingTag) {
-      onSave({ ...editingTag, ...formData });
-      showToast('标签更新成功', 'success');
+      await handleSave({ ...editingTag, ...formData });
     } else {
-      onSave(formData);
-      showToast('标签创建成功', 'success');
+      await handleSave(formData);
     }
     
     handleCloseModal();
@@ -106,8 +122,12 @@ export default function Tags({ tags, onSave, onDelete }) {
       message: `确定要删除标签"${tag.name}"吗？`,
     });
     if (confirmed) {
-      onDelete(tag.id);
-      showToast('标签删除成功', 'success');
+      try {
+        await deleteTag(tag.id);
+        showToast('标签删除成功', 'success');
+      } catch (err) {
+        showToast(err.message || '删除失败', 'error');
+      }
     }
   };
 
