@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-09-22T12:46:57.927Z",
+  "savedAt": "2026-09-22T12:49:20.269Z",
   "apiBase": "http://localhost:3002/api",
   "note": "shape 字段是契约形状（叶子值只留类型）；message 仅供参考不参与 diff",
   "results": [
