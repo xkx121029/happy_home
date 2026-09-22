@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Database, Download, Upload, Trash2, RotateCcw, Clock,
   FileJson, FileText, Archive, Check, X, AlertTriangle,
@@ -6,11 +6,12 @@ import {
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useNotification } from '../components/Notification';
+import { backupsAPI } from '../services/api';
 import Modal from '../components/Modal';
 
 export default function Backup() {
-  const { backups, posts, pages, comments } = useData();
-  const { info, warning } = useNotification();
+  const { backups, loadBackups, posts, pages, comments, loadAllData } = useData();
+  const { success, error, info } = useNotification();
   const [activeTab, setActiveTab] = useState('backups');
   const [selectedBackups, setSelectedBackups] = useState([]);
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(null);
@@ -19,9 +20,17 @@ export default function Backup() {
   const [isImporting, setIsImporting] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+  const [busy, setBusy] = useState(false);
+
+  // 备份列表来自后端目录扫描，进页面时拉一次
+  useEffect(() => {
+    loadBackups().catch(() => {
+      // 未登录或无权限时静默失败，页面会显示空列表
+    });
+  }, [loadBackups]);
 
   const formatSize = (bytes) => {
-    if (bytes === 0) return '0 B';
+    if (!bytes) return '0 B';
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -30,41 +39,171 @@ export default function Backup() {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return dateString || '';
     return date.toLocaleString('zh-CN');
   };
 
-  const handleCreateFullBackup = () => {
-    info('备份功能暂未实现');
+  // 触发浏览器下载。导出走客户端生成，数据本来就在 Context 里，无需往返后端。
+  const downloadFile = (filename, content, mime = 'application/json') => {
+    const blob = new Blob([content], { type: `${mime};charset=utf-8` });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
-  const handleCreateCustomBackup = (type) => {
-    info('自定义备份功能暂未实现');
-  };
+  const stamp = () => new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
 
-  const handleRestore = (id) => {
-    info('恢复功能暂未实现');
-    setShowRestoreConfirm(null);
-  };
-
-  const handleDelete = (id) => {
-    info('删除备份功能暂未实现');
-    setShowDeleteConfirm(null);
-  };
-
-  const handleDownload = (id) => {
-    info('下载备份功能暂未实现');
+  const EXPORT_SOURCES = {
+    posts: { label: '文章', get: () => posts },
+    pages: { label: '页面', get: () => pages },
+    comments: { label: '评论', get: () => comments },
   };
 
   const handleExport = (type) => {
-    info('导出功能暂未实现');
+    try {
+      if (type === 'full') {
+        const payload = {
+          exportedAt: new Date().toISOString(),
+          posts, pages, comments,
+        };
+        downloadFile(`happyhome-全部数据-${stamp()}.json`, JSON.stringify(payload, null, 2));
+        success('已导出全部数据');
+        return;
+      }
+      const source = EXPORT_SOURCES[type];
+      if (!source) return;
+      downloadFile(
+        `happyhome-${source.label}-${stamp()}.json`,
+        JSON.stringify(source.get() || [], null, 2)
+      );
+      success(`已导出${source.label}`);
+    } catch (err) {
+      error('导出失败：' + (err.message || '未知错误'));
+    }
+  };
+
+  // 简易 HTML → Markdown。只覆盖编辑器实际会产出的标签，
+  // 目标是让导出结果在其它平台可读，不做完整的 HTML 规范化。
+  const htmlToMarkdown = (html) => {
+    if (!html) return '';
+    let md = String(html);
+    md = md.replace(/<\s*br\s*\/?>/gi, '\n');
+    md = md.replace(/<\s*h([1-6])[^>]*>([\s\S]*?)<\s*\/h\1>/gi, (_, level, text) => `\n${'#'.repeat(Number(level))} ${text.trim()}\n`);
+    md = md.replace(/<\s*blockquote[^>]*>([\s\S]*?)<\s*\/blockquote>/gi, (_, text) => `\n> ${text.trim().replace(/\n/g, '\n> ')}\n`);
+    md = md.replace(/<\s*pre[^>]*>\s*<\s*code[^>]*>([\s\S]*?)<\s*\/code>\s*<\s*\/pre>/gi, (_, code) => `\n\`\`\`\n${code.trim()}\n\`\`\`\n`);
+    md = md.replace(/<\s*code[^>]*>([\s\S]*?)<\s*\/code>/gi, (_, code) => `\`${code}\``);
+    md = md.replace(/<\s*strong[^>]*>([\s\S]*?)<\s*\/strong>/gi, '**$1**');
+    md = md.replace(/<\s*b[^>]*>([\s\S]*?)<\s*\/b>/gi, '**$1**');
+    md = md.replace(/<\s*em[^>]*>([\s\S]*?)<\s*\/em>/gi, '*$1*');
+    md = md.replace(/<\s*i[^>]*>([\s\S]*?)<\s*\/i>/gi, '*$1*');
+    md = md.replace(/<\s*a[^>]*href\s*=\s*["']([^"']*)["'][^>]*>([\s\S]*?)<\s*\/a>/gi, '[$2]($1)');
+    md = md.replace(/<\s*img[^>]*src\s*=\s*["']([^"']*)["'][^>]*alt\s*=\s*["']([^"']*)["'][^>]*\/?>/gi, '![$2]($1)');
+    md = md.replace(/<\s*img[^>]*src\s*=\s*["']([^"']*)["'][^>]*\/?>/gi, '![]($1)');
+    md = md.replace(/<\s*li[^>]*>([\s\S]*?)<\s*\/li>/gi, (_, text) => `- ${text.trim()}\n`);
+    md = md.replace(/<\s*(ul|ol)[^>]*>/gi, '\n');
+    md = md.replace(/<\s*\/\s*(ul|ol)\s*>/gi, '\n');
+    md = md.replace(/<\s*p[^>]*>([\s\S]*?)<\s*\/p>/gi, (_, text) => `\n${text.trim()}\n`);
+    md = md.replace(/<\s*\/?\s*(div|span|section|article)[^>]*>/gi, '');
+    md = md.replace(/<[^>]+>/g, '');
+    return md.replace(/\n{3,}/g, '\n\n').trim();
   };
 
   const handleExportMarkdown = (postId) => {
-    info('导出 Markdown 功能暂未实现');
+    const post = (posts || []).find(p => p.id === postId);
+    if (!post) {
+      error('文章不存在');
+      return;
+    }
+    const frontMatter = [
+      '---',
+      `title: ${post.title}`,
+      `date: ${post.createdAt || ''}`,
+      `category: ${post.category || ''}`,
+      `status: ${post.status || ''}`,
+      '---',
+      '',
+    ].join('\n');
+    const body = `${frontMatter}# ${post.title}\n\n${htmlToMarkdown(post.content)}\n`;
+    downloadFile(`${(post.slug || post.id)}.md`, body, 'text/markdown');
+    success('已导出 Markdown');
   };
 
-  const handleImport = async (e) => {
-    info('导入功能暂未实现');
+  const handleCreateFullBackup = async () => {
+    setBusy(true);
+    try {
+      await backupsAPI.create({});
+      await loadBackups();
+      success('完整备份创建成功');
+    } catch (err) {
+      error('备份失败：' + (err.message || '未知错误'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleCreateCustomBackup = (type) => {
+    // 后端只做整库文件级备份；按内容类型拆分的备份在文件层面没有意义，
+    // 因此这里改为导出对应内容的 JSON —— 与按钮文案承诺的一致。
+    handleExport(type);
+  };
+
+  const handleRestore = async (id) => {
+    setShowRestoreConfirm(null);
+    setBusy(true);
+    try {
+      const res = await backupsAPI.restore(id);
+      await Promise.all([loadAllData(), loadBackups()]);
+      success(res.message || '已恢复');
+    } catch (err) {
+      error('恢复失败：' + (err.message || '未知错误'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    setShowDeleteConfirm(null);
+    try {
+      await backupsAPI.delete(id);
+      setSelectedBackups(prev => prev.filter(x => x !== id));
+      await loadBackups();
+      success('备份已删除');
+    } catch (err) {
+      error('删除失败：' + (err.message || '未知错误'));
+    }
+  };
+
+  const handleDownload = (id) => {
+    // 走后端下载端点（需要带 token），用 fetch 取 blob 再另存
+    fetch(backupsAPI.getDownloadUrl(id), {
+      headers: { Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}` },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('下载失败');
+        return res.blob();
+      })
+      .then((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = id;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      })
+      .catch((err) => error(err.message || '下载失败'));
+  };
+
+  const handleImport = async () => {
+    // 导入需要完整的校验与合并策略（重复 id 怎么处理、内容要不要净化），
+    // 目前后端没有对应端点，这里如实告知而不是伪造成功。
+    info('导入功能尚未实现，可先用导出功能备份现有数据');
   };
 
   const toggleSection = (section) => {
@@ -80,39 +219,33 @@ export default function Backup() {
     );
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (selectedBackups.length === 0) return;
-    setConfirmModal({
-      isOpen: true,
-      title: '确认批量删除',
-      message: `确定要删除选中的 ${selectedBackups.length} 个备份吗？`,
-      onConfirm: () => {
-        info('批量删除备份功能暂未实现');
-        setSelectedBackups([]);
-      }
-    });
+    const ids = [...selectedBackups];
+    setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null });
+    try {
+      await Promise.all(ids.map((id) => backupsAPI.delete(id)));
+      setSelectedBackups([]);
+      await loadBackups();
+      success(`已删除 ${ids.length} 个备份`);
+    } catch (err) {
+      error('部分备份删除失败：' + (err.message || '未知错误'));
+      await loadBackups();
+    }
   };
 
   const getBackupTypeLabel = (type) => {
     const labels = {
-      full: '完整备份',
-      posts: '文章备份',
-      pages: '页面备份',
-      users: '用户备份',
-      settings: '设置备份',
-      comments: '评论备份',
+      manual: '手动备份',
+      auto: '自动备份',
     };
     return labels[type] || type;
   };
 
   const getBackupTypeColor = (type) => {
     const colors = {
-      full: 'bg-purple-100 text-purple-700',
-      posts: 'bg-blue-100 text-blue-700',
-      pages: 'bg-green-100 text-green-700',
-      users: 'bg-orange-100 text-orange-700',
-      settings: 'bg-gray-100 text-gray-700',
-      comments: 'bg-pink-100 text-pink-700',
+      manual: 'bg-blue-100 text-blue-700',
+      auto: 'bg-gray-100 text-gray-700',
     };
     return colors[type] || 'bg-gray-100 text-gray-700';
   };
