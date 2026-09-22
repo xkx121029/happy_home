@@ -56,7 +56,8 @@ export function normalizeEntity(entity) {
   return result;
 }
 
-// 只规整 data 载荷，不动 success/message/count 这类外层信封字段
+// 只规整数据载荷，不动 success/message/count 这类外层信封字段。
+// notifications 类端点用的是 notifications 而不是 data，一并处理。
 function normalizeResponse(payload) {
   if (!payload || typeof payload !== 'object') return payload;
   const result = { ...payload };
@@ -64,6 +65,9 @@ function normalizeResponse(payload) {
     result.data = payload.data.map(normalizeEntity);
   } else if (payload.data && typeof payload.data === 'object') {
     result.data = normalizeEntity(payload.data);
+  }
+  if (Array.isArray(payload.notifications)) {
+    result.notifications = payload.notifications.map(normalizeEntity);
   }
   return result;
 }

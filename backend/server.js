@@ -1702,7 +1702,7 @@ app.get('/api/notifications', authenticateToken, (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.json({ success: true, notifications: [], unreadCount: 0 });
+    res.status(500).json({ success: false, message: '获取通知失败' });
   }
 });
 
@@ -1717,7 +1717,7 @@ app.get('/api/notifications/unread', authenticateToken, (req, res) => {
     res.json({ success: true, notifications: notifications.map(n => ({ ...n, isRead: false })) });
   } catch (error) {
     console.error(error);
-    res.json({ success: true, notifications: [] });
+    res.status(500).json({ success: false, message: '获取未读通知失败' });
   }
 });
 
@@ -1732,7 +1732,7 @@ app.get('/api/notifications/count', authenticateToken, (req, res) => {
     res.json({ success: true, count: result?.count || 0 });
   } catch (error) {
     console.error(error);
-    res.json({ success: true, count: 0 });
+    res.status(500).json({ success: false, message: '获取未读数失败' });
   }
 });
 

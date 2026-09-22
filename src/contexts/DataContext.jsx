@@ -346,9 +346,11 @@ export const DataProvider = ({ children }) => {
   };
 
   // Notifications
+  // 注意：通知类端点返回的载荷字段是 notifications / unreadCount / count，
+  // 而不是统一的 data，所以这里不能按 response.data 取（否则永远是空数组）。
   const getNotifications = async () => {
     const response = await notificationsAPI.getAll();
-    setNotifications(response.data || []);
+    setNotifications(response.notifications || []);
     return response;
   };
 
