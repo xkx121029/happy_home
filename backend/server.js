@@ -38,6 +38,13 @@ function getSingle(db, sql, params = []) {
   return results.length > 0 ? results[0] : null;
 }
 
+// sql.js 无法绑定 undefined（会抛 Wrong API use），会把整个请求打成 500。
+// 统一规整为 null：配合 SQL 里的 COALESCE(NULL, col) 恰好等于「不修改该列」，
+// 这正是部分更新的语义 —— 例如只传 { sticky: true } 时不应影响标题与正文。
+function bindable(params = []) {
+  return params.map((value) => (value === undefined ? null : value));
+}
+
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -440,7 +447,7 @@ app.put('/api/posts/:id', authenticateToken, (req, res) => {
 
     db.run(
       'UPDATE posts SET title = COALESCE(?, title), content = COALESCE(?, content), excerpt = COALESCE(?, excerpt), category = COALESCE(?, category), status = COALESCE(?, status), sticky = COALESCE(?, sticky), updated_at = datetime("now") WHERE id = ?',
-      [title, content, excerpt, category, status, sticky === undefined ? undefined : (sticky ? 1 : 0), req.params.id]
+      bindable([title, content, excerpt, category, status, sticky === undefined ? undefined : (sticky ? 1 : 0), req.params.id])
     );
     saveDatabase();
 
@@ -557,7 +564,7 @@ app.put('/api/pages/:id', authenticateToken, (req, res) => {
 
     db.run(
       'UPDATE pages SET title = COALESCE(?, title), content = COALESCE(?, content), slug = COALESCE(?, slug), status = COALESCE(?, status), updated_at = datetime("now") WHERE id = ?',
-      [title, content, slug, status, req.params.id]
+      bindable([title, content, slug, status, req.params.id])
     );
     saveDatabase();
 
@@ -636,7 +643,7 @@ app.put('/api/categories/:id', authenticateToken, (req, res) => {
 
     db.run(
       'UPDATE categories SET name = COALESCE(?, name), slug = COALESCE(?, slug), description = COALESCE(?, description), parent = ? WHERE id = ?',
-      [name, slug, description, parent || null, req.params.id]
+      bindable([name, slug, description, parent || null, req.params.id])
     );
     saveDatabase();
 
@@ -716,7 +723,7 @@ app.put('/api/tags/:id', authenticateToken, (req, res) => {
       return res.status(404).json({ success: false, message: '标签不存在' });
     }
 
-    db.run('UPDATE tags SET name = COALESCE(?, name), slug = COALESCE(?, slug) WHERE id = ?', [name, slug, req.params.id]);
+    db.run('UPDATE tags SET name = COALESCE(?, name), slug = COALESCE(?, slug) WHERE id = ?', bindable([name, slug, req.params.id]));
     saveDatabase();
 
     const updatedTag = getSingle(db, 'SELECT * FROM tags WHERE id = ?', [req.params.id]);
@@ -905,8 +912,10 @@ app.put('/api/menus/:id', authenticateToken, (req, res) => {
     }
 
     db.run(
-      'UPDATE menus SET title = COALESCE(?, title), location = COALESCE(?, location), items = ?, updated_at = datetime("now") WHERE id = ?',
-      [title, location, JSON.stringify(items || []), req.params.id]
+      // items 原本是 `items = ?` + `JSON.stringify(items || [])`：只要请求里没带 items
+      // （例如只想改标题），就会把整个菜单项列表清空成 []。改为 COALESCE 后跳过未传字段。
+      'UPDATE menus SET title = COALESCE(?, title), location = COALESCE(?, location), items = COALESCE(?, items), updated_at = datetime("now") WHERE id = ?',
+      bindable([title, location, items === undefined ? undefined : JSON.stringify(items), req.params.id])
     );
     saveDatabase();
 
@@ -1003,8 +1012,11 @@ app.put('/api/widgets/:id', authenticateToken, (req, res) => {
     }
 
     db.run(
-      'UPDATE widgets SET name = COALESCE(?, name), enabled = COALESCE(?, enabled), config = ?, location = COALESCE(?, location), order_num = COALESCE(?, order_num) WHERE id = ?',
-      [name, enabled === undefined ? undefined : (enabled ? 1 : 0), JSON.stringify(config || widget.config), location, order_num, req.params.id]
+      // config 原本是 `config = ?` + `JSON.stringify(config || widget.config)`：widget.config
+      // 已是 JSON 字符串，会被二次编码。改为未传时跳过（COALESCE 保持原值）。
+      // enabled 原本在未传时绑定 undefined，正是 toggleEnabled 类调用 500 的原因。
+      'UPDATE widgets SET name = COALESCE(?, name), enabled = COALESCE(?, enabled), config = COALESCE(?, config), location = COALESCE(?, location), order_num = COALESCE(?, order_num) WHERE id = ?',
+      bindable([name, enabled === undefined ? undefined : (enabled ? 1 : 0), config === undefined ? undefined : JSON.stringify(config), location, order_num, req.params.id])
     );
     saveDatabase();
 
