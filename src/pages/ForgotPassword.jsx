@@ -140,7 +140,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+    <div className="w-full">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
