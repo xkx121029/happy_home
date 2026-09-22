@@ -981,11 +981,13 @@ app.post('/api/widgets', authenticateToken, (req, res) => {
     }
 
     const newWidgetId = uuidv4();
-    const maxOrder = execQuery(db, 'SELECT MAX(order_num) as max_order FROM widgets WHERE location = ?', [location])[0]?.max_order || 0;
+    // location 未传时原样绑定 undefined 会让 sql.js 抛错，必须回退到默认值再查询
+    const widgetLocation = location || 'sidebar';
+    const maxOrder = execQuery(db, 'SELECT MAX(order_num) as max_order FROM widgets WHERE location = ?', [widgetLocation])[0]?.max_order || 0;
 
     db.run(
       'INSERT INTO widgets (id, name, type, location, order_num, config) VALUES (?, ?, ?, ?, ?, ?)',
-      [newWidgetId, name || type, type, location || 'sidebar', maxOrder + 1, JSON.stringify(config || {})]
+      [newWidgetId, name || type, type, widgetLocation, maxOrder + 1, JSON.stringify(config || {})]
     );
     saveDatabase();
 

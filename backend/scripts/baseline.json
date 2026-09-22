@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-09-22T12:16:44.532Z",
+  "savedAt": "2026-09-22T12:19:05.426Z",
   "apiBase": "http://localhost:3002/api",
   "note": "shape 字段是契约形状（叶子值只留类型）；message 仅供参考不参与 diff",
   "results": [
@@ -416,60 +416,26 @@
       "message": "文章创建成功"
     },
     {
-      "name": "PUT  /posts/:id",
-      "status": 500,
+      "name": "PUT  /posts/:id (部分字段)",
+      "status": 200,
       "expect": 200,
-      "shape": {
-        "message": "string",
-        "success": "bool:false"
-      },
-      "message": "服务器错误"
-    },
-    {
-      "name": "POST /posts 置顶字段",
-      "status": 500,
-      "expect": 200,
-      "shape": {
-        "message": "string",
-        "success": "bool:false"
-      },
-      "message": "服务器错误"
-    },
-    {
-      "name": "POST /categories",
-      "status": 201,
-      "expect": 201,
       "shape": {
         "data": {
-          "count": "number",
+          "author": "string",
+          "category": "string",
+          "content": "string",
           "created_at": "string",
-          "description": "string",
+          "excerpt": "string",
           "id": "string",
-          "name": "string",
-          "parent": "null",
-          "slug": "string"
+          "status": "string",
+          "sticky": "number",
+          "title": "string",
+          "updated_at": "string"
         },
         "message": "string",
         "success": "bool:true"
       },
-      "message": "分类创建成功"
-    },
-    {
-      "name": "POST /tags",
-      "status": 201,
-      "expect": 201,
-      "shape": {
-        "data": {
-          "count": "number",
-          "created_at": "string",
-          "id": "string",
-          "name": "string",
-          "slug": "string"
-        },
-        "message": "string",
-        "success": "bool:true"
-      },
-      "message": "标签创建成功"
+      "message": "文章更新成功"
     },
     {
       "name": "POST /pages",
@@ -492,6 +458,98 @@
       "message": "页面创建成功"
     },
     {
+      "name": "PUT  /pages/:id (部分字段)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "author": "string",
+          "content": "string",
+          "created_at": "string",
+          "id": "string",
+          "slug": "string",
+          "status": "string",
+          "title": "string",
+          "updated_at": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "页面更新成功"
+    },
+    {
+      "name": "POST /categories",
+      "status": 201,
+      "expect": 201,
+      "shape": {
+        "data": {
+          "count": "number",
+          "created_at": "string",
+          "description": "string",
+          "id": "string",
+          "name": "string",
+          "parent": "null",
+          "slug": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "分类创建成功"
+    },
+    {
+      "name": "PUT  /categories/:id (部分字段)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "count": "number",
+          "created_at": "string",
+          "description": "string",
+          "id": "string",
+          "name": "string",
+          "parent": "null",
+          "slug": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "分类更新成功"
+    },
+    {
+      "name": "POST /tags",
+      "status": 201,
+      "expect": 201,
+      "shape": {
+        "data": {
+          "count": "number",
+          "created_at": "string",
+          "id": "string",
+          "name": "string",
+          "slug": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "标签创建成功"
+    },
+    {
+      "name": "PUT  /tags/:id (部分字段)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "count": "number",
+          "created_at": "string",
+          "id": "string",
+          "name": "string",
+          "slug": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "标签更新成功"
+    },
+    {
       "name": "POST /media",
       "status": 201,
       "expect": 201,
@@ -508,6 +566,92 @@
         "success": "bool:true"
       },
       "message": "媒体文件上传成功"
+    },
+    {
+      "name": "POST /menus",
+      "status": 201,
+      "expect": 201,
+      "shape": {
+        "data": {
+          "created_at": "string",
+          "id": "string",
+          "items": [
+            {
+              "label": "string",
+              "url": "string"
+            }
+          ],
+          "location": "string",
+          "title": "string",
+          "updated_at": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "菜单创建成功"
+    },
+    {
+      "name": "PUT  /menus/:id (只改标题，items 应保留)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "created_at": "string",
+          "id": "string",
+          "items": [
+            {
+              "label": "string",
+              "url": "string"
+            }
+          ],
+          "location": "string",
+          "title": "string",
+          "updated_at": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "菜单更新成功"
+    },
+    {
+      "name": "POST /widgets (不传 location)",
+      "status": 201,
+      "expect": 201,
+      "shape": {
+        "data": {
+          "config": {},
+          "created_at": "string",
+          "enabled": "bool:true",
+          "id": "string",
+          "location": "string",
+          "name": "string",
+          "order_num": "number",
+          "type": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "部件创建成功"
+    },
+    {
+      "name": "PUT  /widgets/:id (切换 enabled)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "config": {},
+          "created_at": "string",
+          "enabled": "bool:false",
+          "id": "string",
+          "location": "string",
+          "name": "string",
+          "order_num": "number",
+          "type": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "部件更新成功"
     },
     {
       "name": "POST /notifications/demo",

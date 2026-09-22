@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# 环境变量与本地数据库：包含密钥与用户数据，绝不入库
+.env
+.env.*
+!.env.example
+backend/.env
+backend/*.db
+backend/*.db.bak-*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

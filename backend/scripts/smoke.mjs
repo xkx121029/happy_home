@@ -240,64 +240,98 @@ async function main() {
     await record(name, async () => ({ res: await call('GET', path), expect: 200 }));
   }
 
-  // 5. 写路径：建 → 改 → 删，建完登记清理
-  await record('POST /posts', async () => {
-    const res = await call('POST', '/posts', {
+  // 5. 写路径：建 → 部分改 → 删。建完登记清理。
+  //    这里刻意用「只传一个字段」的部分更新做 PUT —— sql.js 无法绑定 undefined，
+  //    历史上这类调用会把所有 PUT 端点打成 500，必须由冒烟守住。
+  const resources = [
+    {
+      name: 'posts',
+      path: '/posts',
+      create: { title: `${MARK} 标题`, content: '<p>内容</p>', category: '未分类', status: 'draft' },
+      patch: { sticky: true },
+    },
+    {
+      name: 'pages',
+      path: '/pages',
+      create: { title: `${MARK} 页面`, content: '<p>页面内容</p>', status: 'draft' },
+      patch: { title: `${MARK} 页面已改` },
+    },
+    {
+      name: 'categories',
+      path: '/categories',
+      create: { name: MARK, slug: MARK, description: '冒烟测试' },
+      patch: { description: '冒烟测试已改' },
+    },
+    {
+      name: 'tags',
+      path: '/tags',
+      create: { name: MARK, slug: MARK },
+      patch: { name: `${MARK}-已改` },
+    },
+    {
+      name: 'media',
+      path: '/media',
+      create: { name: `${MARK}.png`, url: 'https://example.com/x.png', size: '1 KB', type: 'image/png' },
+      patch: null,
+    },
+  ];
+
+  for (const r of resources) {
+    const created = await record(`POST ${r.path}`, async () => ({
+      res: await call('POST', r.path, { token, body: r.create }),
+      expect: 201,
+    }));
+
+    const id = created.body?.data?.id;
+    if (!id) continue;
+    cleanup.push(['delete', `${r.path}/${id}`, token]);
+
+    if (r.patch) {
+      await record(`PUT  ${r.path}/:id (部分字段)`, async () => ({
+        res: await call('PUT', `${r.path}/${id}`, { token, body: r.patch }),
+        expect: 200,
+      }));
+    }
+  }
+
+  // 菜单：部分更新不得清空 items（历史上会写成 []）
+  const menuCreated = await record('POST /menus', async () => {
+    const res = await call('POST', '/menus', {
       token,
-      body: { title: `${MARK} 标题`, content: '<p>内容</p>', category: '未分类', status: 'draft' },
+      body: { title: MARK, location: 'primary', items: [{ label: '首页', url: '/' }] },
     });
-    if (res.body?.data?.id) cleanup.push(['delete', `/posts/${res.body.data.id}`, token]);
+    if (res.body?.data?.id) cleanup.push(['delete', `/menus/${res.body.data.id}`, token]);
     return { res, expect: 201 };
   });
+  const menuId = menuCreated.body?.data?.id;
+  if (menuId) {
+    await record('PUT  /menus/:id (只改标题，items 应保留)', async () => {
+      const res = await call('PUT', `/menus/${menuId}`, { token, body: { title: `${MARK} 已改` } });
+      const items = res.body?.data?.items;
+      if (res.status === 200 && (!Array.isArray(items) || items.length === 0)) {
+        return { res: { status: -1, body: { message: `items 被清空了: ${JSON.stringify(items)}` } }, expect: 200 };
+      }
+      return { res, expect: 200 };
+    });
+  }
 
-  const created = cleanup.find(([m, p]) => m === 'delete' && p.startsWith('/posts/'));
-  if (created) {
-    const id = created[1].split('/').pop();
-    await record('PUT  /posts/:id', async () => ({
-      res: await call('PUT', `/posts/${id}`, { token, body: { title: `${MARK} 已改` } }),
-      expect: 200,
-    }));
-    await record('POST /posts 置顶字段', async () => ({
-      res: await call('PUT', `/posts/${id}`, { token, body: { sticky: true } }),
+  // 部件：创建时故意不传 location（历史上未传会因 undefined 绑定而 500），
+  // 随后切换 enabled（同样历史上会 500）
+  const widgetCreated = await record('POST /widgets (不传 location)', async () => {
+    const res = await call('POST', '/widgets', {
+      token,
+      body: { name: MARK, type: 'recent_posts', config: {} },
+    });
+    if (res.body?.data?.id) cleanup.push(['delete', `/widgets/${res.body.data.id}`, token]);
+    return { res, expect: 201 };
+  });
+  const widgetId = widgetCreated.body?.data?.id;
+  if (widgetId) {
+    await record('PUT  /widgets/:id (切换 enabled)', async () => ({
+      res: await call('PUT', `/widgets/${widgetId}`, { token, body: { enabled: false } }),
       expect: 200,
     }));
   }
-
-  await record('POST /categories', async () => {
-    const res = await call('POST', '/categories', {
-      token,
-      body: { name: MARK, slug: MARK, description: '冒烟测试' },
-    });
-    if (res.body?.data?.id) cleanup.push(['delete', `/categories/${res.body.data.id}`, token]);
-    return { res, expect: 201 };
-  });
-
-  await record('POST /tags', async () => {
-    const res = await call('POST', '/tags', {
-      token,
-      body: { name: MARK, slug: MARK },
-    });
-    if (res.body?.data?.id) cleanup.push(['delete', `/tags/${res.body.data.id}`, token]);
-    return { res, expect: 201 };
-  });
-
-  await record('POST /pages', async () => {
-    const res = await call('POST', '/pages', {
-      token,
-      body: { title: `${MARK} 页面`, content: '<p>页面内容</p>', status: 'draft' },
-    });
-    if (res.body?.data?.id) cleanup.push(['delete', `/pages/${res.body.data.id}`, token]);
-    return { res, expect: 201 };
-  });
-
-  await record('POST /media', async () => {
-    const res = await call('POST', '/media', {
-      token,
-      body: { name: `${MARK}.png`, url: 'https://example.com/x.png', size: '1 KB', type: 'image/png' },
-    });
-    if (res.body?.data?.id) cleanup.push(['delete', `/media/${res.body.data.id}`, token]);
-    return { res, expect: 201 };
-  });
 
   await record('POST /notifications/demo', async () => ({
     res: await call('POST', '/notifications/demo', { token }),
