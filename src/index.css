@@ -1,3 +1,7 @@
+/* 样式入口。顺序敏感：
+   1. 设计变量（定义在 @tailwind 之前，Tailwind 解析 theme() 时需要它们已存在）
+   2. Tailwind 三层
+   3. 基础样式（其中的 @layer base 会被 Tailwind 归入 base 层） */
 @import './styles/tokens.css';
 
 @tailwind base;
