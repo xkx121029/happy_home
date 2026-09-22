@@ -59,18 +59,6 @@ function createTables() {
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
-
-  if (!process.env.INITIAL_ADMIN_PASSWORD) {
-    console.log('');
-    console.log('====================================================');
-    console.log('  已创建初始管理员账号');
-    console.log('  用户名：admin');
-    console.log('  初始口令：' + initialPassword);
-    console.log('  请登录后立即修改，或在 .env 里设置 INITIAL_ADMIN_PASSWORD');
-    console.log('====================================================');
-    console.log('');
-  }
-
     CREATE TABLE posts (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
@@ -221,14 +209,6 @@ function generateInitialPassword() {
 function insertInitialData() {
   console.log('Inserting initial data...');
 
-  db.run(
-  // 初始管理员口令不再硬编码。
-  //
-  // 原来这里写死 'admin123'，而这个口令已经随 backend/.env 与 README 一起被推到了公开仓库 ——
-  // 任何人都能在一个全新部署上用公开口令登录管理员账号。
-  // 现在的策略：优先读环境变量 INITIAL_ADMIN_PASSWORD；没配置就随机生成一个并打印一次，
-  // 让运维有办法登录，然后立刻改掉。
-  const initialPassword = process.env.INITIAL_ADMIN_PASSWORD || generateInitialPassword();
 
     [uuidv4(), 'admin', 'xkxxkx12345@hotmail.com', bcrypt.hashSync(initialPassword, 10), 'administrator', 'active']
   );
