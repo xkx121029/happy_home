@@ -1,13 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  Database, Download, Upload, Trash2, RotateCcw, Clock,
-  FileJson, FileText, Archive, Check, X, AlertTriangle,
-  FolderOpen, Copy, ChevronDown, ChevronRight
+  Download, Upload, Trash2, RotateCcw, Clock,
+  FileJson, FileText, Archive, AlertTriangle,
+  FolderOpen, Copy
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useNotification } from '../components/Notification';
 import { backupsAPI } from '../services/api';
-import Modal from '../components/Modal';
 
 export default function Backup() {
   const { backups, loadBackups, posts, pages, comments, loadAllData } = useData();
@@ -16,11 +15,7 @@ export default function Backup() {
   const [selectedBackups, setSelectedBackups] = useState([]);
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
-  const [importResult, setImportResult] = useState(null);
-  const [isImporting, setIsImporting] = useState(false);
-  const [expandedSections, setExpandedSections] = useState({});
-  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
-  const [busy, setBusy] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   // 备份列表来自后端目录扫描，进页面时拉一次
   useEffect(() => {
@@ -134,15 +129,12 @@ export default function Backup() {
   };
 
   const handleCreateFullBackup = async () => {
-    setBusy(true);
     try {
       await backupsAPI.create({});
       await loadBackups();
       success('完整备份创建成功');
     } catch (err) {
       error('备份失败：' + (err.message || '未知错误'));
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -154,15 +146,12 @@ export default function Backup() {
 
   const handleRestore = async (id) => {
     setShowRestoreConfirm(null);
-    setBusy(true);
     try {
       const res = await backupsAPI.restore(id);
       await Promise.all([loadAllData(), loadBackups()]);
       success(res.message || '已恢复');
     } catch (err) {
       error('恢复失败：' + (err.message || '未知错误'));
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -206,13 +195,6 @@ export default function Backup() {
     info('导入功能尚未实现，可先用导出功能备份现有数据');
   };
 
-  const toggleSection = (section) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
-
   const toggleSelectBackup = (id) => {
     setSelectedBackups(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
@@ -222,7 +204,7 @@ export default function Backup() {
   const handleBulkDelete = async () => {
     if (selectedBackups.length === 0) return;
     const ids = [...selectedBackups];
-    setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null });
+    setShowBulkDeleteConfirm(false);
     try {
       await Promise.all(ids.map((id) => backupsAPI.delete(id)));
       setSelectedBackups([]);
@@ -300,7 +282,7 @@ export default function Backup() {
                 <Archive className="w-6 h-6" />
                 <div className="text-left">
                   <div className="font-medium">完整备份</div>
-                  <div className="text-xs opacity-80">备份所有数据</div>
+                  <div className="text-xs opacity-80">备份整个数据库文件</div>
                 </div>
               </button>
 
@@ -310,8 +292,8 @@ export default function Backup() {
               >
                 <FileText className="w-6 h-6" />
                 <div className="text-left">
-                  <div className="font-medium">文章备份</div>
-                  <div className="text-xs opacity-80">仅备份文章</div>
+                  <div className="font-medium">导出文章</div>
+                  <div className="text-xs opacity-80">JSON 格式</div>
                 </div>
               </button>
 
@@ -321,8 +303,8 @@ export default function Backup() {
               >
                 <FolderOpen className="w-6 h-6" />
                 <div className="text-left">
-                  <div className="font-medium">页面备份</div>
-                  <div className="text-xs opacity-80">仅备份页面</div>
+                  <div className="font-medium">导出页面</div>
+                  <div className="text-xs opacity-80">JSON 格式</div>
                 </div>
               </button>
 
@@ -332,8 +314,8 @@ export default function Backup() {
               >
                 <FileJson className="w-6 h-6" />
                 <div className="text-left">
-                  <div className="font-medium">评论备份</div>
-                  <div className="text-xs opacity-80">仅备份评论</div>
+                  <div className="font-medium">导出评论</div>
+                  <div className="text-xs opacity-80">JSON 格式</div>
                 </div>
               </button>
             </div>
@@ -347,7 +329,7 @@ export default function Backup() {
               </h2>
               {selectedBackups.length > 0 && (
                 <button
-                  onClick={handleBulkDelete}
+                  onClick={() => setShowBulkDeleteConfirm(true)}
                   className="px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -524,10 +506,11 @@ export default function Backup() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">导入数据</h2>
             <p className="text-gray-500 dark:text-gray-400 mb-6">
-              从 JSON 文件导入数据。支持导入文章、页面、分类、标签、菜单和评论。
+              导入功能尚未实现。后端目前没有对应的导入端点，强行导入需要先确定
+              重复数据的合并策略与内容净化规则，因此暂不提供，避免把不合法的数据写进库。
             </p>
 
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center">
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center opacity-60">
               <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 选择或拖拽 JSON 文件到此处
@@ -540,35 +523,19 @@ export default function Backup() {
                   accept=".json"
                   onChange={handleImport}
                   className="hidden"
-                  disabled={isImporting}
                 />
               </label>
             </div>
-
-            {importResult && (
-              <div className={`mt-4 p-4 rounded-xl flex items-center gap-3 ${
-                importResult.type === 'success'
-                  ? 'bg-green-50 text-green-700'
-                  : 'bg-red-50 text-red-700'
-              }`}>
-                {importResult.type === 'success' ? (
-                  <Check className="w-5 h-5" />
-                ) : (
-                  <X className="w-5 h-5" />
-                )}
-                {importResult.message}
-              </div>
-            )}
 
             <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
                 <div>
-                  <h3 className="font-medium text-yellow-800 dark:text-yellow-200">导入提示</h3>
+                  <h3 className="font-medium text-yellow-800 dark:text-yellow-200">当前可用的替代方案</h3>
                   <ul className="mt-2 text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                    <li>• 导入将合并现有数据，不会覆盖已有内容</li>
-                    <li>• 请确保导入的 JSON 文件格式正确</li>
-                    <li>• 建议在导入前创建完整备份</li>
+                    <li>• 「数据导出」页签可把文章、页面、评论导出为 JSON 或 Markdown</li>
+                    <li>• 「备份管理」页签可创建整个数据库文件的完整备份并下载</li>
+                    <li>• 恢复备份会先自动保存当前数据，误操作可以回到恢复前的状态</li>
                   </ul>
                 </div>
               </div>
@@ -630,6 +597,37 @@ export default function Backup() {
               </button>
               <button
                 onClick={() => handleDelete(showDeleteConfirm)}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">确认批量删除</h3>
+            </div>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              确定要删除选中的 {selectedBackups.length} 个备份吗？此操作不可撤销。
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleBulkDelete}
                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
               >
                 确认删除
