@@ -13,6 +13,7 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { tutorialAPI } from '../lib/tutorialProgress';
+import { ADMIN_PATHS } from '../routes/paths';
 import { useData } from '../contexts/DataContext';
 
 export default function TutorialSystem() {
@@ -84,7 +85,8 @@ export default function TutorialSystem() {
       title: '定制网站主题',
       description: '在主题设置中自定义颜色、字体和布局，打造独特的网站风格。',
       action: () => {
-        navigate('/admin/themes');
+        // 主题页现在挂在「外观」分组下：/admin/settings/appearance
+        navigate(ADMIN_PATHS.themes);
         setShowTutorial(false);
       },
       buttonText: '去定制主题',
