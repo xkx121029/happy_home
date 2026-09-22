@@ -214,10 +214,25 @@ export default function Settings() {
     localStorage.setItem('settingsActiveTab', activeTab);
   }, [activeTab]);
 
+  // settings 是异步加载的，挂载那一刻还是空对象，
+  // 而 formData 用 useState 初始化只会执行一次 —— 结果就是设置明明已经取到，
+  // 表单里却始终是空的。这里在设置到达后回填一次；
+  // 如果用户已经开始编辑（hasChanges）就不覆盖他的输入。
+  useEffect(() => {
+    if (hasChanges || !settings || Object.keys(settings).length === 0) return;
+    const next = filterSettings(settings);
+    setFormData(next);
+    setCustomCSS(next.customCSS || '');
+    setCustomJS(next.customJS || '');
+    setHeadCode(next.headCode || '');
+    setFooterCode(next.footerCode || '');
+  }, [settings, hasChanges]);
+
   const loadNotifications = async () => {
     try {
       const response = await notificationsAPI.getAll();
-      setNotifications(response.data || []);
+      // 通知类端点的载荷字段是 notifications，不是统一的 data
+      setNotifications(response.notifications || []);
     } catch (error) {
       console.error('加载通知失败:', error);
     }
