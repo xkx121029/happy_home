@@ -1,0 +1,120 @@
+/*
+ * 基础样式。只放 reset、排版基调、焦点样式与滚动条 —— 不放任何组件类。
+ *
+ * 原来 index.css 里有一组 .btn / .card / .input / .sidebar-item，
+ * 全站零引用（各页面都直接写 Tailwind 类），已删除。
+ */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    /* 中文标题收紧字距要谨慎，幅度比英文小 */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: rgb(var(--c-bg));
+    color: rgb(var(--c-fg));
+    font-family: theme('fontFamily.sans');
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    /* 字重 600 而非 700：中文粗体在 700 下容易糊成一团 */
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.005em;
+  }
+
+  /* 数字用等宽字形，表格与统计卡的数字才不会跳动 */
+  table,
+  .tabular-nums,
+  time,
+  input[type='number'] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 焦点可见性：键盘用户必须看得到焦点在哪 */
+  :focus-visible {
+    outline: 2px solid rgb(var(--c-accent));
+    outline-offset: 2px;
+  }
+
+  /* 主题切换时颜色平滑过渡，避免明暗切换的突兀跳变 */
+  body,
+  body * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 160ms;
+    transition-timing-function: var(--ease-entry);
+  }
+
+  /* 但不要在交互元素上叠加这个过渡，会和按压反馈打架 */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    transition-property: none;
+  }
+
+  /* 减小动效偏好：全部退化为淡入或直接切换 */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* 自下而上的入场：这是全站唯一允许的入场动效形式。
+     不使用 scale 入场（元素不会从天而降），不使用横向位移。 */
+  .enter-from-bottom {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity var(--ease-entry) 220ms, transform var(--ease-entry) 220ms;
+  }
+
+  .enter-from-bottom[data-entered='true'] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* 自下而上揭示，用于批量操作条、图表等 */
+  .reveal-from-bottom {
+    clip-path: inset(100% 0 0 0);
+    transition: clip-path var(--ease-entry) 220ms;
+  }
+
+  .reveal-from-bottom[data-revealed='true'] {
+    clip-path: inset(0 0 0 0);
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--c-border)) transparent;
+  }
+
+  .scrollbar-hide {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
