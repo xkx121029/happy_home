@@ -194,32 +194,13 @@ export function ErrorProvider({ children }) {
   // 监听网络状态变化（从 NetworkContext 获取）
   useEffect(() => {
     dispatch({ type: ActionType.SET_ONLINE_STATUS, payload: { isOnline } });
-    // 网络恢复时，处理离线队列
-    if (isOnline) {
-      processOfflineQueue();
-    }
   }, [isOnline]);
-  
-  // 处理离线队列
-  const processOfflineQueue = useCallback(async () => {
-    let queue = [];
-    try {
-      queue = JSON.parse(localStorage.getItem('offline_queue') || '[]');
-    } catch (error) {
-      console.error('解析离线队列失败:', error);
-      queue = [];
-    }
-    for (const item of queue) {
-      try {
-        // 重新执行离线操作
-        // await retryRequest(item.config);
-      } catch (error) {
-        console.error('[ErrorContext] Failed to process offline item:', error);
-      }
-    }
-    localStorage.removeItem('happyhome_offline_queue');
-  }, []);
-  
+
+  // 原来这里还有一个 processOfflineQueue：网络恢复时遍历 localStorage 里的离线队列
+  // 逐个"重放"。但重放的代码是注释掉的空桩，两个键名还互相对不上
+  // （写用 happyhome_offline_queue，读用 offline_queue），最后无条件删掉队列 ——
+  // 结果是静静地丢弃用户的离线操作并假装已同步。整套机制已删除。
+
   // 添加错误
   const addError = useCallback((error) => {
     const errorObj = typeof error === 'string' 
