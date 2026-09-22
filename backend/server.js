@@ -1491,6 +1491,30 @@ app.get('/api/public/posts/:id/comments', (req, res) => {
   }
 });
 
+// 前台侧栏「最新评论」用。原来那个部件靠 DataContext 里一份只有管理员才会加载的
+// 全量评论列表（含待审核），访客看到的一直是空的。这里提供公开的已审核评论流，
+// 并只取已发布文章下的评论，避免把草稿文章的标题泄露出去。
+app.get('/api/public/comments/recent', (req, res) => {
+  try {
+    const db = getDb();
+    const limit = Math.min(Math.max(Number(req.query.limit) || 5, 1), 20);
+    const comments = execQuery(
+      db,
+      `SELECT c.id, c.post_id, c.author, c.content, c.created_at, p.title AS post_title
+       FROM comments c
+       JOIN posts p ON p.id = c.post_id
+       WHERE c.status = 'approved' AND c.parent_id IS NULL AND p.status = 'published'
+       ORDER BY c.created_at DESC
+       LIMIT ?`,
+      [limit]
+    );
+    res.json({ success: true, data: comments, count: comments.length });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: '服务器错误' });
+  }
+});
+
 // Analytics 相关端点
 app.get('/api/analytics/stats', authenticateToken, (req, res) => {
   try {
