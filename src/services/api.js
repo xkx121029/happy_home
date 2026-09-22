@@ -214,6 +214,8 @@ export const publicAPI = {
   getPageBySlug: (slug) => apiRequest(`/public/pages/${slug}`),
   getSettings: () => apiRequest('/public/settings'),
   getComments: (postId) => apiRequest(`/public/posts/${postId}/comments`),
+  // 侧栏「最新评论」用的公开数据流（仅已发布文章下的已审核评论）
+  getRecentComments: (limit = 5) => apiRequest(`/public/comments/recent?limit=${limit}`),
 };
 
 // --------------------------------------------------------------------- Misc
