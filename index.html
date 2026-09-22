@@ -4,10 +4,26 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="HappyHome 博客内容管理系统" />
     <title>HappyHome - 建站平台</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!--
+      主题需在首屏渲染前定下来，否则会先闪一下默认亮色再切到暗色。
+      这段脚本必须在样式表之前同步执行，因此内联在这里。
+      字体走系统字体栈（见 tailwind.config.js），不再请求 Google Fonts：
+      少一次外部请求，中文也能用到本机真字形。
+    -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('happyhome_theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var theme = saved || (prefersDark ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
