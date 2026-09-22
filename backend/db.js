@@ -4,6 +4,9 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
+const createSettings = require('./src/db/settings');
+const repo = require('./src/db/repo');
+
 const DB_PATH = path.join(__dirname, 'happyhome.db');
 
 let db = null;
@@ -459,59 +462,8 @@ function runMigrations({ isNewDatabase = false } = {}) {
   console.log(`迁移完成，user_version = ${getUserVersion(db)}`);
 }
 
-const dbHelpers = {
-  getSettings() {
-    if (!db) return {};
-    const results = db.exec('SELECT key, value FROM settings');
-    const settings = {};
-    if (results.length > 0) {
-      results[0].values.forEach(row => {
-        try {
-          settings[row[0]] = JSON.parse(row[1]);
-        } catch {
-          settings[row[0]] = row[1];
-        }
-      });
-    }
-    return settings;
-  },
-
-  updateSettings(settings) {
-    if (!db) return false;
-    
-    Object.entries(settings).forEach(([key, value]) => {
-      let strValue;
-      try {
-        if (typeof value === 'object') {
-          strValue = JSON.stringify(value);
-        } else {
-          strValue = String(value);
-        }
-      } catch (error) {
-        console.error(`Failed to serialize setting ${key}:`, error);
-        return;
-      }
-      
-      if (strValue.length > 100000) {
-        console.warn(`Setting ${key} is too large (${strValue.length} characters), skipping`);
-        return;
-      }
-
-      // 原来是字符串拼接 SQL（靠手工转义单引号）。改成参数化绑定，
-      // 既消除注入面，也避免值里出现反斜杠等字符时的边界情况。
-      const exists = db.exec('SELECT key FROM settings WHERE key = ?', [key]);
-      
-      if (exists.length > 0 && exists[0].values.length > 0) {
-        db.run("UPDATE settings SET value = ?, updated_at = datetime('now') WHERE key = ?", [strValue, key]);
-      } else {
-        db.run('INSERT INTO settings (key, value) VALUES (?, ?)', [key, strValue]);
-      }
-    });
-    
-    saveDatabase();
-    return true;
-  }
-};
+// settings 读写已抽到 src/db/settings.js，这里注入 db 实例与写盘函数后继续对外暴露
+const dbHelpers = createSettings({ getDb: () => db, saveDatabase });
 
 module.exports = {
   initDatabase,
@@ -520,5 +472,10 @@ module.exports = {
   dbHelpers,
   saveDatabase,
   runMigrations,
-  backupDatabaseFile
+  backupDatabaseFile,
+  // 参数化查询助手：从 src/db/repo.js 再导出以兼容旧引用
+  execQuery: repo.execQuery,
+  getSingle: repo.getSingle,
+  bindable: repo.bindable,
+  run: repo.run
 };

@@ -277,7 +277,7 @@ export default function Backup() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <button
                 onClick={handleCreateFullBackup}
-                className="flex items-center gap-3 p-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl hover:opacity-90 transition-opacity"
+                className="flex items-center gap-3 p-4 bg-accent text-white rounded-xl hover:opacity-90 transition-opacity"
               >
                 <Archive className="w-6 h-6" />
                 <div className="text-left">

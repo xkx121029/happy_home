@@ -338,7 +338,7 @@ export default function Help() {
           })}
 
           {/* Contact Section */}
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6 border border-blue-100 dark:border-blue-800">
+          <div className="bg-accent-50 rounded-xl p-6 border border-blue-100 dark:border-blue-800">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               需要更多帮助？
             </h3>

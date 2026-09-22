@@ -149,7 +149,7 @@ export default function Analytics() {
           {data.dailyData.map((count, index) => (
             <div key={index} className="flex-1 flex flex-col items-center gap-2">
               <div
-                className="w-full bg-gradient-to-t from-blue-500 to-blue-300 rounded-t transition-all hover:from-blue-600 hover:to-blue-400"
+                className="w-full bg-accent/60 rounded-t transition-all hover:bg-accent/70"
                 style={{ height: `${Math.max((count / maxDailyViews) * 100, 5)}%` }}
                 title={`${count} 次访问`}
               ></div>

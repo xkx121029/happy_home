@@ -177,7 +177,7 @@ function NotificationItem({ notification, onClose, onAction }) {
       className={`
         relative w-80 overflow-hidden rounded-xl shadow-lg border
         ${colors.bg} ${colors.border}
-        transform transition-all duration-300 ease-out
+        transform transition-colors duration-100 ease-out
         ${isExiting ? 'translate-x-full opacity-0' : 'translate-x-0 opacity-100'}
       `}
       role="alert"

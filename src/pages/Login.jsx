@@ -183,7 +183,7 @@ export default function Login() {
     <div className="w-full">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-2xl font-bold">H</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">HappyHome</h1>
@@ -267,7 +267,7 @@ export default function Login() {
                   setUsername('admin');
                   setPassword('admin123');
                 }}
-                className="w-full py-3 mt-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-medium hover:from-orange-600 hover:to-red-600 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 mt-3 bg-accent text-white rounded-lg font-medium hover:bg-accent-700 transition-all flex items-center justify-center gap-2"
               >
                 <Zap className="w-5 h-5" />
                 快速登录管理员

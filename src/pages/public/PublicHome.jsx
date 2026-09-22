@@ -106,10 +106,10 @@ export default function PublicHome() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <section className="py-20 bg-surface-2">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <h1 className="text-5xl font-extrabold text-gray-900 mb-6">
-            欢迎来到 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">{siteName}</span>
+            欢迎来到 <span className="text-transparent bg-clip-text bg-accent">{siteName}</span>
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10">
             {siteDescription}。
@@ -118,7 +118,7 @@ export default function PublicHome() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               to="/posts"
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+              className="px-8 py-4 bg-accent text-white rounded-xl font-semibold hover:bg-accent-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               浏览文章
               <FileText className="w-5 h-5" />
@@ -184,7 +184,7 @@ export default function PublicHome() {
               {recentPosts.map((post) => (
                 <article key={post.id} className="group">
                   <Link to={`/posts/${post.id}`} className="block">
-                    <div className="bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl aspect-video mb-4 group-hover:scale-[1.02] transition-transform overflow-hidden">
+                    <div className="bg-surface-2 rounded-2xl aspect-video mb-4 overflow-hidden">
                       <div className="w-full h-full flex items-center justify-center text-white text-4xl opacity-30">
                         <FileText className="w-16 h-16" />
                       </div>
@@ -233,7 +233,7 @@ export default function PublicHome() {
               {publishedPages.map((page) => (
                 <article key={page.id} className="group">
                   <Link to={`/page/${page.slug}`} className="block">
-                    <div className="bg-gradient-to-br from-green-400 to-teal-500 rounded-2xl aspect-video mb-4 group-hover:scale-[1.02] transition-transform overflow-hidden flex items-center justify-center">
+                    <div className="bg-surface-2 rounded-2xl aspect-video mb-4 overflow-hidden flex items-center justify-center">
                       <FileText className="w-16 h-16 text-white opacity-30" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">

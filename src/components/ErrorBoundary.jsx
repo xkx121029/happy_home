@@ -76,7 +76,7 @@ export default class ErrorBoundary extends Component {
             {/* 主要错误卡片 */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
               {/* 头部 - 警告图标和标题 */}
-              <div className="bg-gradient-to-r from-red-500 to-orange-500 p-6 text-white">
+              <div className="bg-danger p-6 text-white">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                     <AlertTriangle className="w-8 h-8" />

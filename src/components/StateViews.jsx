@@ -70,7 +70,7 @@ export function LoadingState({
                 strokeDasharray={2 * Math.PI * 28}
                 strokeDashoffset={2 * Math.PI * 28 * (1 - (progress || 0) / 100)}
                 strokeLinecap="round"
-                className="text-blue-500 transition-all duration-300"
+                className="text-blue-500 transition-colors duration-100"
               />
             </svg>
             <span className="absolute inset-0 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-300">

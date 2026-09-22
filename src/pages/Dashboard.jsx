@@ -154,7 +154,7 @@ export default function Dashboard() {
                       return (
                         <div
                           key={day.date || index}
-                          className="flex-1 bg-gradient-to-t from-blue-500 to-blue-300 rounded-t transition-all hover:from-blue-600 hover:to-blue-400"
+                          className="flex-1 bg-accent/60 rounded-t transition-all hover:bg-accent/70"
                           style={{ height: `${Math.max(height, 5)}%` }}
                           title={`${day.date}: ${day.count} 次访问`}
                         ></div>

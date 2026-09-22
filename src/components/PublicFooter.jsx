@@ -5,7 +5,7 @@ export default function PublicFooter() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">H</span>
               </div>
               <span className="text-lg font-bold text-gray-900 dark:text-white">HappyHome</span>

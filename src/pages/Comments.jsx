@@ -70,7 +70,7 @@ export default function Comments() {
   const getAvatar = (author) => {
     const initial = (author || '').charAt(0).toUpperCase() || '?';
     return (
-      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-medium">
+      <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center text-white font-medium">
         {initial}
       </div>
     );

@@ -211,7 +211,7 @@ export default function PublicPostDetail() {
   const getAvatar = (author) => {
     const initial = (author || '').charAt(0).toUpperCase() || '?';
     return (
-      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-medium">
+      <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center text-white font-medium">
         {initial}
       </div>
     );
@@ -296,7 +296,7 @@ export default function PublicPostDetail() {
     <div className="min-h-screen bg-gray-50">
       <article>
         {/* Hero */}
-        <div className="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-16">
+        <div className="bg-surface-2 py-16">
           <div className="max-w-4xl mx-auto px-6">
             <button
               onClick={() => navigate(-1)}

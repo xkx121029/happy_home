@@ -36,30 +36,8 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // 验证码存储（内存中，生产环境应使用 Redis）
 const verificationCodes = new Map();
 
-function execQuery(db, sql, params = []) {
-  const stmt = db.prepare(sql);
-  const results = [];
-  if (params.length > 0) {
-    stmt.bind(params);
-  }
-  while (stmt.step()) {
-    results.push(stmt.getAsObject());
-  }
-  stmt.free();
-  return results;
-}
-
-function getSingle(db, sql, params = []) {
-  const results = execQuery(db, sql, params);
-  return results.length > 0 ? results[0] : null;
-}
-
-// sql.js 无法绑定 undefined（会抛 Wrong API use），会把整个请求打成 500。
-// 统一规整为 null：配合 SQL 里的 COALESCE(NULL, col) 恰好等于「不修改该列」，
-// 这正是部分更新的语义 —— 例如只传 { sticky: true } 时不应影响标题与正文。
-function bindable(params = []) {
-  return params.map((value) => (value === undefined ? null : value));
-}
+// 参数化查询助手统一由 src/db/repo.js 提供（execQuery / getSingle / bindable）
+const { execQuery, getSingle, bindable } = require('./src/db/repo');
 
 // 鉴权中间件由工厂创建，db 助手通过参数注入（见 src/middleware/auth.js）
 const { authenticateToken, optionalAuth, requireRole } = createAuth({ getDb, getSingle });

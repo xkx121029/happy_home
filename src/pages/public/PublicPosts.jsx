@@ -69,7 +69,7 @@ export default function PublicPosts() {
             {filteredPosts.map((post) => (
               <article key={post.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
                 <Link to={`/posts/${post.id}`} className="block">
-                  <div className="bg-gradient-to-br from-blue-400 to-purple-500 aspect-video flex items-center justify-center text-white text-4xl opacity-80">
+                  <div className="bg-surface-2 aspect-video flex items-center justify-center text-white text-4xl opacity-80">
                     <FileText className="w-12 h-12" />
                   </div>
                   <div className="p-6">

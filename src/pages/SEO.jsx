@@ -214,7 +214,7 @@ export default function SEO() {
               <img src={seo.ogImage} alt="OG Preview" className="w-full h-full object-cover" onError={(e) => e.target.style.display = 'none'} />
             </div>
           ) : (
-            <div className="aspect-video bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+            <div className="aspect-video bg-surface-2 flex items-center justify-center">
               <FileText className="w-12 h-12 text-white opacity-50" />
             </div>
           )}

@@ -21,7 +21,7 @@ export default function UnauthorizedPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
         {/* 顶部渐变区域 */}
-        <div className="bg-gradient-to-r from-red-500 to-orange-500 px-8 py-10 text-center">
+        <div className="bg-danger px-8 py-10 text-center">
           <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-10 h-10 text-white" />
           </div>
