@@ -346,6 +346,12 @@ function insertInitialData() {
   console.log('Initial data inserted successfully');
 }
 
+// 同步小睡。Node 主线程允许 Atomics.wait（浏览器里不允许），
+// 用来给重试之间留出一点间隔，避免忙等到处占用 CPU。
+function sleepSync(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
 function saveDatabase() {
   if (!db) return;
   const data = db.export();
@@ -354,7 +360,29 @@ function saveDatabase() {
   // 改为「先写临时文件，再原子替换」，任何时刻磁盘上至少有一份完整可用的库。
   const tmpPath = `${DB_PATH}.tmp`;
   fs.writeFileSync(tmpPath, buffer);
-  fs.renameSync(tmpPath, DB_PATH);
+
+  // Windows 上 rename 覆盖已存在的文件时，如果有别的进程正打开着目标文件
+  // （文件监视、索引、杀软扫描都可能），会抛 EPERM 而不是等待。
+  // 保存失败意味着这次修改只留在内存里，所以重试几次、再退回直接覆盖写。
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      fs.renameSync(tmpPath, DB_PATH);
+      return;
+    } catch (error) {
+      if (error.code !== 'EPERM' && error.code !== 'EACCES' && error.code !== 'EBUSY') {
+        throw error;
+      }
+      sleepSync(30 * (attempt + 1));
+    }
+  }
+
+  console.warn('数据库临时文件替换失败，退回直接覆盖写入');
+  fs.writeFileSync(DB_PATH, buffer);
+  try {
+    fs.unlinkSync(tmpPath);
+  } catch {
+    // 临时文件清不掉不影响正确性，下次写入会覆盖它
+  }
 }
 
 // ------------------------------------------------------------------ 迁移
