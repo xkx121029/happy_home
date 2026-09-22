@@ -74,6 +74,9 @@ async function call(method, path, { body, token, headers = {} } = {}) {
 
 // -------------------------------------------------------------- 契约归一化
 
+// 传输层错误不是响应契约的一部分，比对时忽略
+const VOLATILE_KEYS = new Set(['__nonJson', '__transportError']);
+
 /**
  * 把响应体压成「契约形状」：保留 success 与字段结构，叶子值只留类型。
  * 这样 diff 能捕捉到「字段消失 / 字段改名 / 类型变了」。

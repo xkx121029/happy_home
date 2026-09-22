@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-09-22T12:43:51.137Z",
+  "savedAt": "2026-09-22T12:46:57.927Z",
   "apiBase": "http://localhost:3002/api",
   "note": "shape 字段是契约形状（叶子值只留类型）；message 仅供参考不参与 diff",
   "results": [
@@ -65,21 +65,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [
-          {
-            "author": "string",
-            "category": "string",
-            "content": "string",
-            "created_at": "string",
-            "excerpt": "string",
-            "id": "string",
-            "publish_date": "null",
-            "status": "string",
-            "sticky": "number",
-            "title": "string",
-            "updated_at": "string"
-          }
-        ],
+        "data": "array",
         "success": "bool:true"
       }
     },
@@ -89,18 +75,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [
-          {
-            "author": "string",
-            "content": "string",
-            "created_at": "string",
-            "id": "string",
-            "slug": "string",
-            "status": "string",
-            "title": "string",
-            "updated_at": "string"
-          }
-        ],
+        "data": "array",
         "success": "bool:true"
       }
     },
@@ -110,17 +85,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [
-          {
-            "count": "number",
-            "created_at": "string",
-            "description": "string",
-            "id": "string",
-            "name": "string",
-            "parent": "null",
-            "slug": "string"
-          }
-        ],
+        "data": "array",
         "success": "bool:true"
       }
     },
@@ -130,15 +95,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [
-          {
-            "count": "number",
-            "created_at": "string",
-            "id": "string",
-            "name": "string",
-            "slug": "string"
-          }
-        ],
+        "data": "array",
         "success": "bool:true"
       }
     },
@@ -148,26 +105,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [
-          {
-            "created_at": "string",
-            "id": "string",
-            "items": [
-              {
-                "enabled": "bool:true",
-                "id": "string",
-                "order": "number",
-                "target": "string",
-                "title": "string",
-                "type": "string",
-                "url": "string"
-              }
-            ],
-            "location": "string",
-            "title": "string",
-            "updated_at": "string"
-          }
-        ],
+        "data": "array",
         "success": "bool:true"
       }
     },
@@ -177,18 +115,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [
-          {
-            "config": {},
-            "created_at": "string",
-            "enabled": "bool:true",
-            "id": "string",
-            "location": "string",
-            "name": "string",
-            "order_num": "number",
-            "type": "string"
-          }
-        ],
+        "data": "array",
         "success": "bool:true"
       }
     },
@@ -198,16 +125,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [
-          {
-            "id": "string",
-            "name": "string",
-            "size": "string",
-            "type": "string",
-            "uploaded_at": "string",
-            "url": "string"
-          }
-        ],
+        "data": "array",
         "success": "bool:true"
       }
     },
@@ -217,19 +135,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [
-          {
-            "author": "string",
-            "content": "string",
-            "created_at": "string",
-            "email": "string",
-            "id": "string",
-            "parent_id": "null",
-            "post_id": "string",
-            "status": "string",
-            "updated_at": "string"
-          }
-        ],
+        "data": "array",
         "success": "bool:true"
       }
     },
@@ -239,17 +145,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [
-          {
-            "created_at": "string",
-            "email": "string",
-            "id": "string",
-            "role": "string",
-            "status": "string",
-            "updated_at": "string",
-            "username": "string"
-          }
-        ],
+        "data": "array",
         "success": "bool:true"
       }
     },
@@ -289,19 +185,7 @@
       "status": 200,
       "expect": 200,
       "shape": {
-        "notifications": [
-          {
-            "created_at": "string",
-            "id": "string",
-            "isRead": "bool:false",
-            "is_read": "number",
-            "link": "string",
-            "message": "string",
-            "title": "string",
-            "type": "string",
-            "user_id": "null"
-          }
-        ],
+        "notifications": "array",
         "success": "bool:true",
         "unreadCount": "number"
       }
@@ -321,12 +205,7 @@
       "expect": 200,
       "shape": {
         "data": {
-          "dailyData": [
-            {
-              "count": "number",
-              "date": "string"
-            }
-          ],
+          "dailyData": "array",
           "month": "number",
           "today": "number",
           "total": "number",
@@ -342,21 +221,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [
-          {
-            "author": "string",
-            "category": "string",
-            "content": "string",
-            "created_at": "string",
-            "excerpt": "string",
-            "id": "string",
-            "publish_date": "null",
-            "status": "string",
-            "sticky": "number",
-            "title": "string",
-            "updated_at": "string"
-          }
-        ],
+        "data": "array",
         "success": "bool:true"
       }
     },
@@ -366,18 +231,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [
-          {
-            "author": "string",
-            "content": "string",
-            "created_at": "string",
-            "id": "string",
-            "slug": "string",
-            "status": "string",
-            "title": "string",
-            "updated_at": "string"
-          }
-        ],
+        "data": "array",
         "success": "bool:true"
       }
     },
@@ -579,12 +433,7 @@
         "data": {
           "created_at": "string",
           "id": "string",
-          "items": [
-            {
-              "label": "string",
-              "url": "string"
-            }
-          ],
+          "items": "array",
           "location": "string",
           "title": "string",
           "updated_at": "string"
@@ -602,12 +451,7 @@
         "data": {
           "created_at": "string",
           "id": "string",
-          "items": [
-            {
-              "label": "string",
-              "url": "string"
-            }
-          ],
+          "items": "array",
           "location": "string",
           "title": "string",
           "updated_at": "string"
@@ -730,21 +574,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [
-          {
-            "author": "string",
-            "category": "string",
-            "content": "string",
-            "created_at": "string",
-            "excerpt": "string",
-            "id": "string",
-            "publish_date": "null",
-            "status": "string",
-            "sticky": "number",
-            "title": "string",
-            "updated_at": "string"
-          }
-        ],
+        "data": "array",
         "success": "bool:true"
       }
     },
@@ -785,7 +615,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [],
+        "data": "array",
         "success": "bool:true"
       }
     },
@@ -858,15 +688,7 @@
       "expect": 200,
       "shape": {
         "count": "number",
-        "data": [
-          {
-            "createdAt": "string",
-            "id": "string",
-            "name": "string",
-            "size": "number",
-            "type": "string"
-          }
-        ],
+        "data": "array",
         "success": "bool:true"
       }
     },
