@@ -50,6 +50,14 @@ export default function Analytics() {
     }
   };
 
+  // 这个 useMemo 原来写在下面那个 loading 的提前 return 之后：
+// 首次渲染（loading=true）不执行它，拿到数据后再渲染就多出一个 hook，
+// React 会抛出「Rendered more hooks than during the previous render」，页面直接崩。
+// 所有 hook 必须无条件地出现在提前 return 之前。
+  const maxDailyViews = useMemo(() => {
+    return data.dailyData.length > 0 ? Math.max(...data.dailyData.map(d => d.count), 1) : 1;
+  }, [data.dailyData]);
+
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center">
@@ -57,10 +65,6 @@ export default function Analytics() {
       </div>
     );
   }
-
-  const maxDailyViews = useMemo(() => {
-    return data.dailyData.length > 0 ? Math.max(...data.dailyData.map(d => d.count), 1) : 1;
-  }, [data.dailyData]);
 
   return (
     <div className="p-6">
