@@ -51,7 +51,7 @@ Authorization: Bearer <your_token>
 ```json
 {
   "username": "admin",
-  "password": "admin123"
+  "password": "<你的管理员口令>"
 }
 ```
 
@@ -616,7 +616,7 @@ npm start
 # 登录获取 Token
 curl -X POST http://localhost:3001/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+  -d '{"username":"admin","password":"<你的管理员口令>"}'
 
 # 使用 Token 访问受保护的接口
 curl -X GET http://localhost:3001/api/posts \

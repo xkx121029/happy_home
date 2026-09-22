@@ -70,33 +70,52 @@ npm run lint
 
 ### 登录凭证
 
-默认管理员账户（演示数据）：
-- 用户名: `admin`
-- 密码: `admin123`
+管理员用户名固定为 `admin`，**密码不再是固定的演示口令**。
+
+首次初始化数据库时会自动生成一个随机口令，并在后端控制台打印一次：
+
+```
+====================================================
+  已创建初始管理员账号
+  用户名：admin
+  初始口令：<随机生成>
+  请登录后立即修改，或在 .env 里设置 INITIAL_ADMIN_PASSWORD
+====================================================
+```
+
+也可以在执行初始化前，于 `backend/.env` 中显式指定 `INITIAL_ADMIN_PASSWORD`。
+
+> 早期版本在代码与本文档里硬编码了 `admin123`，并随仓库一并公开。该口令已被轮换，
+> 相关的快捷登录入口也已移除。
 
 ### 项目结构
 
 ```
 happy_home/
 ├── src/
-│   ├── components/          # 通用组件
-│   │   ├── Header.jsx       # 头部导航
-│   │   ├── Sidebar.jsx      # 侧边栏菜单
-│   │   ├── RichTextEditor.jsx # 富文本编辑器
-│   │   └── ...
-│   ├── pages/               # 页面组件
-│   │   ├── Dashboard.jsx    # 仪表盘
-│   │   ├── Posts.jsx        # 文章管理
-│   │   ├── Pages.jsx        # 页面管理
-│   │   ├── Users.jsx        # 用户管理
-│   │   ├── Analytics.jsx    # 数据分析
-│   │   └── public/          # 前端展示页面
-│   ├── data/                # 模拟数据
-│   ├── utils/               # 工具函数
-│   └── App.jsx              # 主应用组件
-├── public/                  # 静态资源
-├── dist/                    # 构建输出
-└── package.json             # 项目配置
+│   ├── app/                 # 应用装配（App / providers / RouteError）
+│   ├── routes/              # 路由表、路径常量、鉴权守卫、页面懒加载
+│   ├── layouts/             # AdminLayout / PublicLayout / AuthLayout
+│   ├── components/
+│   │   ├── ui/              # 无业务原语（Button / Form / Card / Table ...）
+│   │   ├── layout/          # 顶栏、侧栏、前台导航
+│   │   └── widgets/         # 前台侧栏小工具
+│   ├── pages/               # 页面（按路由懒加载，各自独立 chunk）
+│   │   └── public/          # 前台展示页面
+│   ├── state/               # 全局状态（Auth / SiteSettings / Theme）
+│   ├── contexts/            # 实体数据与错误/网络上下文
+│   ├── hooks/
+│   ├── lib/                 # http / storage / format / sanitize / cn
+│   ├── styles/              # 设计变量与基础样式
+│   └── services/api.js      # 端点声明层
+├── backend/
+│   ├── server.js            # 仅装配中间件与挂载模块路由
+│   ├── db.js                # sql.js 生命周期 + 迁移
+│   └── src/
+│       ├── config/ db/ lib/ middleware/
+│       ├── modules/<domain>/routes.js   # 按业务域拆分
+│       └── mailer/
+└── package.json
 ```
 
 ## 🤝 贡献

@@ -259,20 +259,10 @@ export default function Login() {
               <LogIn className="w-5 h-5" />
               登录
             </button>
-
-            {settings?.showQuickLoginButton !== false && (
-              <button
-                type="button"
-                onClick={() => {
-                  setUsername('admin');
-                  setPassword('admin123');
-                }}
-                className="w-full py-3 mt-3 bg-accent text-white rounded-lg font-medium hover:bg-accent-700 transition-all flex items-center justify-center gap-2"
-              >
-                <Zap className="w-5 h-5" />
-                快速登录管理员
-              </button>
-            )}
+            {/* 这里原本有一个「快速登录管理员」按钮，点一下就把 admin / admin123 填进表单。
+                两个问题：一是把凭据直接印在登录页上，任何访问者都能看见并拿去尝试；
+                二是该口令已随公开仓库泄露并且已被轮换，按钮早已失效。
+                演示用的快捷入口不应该出现在这个位置，已整体移除。 */}
           </form>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4">
