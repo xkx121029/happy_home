@@ -1,11 +1,10 @@
-/* 样式入口。顺序敏感：
-   1. 设计变量（定义在 @tailwind 之前，Tailwind 解析 theme() 时需要它们已存在）
-   2. Tailwind 三层
-   3. 基础样式（其中的 @layer base 会被 Tailwind 归入 base 层） */
+/* 样式入口。
+   @import 必须出现在所有语句之前（CSS 规范要求），否则会被直接忽略 ——
+   这里曾把 base.css 放在 @tailwind 之后，结果基础样式整段没进产物。
+   文件内部的 @layer base 块会被 Tailwind 归入 base 层，与出现位置无关。 */
 @import './styles/tokens.css';
+@import './styles/base.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import './styles/base.css';
