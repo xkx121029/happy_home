@@ -1,4 +1,7 @@
-const API_BASE_URL = 'http://localhost:3002/api';
+// 默认走相对路径 /api：开发环境由 vite.config.js 的 server.proxy 转发到后端，
+// 生产环境由同源反向代理接住。这样代码里不再硬编码 http://localhost:3002，
+// 部署到其它机器时不用再改前端源码（原来这是"一部署就全站报错"的根源）。
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 let authToken = null;
 
@@ -34,10 +37,27 @@ export const apiRequest = async (endpoint, options = {}) => {
     headers,
   });
 
-  const data = await response.json();
-  
+  // 401 说明 token 已失效：清掉它，避免后续请求继续带着废 token 打空转。
+  // 路由跳转交给 PrivateRoute 处理，这里不直接动 location。
+  if (response.status === 401) {
+    authToken = null;
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('isLoggedIn');
+  }
+
+  // 204 或空响应体时 response.json() 会抛错，先取文本再尝试解析
+  const text = await response.text();
+  let data = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { message: text };
+    }
+  }
+
   if (!response.ok) {
-    throw new Error(data.message || 'API 请求失败');
+    throw new Error(data?.message || `API 请求失败（HTTP ${response.status}）`);
   }
 
   return data;
@@ -198,6 +218,24 @@ export const widgetsAPI = {
   delete: (id) => apiRequest(`/widgets/${id}`, {
     method: 'DELETE',
   }),
+  // 页面需要「启用/停用」与「拖拽排序」两个动作，但 api 层一直没提供，
+  // Widgets.jsx 却在调用，结果一用就崩。这里补上。
+  toggleEnabled: (id, enabled) => apiRequest(`/widgets/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ enabled }),
+  }),
+  // 后端没有批量排序端点，部件数量在个位数，逐个串行更新即可，
+  // 避免为了排序单独加一个接口。（Phase 5 拆分后端时可再评估批量端点）
+  reorder: async (orderedIds = []) => {
+    const results = [];
+    for (let index = 0; index < orderedIds.length; index += 1) {
+      results.push(await apiRequest(`/widgets/${orderedIds[index]}`, {
+        method: 'PUT',
+        body: JSON.stringify({ order_num: index + 1 }),
+      }));
+    }
+    return results;
+  },
 };
 
 // Media
@@ -228,6 +266,18 @@ export const commentsAPI = {
   }),
   delete: (id) => apiRequest(`/comments/${id}`, {
     method: 'DELETE',
+  }),
+  // 前台专用：访客没有 token，走后端新开的公开端点（已审核列表 + 提交待审）。
+  // 原来前台调用的是需要登录的 /api/comments，访客必然 401；
+  // 而 commentsAPI.reply 更是在 api 层和后端都不存在，一调用就抛错。
+  getPublicForPost: (postId) => apiRequest(`/public/posts/${postId}/comments`),
+  createPublic: (data) => apiRequest('/public/comments', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  reply: (parentId, data) => apiRequest('/public/comments', {
+    method: 'POST',
+    body: JSON.stringify({ ...data, parentId }),
   }),
 };
 
@@ -319,5 +369,24 @@ export const analyticsAPI = {
     method: 'POST',
     body: JSON.stringify(data),
   }),
+};
+
+// Backups
+// 备份页此前是个空壳：10 个操作全是「暂未实现」的提示，后端也没有任何备份端点。
+// 这里对应后端新增的 /api/backups 一组接口。
+export const backupsAPI = {
+  getAll: () => apiRequest('/backups'),
+  create: (data) => apiRequest('/backups', {
+    method: 'POST',
+    body: JSON.stringify(data || {}),
+  }),
+  delete: (id) => apiRequest(`/backups/${id}`, {
+    method: 'DELETE',
+  }),
+  restore: (id) => apiRequest(`/backups/${id}/restore`, {
+    method: 'POST',
+  }),
+  // 下载走浏览器直接打开，避免把整个库读进内存再塞给前端
+  getDownloadUrl: (id) => `${API_BASE_URL}/backups/${id}/download`,
 };
 
