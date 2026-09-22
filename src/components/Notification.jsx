@@ -175,11 +175,11 @@ function NotificationItem({ notification, onClose, onAction }) {
   return (
     <div
       className={`
-        relative w-80 overflow-hidden rounded-xl shadow-lg border
+        relative w-80 overflow-hidden rounded-lg shadow-lg border
         ${colors.bg} ${colors.border}
-        transform transition-colors duration-100 ease-out
-        ${isExiting ? 'translate-x-full opacity-0' : 'translate-x-0 opacity-100'}
+        ${isExiting ? 'opacity-0' : 'opacity-100'}
       `}
+      style={{ transition: 'opacity 180ms var(--ease-entry)' }}
       role="alert"
     >
       <div className="p-4">
