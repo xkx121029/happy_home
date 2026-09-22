@@ -445,7 +445,7 @@ app.get('/api/posts/:id', authenticateToken, (req, res) => {
 
 app.post('/api/posts', authenticateToken, (req, res) => {
   try {
-    const { title, content, excerpt, category, status, sticky } = req.body;
+    const { title, content, excerpt, category, status, sticky, publishDate } = req.body;
     const db = getDb();
 
     if (!title || !content) {
@@ -456,8 +456,8 @@ app.post('/api/posts', authenticateToken, (req, res) => {
     const postExcerpt = excerpt || content.substring(0, 100).replace(/<[^>]*>/g, '') + '...';
 
     db.run(
-      'INSERT INTO posts (id, title, content, excerpt, category, status, author, sticky) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [newPostId, title, content, postExcerpt, category || '未分类', status || 'draft', req.user.username, sticky ? 1 : 0]
+      'INSERT INTO posts (id, title, content, excerpt, category, status, author, sticky, publish_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [newPostId, title, content, postExcerpt, category || '未分类', status || 'draft', req.user.username, sticky ? 1 : 0, publishDate || null]
     );
     saveDatabase();
 
@@ -471,7 +471,7 @@ app.post('/api/posts', authenticateToken, (req, res) => {
 
 app.put('/api/posts/:id', authenticateToken, (req, res) => {
   try {
-    const { title, content, excerpt, category, status, sticky } = req.body;
+    const { title, content, excerpt, category, status, sticky, publishDate } = req.body;
     const db = getDb();
     const post = getSingle(db, 'SELECT * FROM posts WHERE id = ?', [req.params.id]);
 
@@ -480,8 +480,8 @@ app.put('/api/posts/:id', authenticateToken, (req, res) => {
     }
 
     db.run(
-      'UPDATE posts SET title = COALESCE(?, title), content = COALESCE(?, content), excerpt = COALESCE(?, excerpt), category = COALESCE(?, category), status = COALESCE(?, status), sticky = COALESCE(?, sticky), updated_at = datetime("now") WHERE id = ?',
-      bindable([title, content, excerpt, category, status, sticky === undefined ? undefined : (sticky ? 1 : 0), req.params.id])
+      'UPDATE posts SET title = COALESCE(?, title), content = COALESCE(?, content), excerpt = COALESCE(?, excerpt), category = COALESCE(?, category), status = COALESCE(?, status), sticky = COALESCE(?, sticky), publish_date = COALESCE(?, publish_date), updated_at = datetime("now") WHERE id = ?',
+      bindable([title, content, excerpt, category, status, sticky === undefined ? undefined : (sticky ? 1 : 0), publishDate, req.params.id])
     );
     saveDatabase();
 
@@ -823,7 +823,8 @@ app.post('/api/comments', authenticateToken, (req, res) => {
     res.json({ success: true, data: newComment, message: '评论已添加' });
   } catch (error) {
     console.error(error);
-    res.json({ success: false, message: '添加评论失败' });
+    // 原来这里返回的是 HTTP 200 + success:false，前端会当成成功处理
+    res.status(500).json({ success: false, message: '添加评论失败' });
   }
 });
 
@@ -1362,6 +1363,125 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'API 运行正常', timestamp: new Date().toISOString() });
 });
 
+// ------------------------------------------------------- 公开评论（访客可用）
+//
+// 原来前台提交评论走的是 POST /api/comments，而那个端点挂了 authenticateToken：
+// 访客没有 token，永远拿到 401，评论功能实际上从未对公众开放。
+// 这里为前台单独开一组端点，并做好滥用防护。
+
+// 可选鉴权：有合法 token 就带上用户信息，没有也放行
+function optionalAuth(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return next();
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (!err) req.user = user;
+    next();
+  });
+}
+
+// 极简内存限流：按 IP 与邮箱双维度计数。
+// 公开写接口没有限流等于开放刷库通道，所以它与端点必须同时存在。
+const COMMENT_RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 10 };
+const commentRateBuckets = new Map();
+
+function checkCommentRate(key) {
+  const now = Date.now();
+  const bucket = commentRateBuckets.get(key);
+  if (!bucket || now - bucket.start > COMMENT_RATE_LIMIT.windowMs) {
+    commentRateBuckets.set(key, { start: now, count: 1 });
+    return { allowed: true, remaining: COMMENT_RATE_LIMIT.max - 1 };
+  }
+  if (bucket.count >= COMMENT_RATE_LIMIT.max) {
+    return { allowed: false, remaining: 0 };
+  }
+  bucket.count += 1;
+  return { allowed: true, remaining: COMMENT_RATE_LIMIT.max - bucket.count };
+}
+
+// 定期清理过期计数，避免内存随访客量无界增长
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, bucket] of commentRateBuckets) {
+    if (now - bucket.start > COMMENT_RATE_LIMIT.windowMs) commentRateBuckets.delete(key);
+  }
+}, COMMENT_RATE_LIMIT.windowMs).unref();
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+app.post('/api/public/comments', optionalAuth, (req, res) => {
+  try {
+    const db = getDb();
+    const { postId, parentId, author, email, content } = req.body || {};
+
+    if (!author || !email || !content) {
+      return res.status(400).json({ success: false, message: '请填写昵称、邮箱和评论内容' });
+    }
+    if (!EMAIL_PATTERN.test(String(email))) {
+      return res.status(400).json({ success: false, message: '邮箱格式不正确' });
+    }
+    // 长度上限：不加限制的话单条评论可以塞进任意大的内容
+    if (String(author).length > 50) {
+      return res.status(400).json({ success: false, message: '昵称不能超过 50 个字符' });
+    }
+    if (String(content).length > 5000) {
+      return res.status(400).json({ success: false, message: '评论内容不能超过 5000 个字符' });
+    }
+
+    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+    const ipCheck = checkCommentRate(`ip:${ip}`);
+    if (!ipCheck.allowed) {
+      return res.status(429).json({ success: false, message: '提交过于频繁，请稍后再试' });
+    }
+    const emailCheck = checkCommentRate(`email:${String(email).toLowerCase()}`);
+    if (!emailCheck.allowed) {
+      return res.status(429).json({ success: false, message: '提交过于频繁，请稍后再试' });
+    }
+
+    if (!postId) {
+      return res.status(400).json({ success: false, message: '缺少文章标识' });
+    }
+    const post = getSingle(db, 'SELECT id FROM posts WHERE id = ?', [postId]);
+    if (!post) {
+      return res.status(404).json({ success: false, message: '文章不存在' });
+    }
+
+    // 访客评论一律先审核，绝不直接公开
+    const id = uuidv4();
+    db.run(
+      'INSERT INTO comments (id, post_id, parent_id, author, email, content, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [id, postId, parentId || null, String(author).trim(), String(email).trim(), String(content).trim(), 'pending']
+    );
+    db.run(
+      'INSERT INTO notifications (id, user_id, type, title, message, link) VALUES (?, ?, ?, ?, ?, ?)',
+      [uuidv4(), null, 'comment', '新评论', `访客 ${author} 发表了新评论，待审核`, '/admin/comments']
+    );
+    saveDatabase();
+
+    const created = getSingle(db, 'SELECT * FROM comments WHERE id = ?', [id]);
+    res.status(201).json({ success: true, data: created, message: '评论已提交，审核通过后显示' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: '服务器错误' });
+  }
+});
+
+// 前台读取某篇文章的已审核评论（含回复，便于一次性渲染嵌套结构）
+app.get('/api/public/posts/:id/comments', (req, res) => {
+  try {
+    const db = getDb();
+    const comments = execQuery(
+      db,
+      'SELECT id, post_id, parent_id, author, content, created_at FROM comments WHERE post_id = ? AND status = ? ORDER BY created_at ASC',
+      [req.params.id, 'approved']
+    );
+    res.json({ success: true, data: comments, count: comments.length });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: '服务器错误' });
+  }
+});
+
 // Analytics 相关端点
 app.get('/api/analytics/stats', authenticateToken, (req, res) => {
   try {
@@ -1704,25 +1824,48 @@ app.post('/api/notifications/demo', authenticateToken, (req, res) => {
   }
 });
 
-async function startServer() {
-  await initDatabase();
-  
-  // 创建系统启动通知（如果 notifications 表存在）
+// ------------------------------------------------------------ 定时发布调度
+//
+// 这段逻辑原来在前端（App.jsx 里的 setInterval）：依赖数组为空，闭包永远捕获
+// 首次渲染时的 posts 列表，加上 posts 表当时根本没有 publish_date 列，
+// 所以「定时发布」从头到尾没有生效过一次。移到后端用一条 SQL 完成，
+// 既不依赖有没有人打开管理页面，也不需要在前端保存一份会过期的副本。
+function publishDuePosts() {
   try {
     const db = getDb();
-    const admins = execQuery(db, "SELECT id FROM users WHERE role = 'administrator'");
-    if (admins.length > 0) {
-      const id = uuidv4();
-      db.run(
-        'INSERT INTO notifications (id, user_id, type, title, message) VALUES (?, ?, ?, ?, ?)',
-        [id, admins[0].id, 'success', '系统已启动', `HappyHome 管理面板已成功启动于 ${new Date().toLocaleString('zh-CN')}`]
-      );
-      saveDatabase();
-    }
+    const due = execQuery(
+      db,
+      "SELECT id, title FROM posts WHERE status = 'future' AND publish_date IS NOT NULL AND datetime(publish_date) <= datetime('now')"
+    );
+    if (due.length === 0) return 0;
+
+    db.run(
+      "UPDATE posts SET status = 'published', publish_date = NULL, updated_at = datetime('now') WHERE status = 'future' AND publish_date IS NOT NULL AND datetime(publish_date) <= datetime('now')"
+    );
+    saveDatabase();
+    console.log(`定时发布：${due.length} 篇文章已转为已发布（${due.map((p) => p.title).join('、')}）`);
+    return due.length;
   } catch (error) {
-    console.log('通知表不存在，跳过创建系统通知');
+    console.error('定时发布执行失败:', error);
+    return 0;
   }
-  
+}
+
+const PUBLISH_CHECK_INTERVAL = 60 * 1000;
+
+function startScheduler() {
+  publishDuePosts();
+  setInterval(publishDuePosts, PUBLISH_CHECK_INTERVAL).unref();
+}
+
+async function startServer() {
+  await initDatabase();
+
+  // 原来每次启动都往 notifications 插一条「系统已启动」并全量写盘：
+  // 重启几次就多几条垃圾通知，纯属污染数据，已移除。
+
+  startScheduler();
+
   app.listen(PORT, () => {
     console.log(`HappyHome API Server running on http://localhost:${PORT}`);
     console.log('Database: happyhome.db');
