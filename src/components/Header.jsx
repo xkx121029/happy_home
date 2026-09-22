@@ -1,19 +1,40 @@
-import { Search, Bell, User, Sun, Moon, LogOut, Check, Trash2, Info, AlertCircle, CheckCircle, MessageSquare, FileText, Plus } from 'lucide-react';
+import {
+  Search, Bell, User, Sun, Moon, LogOut, Check, Trash2,
+  Info, AlertCircle, CheckCircle, MessageSquare, FileText, Plus,
+} from 'lucide-react';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
 import { notificationsAPI } from '../services/api';
+import { useData } from '../contexts/DataContext';
+import { useTheme } from '../state/ThemeContext';
+import { formatDate } from '../lib/format';
+import { ADMIN_PATHS } from '../routes/paths';
 import Modal from './Modal';
 
-export default function Header({ darkMode, onDarkModeToggle }) {
+/**
+ * 后台顶栏。
+ *
+ * 相比原实现的三处修正：
+ * 1. 亮暗模式改为从 ThemeContext 取（原来靠 App.jsx 传 props，
+ *    并且是第二套互相打架的机制）。
+ * 2. 当前用户改为从 Context 取。原来读的是 localStorage 的 currentUser 键，
+ *    但全项目没有任何地方写这个键，于是右上角永远显示兜底的 "admin"。
+ * 3. 退出登录走 Context 的 logout。原来只清了 localStorage 标记、
+ *    没清 token 也没通知 Context，导致退出后其他页面仍以为自己已登录。
+ */
+export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentUser, setCurrentUser] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
+  const [creatingDemo, setCreatingDemo] = useState(false);
   const notificationRef = useRef(null);
   const navigate = useNavigate();
-  const location = useLocation();
-  
+
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
+  const { currentUser, logout } = useData();
+
   const {
     notifications,
     unreadCount,
@@ -21,10 +42,35 @@ export default function Header({ darkMode, onDarkModeToggle }) {
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    fetchNotifications
+    fetchNotifications,
   } = useNotifications();
 
-  const [creatingDemo, setCreatingDemo] = useState(false);
+  // 点击面板外部关闭
+  const handleClickOutside = useCallback((event) => {
+    if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+      setShowNotifications(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!showNotifications) return undefined;
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showNotifications, handleClickOutside]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const keyword = searchQuery.trim();
+    if (!keyword) return;
+    // 带上关键词，原来的搜索框只是跳转到文章列表，输入的内容被丢掉了
+    navigate(`${ADMIN_PATHS.posts}?q=${encodeURIComponent(keyword)}`);
+  };
+
+  const confirmLogout = async () => {
+    setLogoutConfirm(false);
+    await logout();
+    navigate('/login', { replace: true });
+  };
 
   const createDemoNotifications = async () => {
     setCreatingDemo(true);
@@ -38,64 +84,18 @@ export default function Header({ darkMode, onDarkModeToggle }) {
     }
   };
 
-  // 从 localStorage 读取当前登录用户
-  useEffect(() => {
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      try {
-        setCurrentUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error('解析用户信息失败:', error);
-      }
-    }
-  }, []);
-
-  // 点击外部关闭通知面板
-  const handleClickOutside = useCallback((event) => {
-    if (notificationRef.current && !notificationRef.current.contains(event.target)) {
-      setShowNotifications(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (showNotifications) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showNotifications, handleClickOutside]);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate('/admin/posts');
-    }
-  };
-
-  const handleLogout = () => {
-    setLogoutConfirm(true);
-  };
-
-  const confirmLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('currentUser');
-    navigate('/login');
-  };
-
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'success':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return <CheckCircle className="w-5 h-5 text-success" />;
       case 'error':
-        return <AlertCircle className="w-5 h-5 text-red-500" />;
+        return <AlertCircle className="w-5 h-5 text-danger" />;
       case 'comment':
-        return <MessageSquare className="w-5 h-5 text-blue-500" />;
+        return <MessageSquare className="w-5 h-5 text-info" />;
       case 'post':
-        return <FileText className="w-5 h-5 text-purple-500" />;
+        return <FileText className="w-5 h-5 text-accent" />;
       default:
-        return <Info className="w-5 h-5 text-gray-500" />;
+        return <Info className="w-5 h-5 text-muted" />;
     }
   };
 
@@ -109,174 +109,178 @@ export default function Header({ darkMode, onDarkModeToggle }) {
     }
   };
 
+  const roleLabel = {
+    administrator: '管理员',
+    editor: '编辑',
+    author: '作者',
+  }[currentUser?.role] || '未登录';
+
   return (
     <>
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-      <div className="flex items-center justify-between h-16 px-6">
-        <div className="flex items-center gap-8">
-          <Link to="/admin" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">H</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">HappyHome Admin</span>
-          </Link>
-          
-          <form onSubmit={handleSearch} className="hidden md:flex items-center">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="搜索文章、页面..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </form>
-        </div>
+      <header className="bg-surface border-b border-line sticky top-0 z-50">
+        <div className="flex items-center justify-between h-16 px-6">
+          <div className="flex items-center gap-8">
+            <Link to={ADMIN_PATHS.root} className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-accent text-accent-fg grid place-items-center font-semibold text-sm">
+                H
+              </span>
+              <span className="text-lg font-semibold text-fg">HappyHome</span>
+            </Link>
 
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onDarkModeToggle}
-            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title={darkMode ? '切换到亮色模式' : '切换到暗色模式'}
-          >
-            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-
-          <div className="relative" ref={notificationRef}>
-            <button
-              onClick={() => {
-                setShowNotifications(!showNotifications);
-                if (!showNotifications) {
-                  fetchNotifications();
-                }
-              }}
-              className="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </button>
-
-            {showNotifications && (
-              <div className="absolute right-0 top-12 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden z-50">
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">通知</h3>
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={markAllAsRead}
-                      className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                    >
-                      <Check className="w-3 h-3" />
-                      全部已读
-                    </button>
-                  )}
-                </div>
-
-                <div className="max-h-96 overflow-y-auto">
-                  {loading ? (
-                    <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                      加载中...
-                    </div>
-                  ) : notifications.length === 0 ? (
-                    <div className="p-8 text-center">
-                      <div className="text-gray-500 dark:text-gray-400 mb-4">暂无通知</div>
-                      <button
-                        onClick={createDemoNotifications}
-                        disabled={creatingDemo}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2 mx-auto"
-                      >
-                        {creatingDemo ? (
-                          <>生成中...</>
-                        ) : (
-                          <>
-                            <Plus className="w-4 h-4" />
-                            生成示例通知
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  ) : (
-                    notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
-                          !notification.isRead ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                        }`}
-                        onClick={() => handleNotificationClick(notification)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="flex-shrink-0 mt-1">
-                            {getNotificationIcon(notification.type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm ${!notification.isRead ? 'font-semibold text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
-                              {notification.title}
-                            </p>
-                            {notification.message && (
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
-                                {notification.message}
-                              </p>
-                            )}
-                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                              {new Date(notification.created_at).toLocaleString('zh-CN')}
-                            </p>
-                          </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteNotification(notification.id);
-                            }}
-                            className="p-1 text-gray-400 hover:text-red-500 rounded"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+            <form onSubmit={handleSearch} className="hidden md:flex items-center">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                <input
+                  type="text"
+                  placeholder="搜索文章、页面..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-64 pl-10 pr-4 py-2 bg-surface-2 border border-line rounded-lg text-sm text-fg placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-accent"
+                />
               </div>
-            )}
+            </form>
           </div>
 
-          <div className="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-gray-700">
-            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-blue-600 dark:text-blue-300" />
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {currentUser?.username || 'admin'}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {currentUser?.role === 'administrator' ? '管理员' : 
-                 currentUser?.role === 'editor' ? '编辑' : '作者'}
-              </p>
-            </div>
+          <div className="flex items-center gap-1">
             <button
-              onClick={handleLogout}
-              className="ml-2 p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
-              title="退出登录"
+              type="button"
+              onClick={toggleTheme}
+              className="p-2 text-muted hover:text-fg hover:bg-surface-2 rounded-lg transition-colors duration-100 active:scale-[0.97]"
+              title={isDark ? '切换到亮色模式' : '切换到暗色模式'}
             >
-              <LogOut className="w-4 h-4" />
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
+
+            <div className="relative" ref={notificationRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !showNotifications;
+                  setShowNotifications(next);
+                  if (next) fetchNotifications();
+                }}
+                className="relative p-2 text-muted hover:text-fg hover:bg-surface-2 rounded-lg transition-colors duration-100 active:scale-[0.97]"
+                title="通知"
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-danger text-white text-[11px] font-semibold rounded-full grid place-items-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 top-12 w-80 bg-surface rounded-xl shadow-lg border border-line overflow-hidden z-50">
+                  <div className="flex items-center justify-between p-4 border-b border-line">
+                    <h3 className="font-semibold text-fg">通知</h3>
+                    {unreadCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={markAllAsRead}
+                        className="text-xs text-accent hover:opacity-80 flex items-center gap-1"
+                      >
+                        <Check className="w-3 h-3" />
+                        全部已读
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="max-h-96 overflow-y-auto scrollbar-thin">
+                    {loading ? (
+                      <div className="p-8 text-center text-sm text-muted">加载中...</div>
+                    ) : notifications.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <p className="text-sm text-muted mb-4">暂无通知</p>
+                        <button
+                          type="button"
+                          onClick={createDemoNotifications}
+                          disabled={creatingDemo}
+                          className="px-4 py-2 bg-accent text-accent-fg rounded-lg text-sm font-medium disabled:opacity-50 inline-flex items-center gap-2 active:scale-[0.97]"
+                        >
+                          <Plus className="w-4 h-4" />
+                          {creatingDemo ? '生成中...' : '生成示例通知'}
+                        </button>
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-4 border-b border-line last:border-0 hover:bg-surface-2 cursor-pointer transition-colors duration-100 ${
+                            !notification.isRead ? 'bg-accent-50/60' : ''
+                          }`}
+                          onClick={() => handleNotificationClick(notification)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="shrink-0 mt-0.5">
+                              {getNotificationIcon(notification.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm ${!notification.isRead ? 'font-semibold text-fg' : 'text-fg/80'}`}>
+                                {notification.title}
+                              </p>
+                              {notification.message && (
+                                <p className="text-xs text-muted mt-1 truncate">
+                                  {notification.message}
+                                </p>
+                              )}
+                              {/* 字段名是 createdAt（后端 created_at 已由 api 层规整），
+                                  原来读的 created_at 取不到值，时间永远显示 Invalid Date */}
+                              <p className="text-xs text-muted/70 mt-1">
+                                {formatDate(notification.createdAt, { style: 'datetime' })}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(notification.id);
+                              }}
+                              className="p-1 text-muted hover:text-danger rounded transition-colors duration-100"
+                              title="删除通知"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 pl-4 ml-2 border-l border-line">
+              <div className="w-8 h-8 bg-accent-100 rounded-full grid place-items-center">
+                <User className="w-4 h-4 text-accent" />
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-sm font-medium text-fg leading-tight">
+                  {currentUser?.username || '—'}
+                </p>
+                <p className="text-xs text-muted leading-tight">{roleLabel}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLogoutConfirm(true)}
+                className="ml-1 p-2 text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors duration-100 active:scale-[0.97]"
+                title="退出登录"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
-    
-    <Modal
-      isOpen={logoutConfirm}
-      onClose={() => setLogoutConfirm(false)}
-      title="确认退出"
-      message="确定要退出登录吗？"
-      type="confirm"
-      onConfirm={confirmLogout}
-    />
+      </header>
+
+      <Modal
+        isOpen={logoutConfirm}
+        onClose={() => setLogoutConfirm(false)}
+        title="确认退出"
+        message="确定要退出登录吗？"
+        type="confirm"
+        onConfirm={confirmLogout}
+      />
     </>
   );
 }
