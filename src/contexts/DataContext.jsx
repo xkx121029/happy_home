@@ -372,10 +372,10 @@ export function DataProvider({ children }) {
     loadBackups, getNotifications, markNotificationAsRead, deleteNotification,
 
     // ------------------------------------------------ 过渡兼容层（收尾阶段删除）
-    // 少数页面直接解构了 xxxAPI 对象：Settings 与 SEO 取 settingsAPI、
-    // Widgets 取 widgetsAPI、Users/UserEditor 取 usersAPI。
+    // 少数页面直接解构了 xxxAPI 对象：Widgets 取 widgetsAPI、Users/UserEditor 取 usersAPI。
     // 这里透传出去，页面改为调用语义化方法后即可移除。
-    usersAPI, widgetsAPI, settingsAPI: undefined,
+    // （settingsAPI 不再需要 —— 设置已拆到 SiteSettingsContext。）
+    usersAPI, widgetsAPI,
   }), [
     posts, pages, users, categories, tags, menus, widgets,
     mediaItems, comments, backups, notifications, loading,
