@@ -8,11 +8,12 @@ import { useModal, useToast } from '../hooks/useModal';
 import { useData } from '../contexts/DataContext';
 import { sanitizeHtml } from '../lib/sanitize';
 
-export default function PostEditor({ onSave }) {
+export default function PostEditor() {
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
   const { id } = useParams();
-  const { posts, getPost, categories } = useData();
+  // 原来保存走 props.onSave 回调，现在页面自取 Context 的语义化方法
+  const { posts, getPost, categories, createPost, updatePost } = useData();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [excerpt, setExcerpt] = useState('');
@@ -78,7 +79,22 @@ export default function PostEditor({ onSave }) {
     // 修订功能暂未实现
   };
 
-  const handleSaveDraft = () => {
+  // 原来保存走 props.onSave 回调，现在页面自取 Context，成功后再跳转列表
+  const handleSave = async (data) => {
+    try {
+      if (data.id) {
+        await updatePost(data.id, data);
+      } else {
+        await createPost(data);
+      }
+      showToast('文章已保存', 'success');
+      navigate('/admin/posts');
+    } catch (err) {
+      showToast(err.message || '保存失败', 'error');
+    }
+  };
+
+  const handleSaveDraft = async () => {
     createRevisionIfNeeded();
     const postData = {
       title: title || '无标题',
@@ -92,10 +108,7 @@ export default function PostEditor({ onSave }) {
       author: 'admin',
     };
 
-    if (onSave) {
-      onSave({ ...postData, id: postId });
-    }
-    navigate('/admin/posts');
+    await handleSave({ ...postData, id: postId });
   };
 
   const handlePublish = async () => {
@@ -125,10 +138,7 @@ export default function PostEditor({ onSave }) {
       author: 'admin',
     };
 
-    if (onSave) {
-      onSave({ ...postData, id: postId });
-    }
-    navigate('/admin/posts');
+    await handleSave({ ...postData, id: postId });
   };
 
   const handleRestoreRevision = async (revision) => {

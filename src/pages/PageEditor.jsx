@@ -5,7 +5,7 @@ import RichTextEditor from '../components/RichTextEditor';
 import ContentPreview from '../components/ContentPreview';
 import { useData } from '../contexts/DataContext';
 
-export default function PageEditor({ onSave }) {
+export default function PageEditor() {
   const { pages, createPage, updatePage } = useData();
   const { id } = useParams();
   const [title, setTitle] = useState('');
