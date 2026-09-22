@@ -481,8 +481,13 @@ app.put('/api/posts/:id', authenticateToken, (req, res) => {
 
     db.run(
       'UPDATE posts SET title = COALESCE(?, title), content = COALESCE(?, content), excerpt = COALESCE(?, excerpt), category = COALESCE(?, category), status = COALESCE(?, status), sticky = COALESCE(?, sticky), publish_date = COALESCE(?, publish_date), updated_at = datetime("now") WHERE id = ?',
-      bindable([title, content, excerpt, category, status, sticky === undefined ? undefined : (sticky ? 1 : 0), publishDate, req.params.id])
+      bindable([title, content, excerpt, category, status, sticky === undefined ? undefined : (sticky ? 1 : 0), publishDate || undefined, req.params.id])
     );
+    // COALESCE 的语义是「没传就保持原值」，因此无法把列改回 NULL。
+    // 「取消定时发布」需要真的清空 publish_date，这里单独处理。
+    if ('publishDate' in req.body && !publishDate) {
+      db.run('UPDATE posts SET publish_date = NULL WHERE id = ?', [req.params.id]);
+    }
     saveDatabase();
 
     const updatedPost = getSingle(db, 'SELECT * FROM posts WHERE id = ?', [req.params.id]);

@@ -154,45 +154,58 @@ export default function PublicPostDetail({ posts: propPosts, settings: propSetti
   }
 
   // 对内容进行XSS防护
-  const safeContent = sanitizeHTML(post.content);
+  const safeContent = sanitizeHtml(post.content);
 
-  // 获取文章的评论（只显示已审核的）
-  const postComments = comments.filter(c => c.postId === Number(id) && c.status === 'approved');
+  // 评论来自上面从公开端点拉取的 postComments（已审核），
+  // 并且这些调用原本既不 await 也不处理失败，提交后无论成功与否都提示"已提交"。
   const topLevelComments = postComments.filter(c => !c.parentId);
 
   const getReplies = (parentId) => postComments.filter(c => c.parentId === parentId);
 
-  const handleCommentSubmit = (e) => {
+  const handleCommentSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError('');
     if (!commentForm.author || !commentForm.email || !commentForm.content) {
-      alert('请填写所有字段');
+      setSubmitError('请填写昵称、邮箱和评论内容');
       return;
     }
-    commentsAPI.create({
-      postId: Number(id),
-      author: commentForm.author,
-      email: commentForm.email,
-      content: commentForm.content,
-      parentId: null,
-    });
-    setCommentForm({ author: '', email: '', content: '' });
-    setCommentSubmitted(true);
-    setTimeout(() => setCommentSubmitted(false), 3000);
+    try {
+      await commentsAPI.createPublic({
+        postId: post.id,
+        author: commentForm.author,
+        email: commentForm.email,
+        content: commentForm.content,
+        parentId: null,
+      });
+      setCommentForm({ author: '', email: '', content: '' });
+      setCommentSubmitted(true);
+      setTimeout(() => setCommentSubmitted(false), 4000);
+    } catch (err) {
+      setSubmitError(err.message || '提交失败，请稍后重试');
+    }
   };
 
-  const handleReplySubmit = (e) => {
+  const handleReplySubmit = async (e) => {
     e.preventDefault();
+    setSubmitError('');
     if (!replyForm.author || !replyForm.email || !replyForm.content) {
-      alert('请填写所有字段');
+      setSubmitError('请填写昵称、邮箱和回复内容');
       return;
     }
-    commentsAPI.reply(replyingTo, {
-      author: replyForm.author,
-      email: replyForm.email,
-      content: replyForm.content,
-    });
-    setReplyForm({ author: '', email: '', content: '' });
-    setReplyingTo(null);
+    try {
+      await commentsAPI.reply(replyingTo, {
+        postId: post.id,
+        author: replyForm.author,
+        email: replyForm.email,
+        content: replyForm.content,
+      });
+      setReplyForm({ author: '', email: '', content: '' });
+      setReplyingTo(null);
+      setCommentSubmitted(true);
+      setTimeout(() => setCommentSubmitted(false), 4000);
+    } catch (err) {
+      setSubmitError(err.message || '回复失败，请稍后重试');
+    }
   };
 
   const getAvatar = (author) => {
@@ -363,6 +376,11 @@ export default function PublicPostDetail({ posts: propPosts, settings: propSetti
                   {commentSubmitted && (
                     <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg">
                       评论已提交，等待审核后显示
+                    </div>
+                  )}
+                  {submitError && (
+                    <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg">
+                      {submitError}
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-4 mb-4">

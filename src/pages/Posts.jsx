@@ -8,16 +8,18 @@ import { useData } from '../contexts/DataContext';
 export default function Posts({ posts, onDelete }) {
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
-  const { postsAPI, settings, categories } = useData();
+  const { updatePost, settings, categories } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
   const navigate = useNavigate();
 
   // 根据设置获取文章链接
+  // 原来生成的是 /post/xxx，而前台路由注册的是 /posts/:id，
+  // 路径对不上，管理员点"查看文章"必然落到 404。
   const getPostUrl = (post) => {
     const urlType = settings?.postUrlType || 'slug';
-    return urlType === 'id' ? `/post/${post.id}` : `/post/${post.slug || post.id}`;
+    return urlType === 'id' ? `/posts/${post.id}` : `/posts/${post.slug || post.id}`;
   };
 
   const sortedPosts = [...posts].sort((a, b) => {
@@ -44,9 +46,17 @@ export default function Posts({ posts, onDelete }) {
     return <span className="px-2 py-1 text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded-full">草稿</span>;
   };
 
-  const handleToggleSticky = (post, e) => {
+  const handleToggleSticky = async (post, e) => {
     e.stopPropagation();
-    postsAPI.update(post.id, { sticky: !post.sticky });
+    // 原来调用 postsAPI.update —— 但 postsAPI 是从 DataContext 解构出来的，
+    // 而 Context 从未提供该成员，拿到的是 undefined，一点击就抛 TypeError。
+    // 改用 Context 的语义化方法，顺带让本地状态同步更新。
+    try {
+      await updatePost(post.id, { sticky: !post.sticky });
+      showToast(post.sticky ? '已取消置顶' : '已置顶', 'success');
+    } catch (err) {
+      showToast(err.message || '操作失败', 'error');
+    }
   };
 
   const handleCancelScheduled = async (post, e) => {
@@ -56,8 +66,12 @@ export default function Posts({ posts, onDelete }) {
       message: '确定要取消定时发布吗？',
     });
     if (confirmed) {
-      postsAPI.update(post.id, { status: 'draft', publishDate: null });
-      showToast('已取消定时发布', 'success');
+      try {
+        await updatePost(post.id, { status: 'draft', publishDate: null });
+        showToast('已取消定时发布', 'success');
+      } catch (err) {
+        showToast(err.message || '操作失败', 'error');
+      }
     }
   };
 
