@@ -1,11 +1,11 @@
 {
   "remove": [
-    { "from": "app.post('/api/comments', authenticateToken", "to": "app.get('/api/menus', authenticateToken" },
-    { "from": "app.get('/api/menus', authenticateToken", "to": "app.get('/api/widgets', authenticateToken" },
-    { "from": "app.get('/api/widgets', authenticateToken", "to": "app.get('/api/media', authenticateToken" },
-    { "from": "app.get('/api/media', authenticateToken", "to": "app.get('/api/settings', authenticateToken" },
-    { "from": "app.get('/api/settings', authenticateToken", "to": "app.get('/api/users', authenticateToken" },
-    { "from": "app.get('/api/users', authenticateToken", "to": "app.get('/api/public/posts'," }
+    { "from": "app.get('/api/public/posts',", "to": "app.get('/api/analytics/stats'," },
+    { "from": "app.get('/api/analytics/stats',", "to": "// SMTP 相关端点" },
+    { "from": "// SMTP 相关端点", "to": "// 通知 API" },
+    { "from": "// 通知 API", "to": "// ---------------------------------------------------------------- 备份管理" },
+    { "from": "// ---------------------------------------------------------------- 备份管理", "to": "// ------------------------------------------------------------ 定时发布调度" },
+    { "from": "// 验证码存储（内存中，生产环境应使用 Redis）", "to": "// 参数化查询助手统一由" }
   ],
   "insertAt": "async function startServer() {",
   "insertFile": "_migrate.insert.txt"

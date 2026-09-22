@@ -1,6 +1,5 @@
-app.use(require('./src/modules/comments/routes')(deps));
-app.use(require('./src/modules/menus/routes')(deps));
-app.use(require('./src/modules/widgets/routes')(deps));
-app.use(require('./src/modules/media/routes')(deps));
-app.use(require('./src/modules/settings/routes')(deps));
-app.use(require('./src/modules/users/routes')(deps));
+app.use(require('./src/modules/notifications/routes')(deps));
+app.use(require('./src/modules/public/routes')(deps));
+app.use(require('./src/modules/analytics/routes')(deps));
+app.use(require('./src/modules/smtp/routes')(deps));
+app.use(require('./src/modules/backups/routes')(deps));
