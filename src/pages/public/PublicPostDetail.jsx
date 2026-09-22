@@ -2,92 +2,49 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, User, Tag, MessageSquare, Send, Reply, Share2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useData } from '../../contexts/DataContext';
+import { commentsAPI } from '../../services/api';
+import { sanitizeHtml } from '../../utils/sanitize';
 import SidebarWidgets from '../../components/SidebarWidgets';
 import SocialShare from '../../components/SocialShare';
-
-// XSS防护：增强的HTML过滤函数
-const sanitizeHTML = (html) => {
-  if (!html) return '';
-  
-  // 创建一个临时div来解析HTML
-  const temp = document.createElement('div');
-  temp.innerHTML = html;
-  
-  // 1. 移除所有危险的标签
-  const dangerousTags = ['script', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'select', 'textarea', 'link', 'meta', 'style'];
-  dangerousTags.forEach(tagName => {
-    const elements = temp.getElementsByTagName(tagName);
-    while (elements.length > 0) {
-      elements[0].parentNode.removeChild(elements[0]);
-    }
-  });
-  
-  // 2. 移除所有事件处理器属性和危险属性
-  const allElements = temp.getElementsByTagName('*');
-  const dangerousAttrs = [
-    // 事件处理器
-    /^on/i,
-    // 危险属性
-    /^(src|href|data|style)$/i, // 需要进一步检查
-  ];
-  
-  const dangerousPatterns = [
-    /javascript:/i,
-    /data:(?!image\/(png|jpg|jpeg|gif|webp))/i, // 只允许图片data URL
-    /vbscript:/i,
-    /expression\s*\(/i, // CSS表达式（IE）
-  ];
-  
-  for (let i = 0; i < allElements.length; i++) {
-    const element = allElements[i];
-    const attrs = Array.from(element.attributes);
-    
-    attrs.forEach(attr => {
-      const attrName = attr.name.toLowerCase();
-      let shouldRemove = false;
-      
-      // 检查是否是事件处理器（on开头）
-      if (attrName.startsWith('on')) {
-        shouldRemove = true;
-      }
-      
-      // 检查href/src/data属性中的危险协议
-      if (['href', 'src', 'data', 'action', 'poster'].includes(attrName)) {
-        const attrValue = attr.value || '';
-        if (dangerousPatterns.some(pattern => pattern.test(attrValue))) {
-          shouldRemove = true;
-        }
-      }
-      
-      // 检查style属性中的危险内容
-      if (attrName === 'style') {
-        if (/expression\s*\(|url\s*\(|javascript:/i.test(attr.value || '')) {
-          shouldRemove = true;
-        }
-      }
-      
-      if (shouldRemove) {
-        element.removeAttribute(attr.name);
-      }
-    });
-  }
-  
-  return temp.innerHTML;
-};
 
 export default function PublicPostDetail({ posts: propPosts, settings: propSettings }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { posts: contextPosts, settings: contextSettings, categories, tags, comments, commentsAPI, widgets } = useData();
+  const { posts: contextPosts, settings: contextSettings, categories, tags, widgets } = useData();
 
   const posts = propPosts || contextPosts;
   const settings = propSettings || contextSettings;
-  const post = posts.find(p => p.id === Number(id));
+
+  // 原来的写法是 posts.find(p => p.id === Number(id))，但文章的 id 是后端生成的
+  // UUID 字符串，Number(uuid) 得到 NaN，条件永远不成立 —— 结果就是无论访问哪篇
+  // 文章，前台都只显示「文章不存在」，阅读页等于完全不可用。
+  // 这里直接按字符串比较，并同时支持用 slug 访问（设置里可选文章链接形式）。
+  const post = posts.find(p => p.id === id || p.slug === id);
 
   const [commentForm, setCommentForm] = useState({ author: '', email: '', content: '' });
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyForm, setReplyForm] = useState({ author: '', email: '', content: '' });
   const [commentSubmitted, setCommentSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [postComments, setPostComments] = useState([]);
+
+  // 评论单独从公开端点取「已审核」的那部分。
+  // 原来直接用 Context 里的 comments（那是后台全量评论，含待审核与垃圾评论），
+  // 而且在没有登录的访客场景下根本不会被加载。
+  useEffect(() => {
+    if (!post?.id) return;
+    let cancelled = false;
+    commentsAPI.getPublicForPost(post.id)
+      .then((res) => {
+        if (!cancelled) setPostComments(res.data || []);
+      })
+      .catch(() => {
+        if (!cancelled) setPostComments([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [post?.id]);
 
   // SEO 设置
   const seo = settings?.seo || {};
