@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "init-db": "node init-db.js"
+    "init-db": "node init-db.js",
+    "smoke": "node scripts/smoke.mjs",
+    "smoke:save": "node scripts/smoke.mjs --save"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

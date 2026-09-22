@@ -8,9 +8,10 @@
  *   node scripts/smoke.mjs --verbose  打印完整响应体
  *
  * 环境变量：
- *   API_BASE    默认 http://localhost:3002/api
- *   ADMIN_USER  默认 admin
- *   ADMIN_PASS  默认 admin123
+ *   API_BASE         默认 http://localhost:3002/api
+ *   ADMIN_USER       默认 admin
+ *   ADMIN_PASS       默认读 backend/.env 的 SMOKE_ADMIN_PASS，最后回退 admin123
+ *                    （管理员口令已轮换过，正常情况下应写在 .env 里）
  */
 
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'node:fs';
@@ -19,10 +20,23 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BASELINE_PATH = join(__dirname, 'baseline.json');
+const ENV_PATH = join(__dirname, '..', '.env');
 
+// 从 backend/.env 取冒烟用的口令，避免把口令硬编码进版本库
+function readEnvFile() {
+  if (!existsSync(ENV_PATH)) return {};
+  const result = {};
+  for (const line of readFileSync(ENV_PATH, 'utf8').split('\n')) {
+    const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)$/);
+    if (match) result[match[1]] = match[2].trim();
+  }
+  return result;
+}
+
+const fileEnv = readEnvFile();
 const BASE = process.env.API_BASE || 'http://localhost:3002/api';
-const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS = process.env.ADMIN_PASS || 'admin123';
+const ADMIN_USER = process.env.ADMIN_USER || fileEnv.SMOKE_ADMIN_USER || 'admin';
+const ADMIN_PASS = process.env.ADMIN_PASS || fileEnv.SMOKE_ADMIN_PASS || 'admin123';
 
 const ARGS = new Set(process.argv.slice(2));
 const SAVE = ARGS.has('--save');
@@ -338,7 +352,110 @@ async function main() {
     expect: 200,
   }));
 
-  // 6. 校验失败路径
+  // 6. 权限：非管理员不得访问用户管理。
+  //    这是必须守住的回归点 —— requireRole 曾经存在逻辑旁路，任何登录用户都能通过。
+  const editorName = `${MARK}-editor`;
+  const editorPass = 'EditorPass123';
+  await record('POST /users 建 editor 账号', async () => {
+    const res = await call('POST', '/users', {
+      token,
+      body: { username: editorName, email: `${MARK}@example.com`, password: editorPass, role: 'editor', status: 'active' },
+    });
+    if (res.body?.data?.id) cleanup.push(['delete', `/users/${res.body.data.id}`, token]);
+    return { res, expect: 201 };
+  });
+
+  const editorLogin = await record('POST /auth/login (editor)', async () => ({
+    res: await call('POST', '/auth/login', { body: { username: editorName, password: editorPass } }),
+    expect: 200,
+  }));
+  const editorToken = editorLogin.body?.token;
+  if (editorToken) {
+    await record('GET  /users (editor 应 403)', async () => ({
+      res: await call('GET', '/users', { token: editorToken }),
+      expect: 403,
+    }));
+    await record('POST /backups (editor 应 403)', async () => ({
+      res: await call('POST', '/backups', { token: editorToken }),
+      expect: 403,
+    }));
+    // 普通登录用户仍应能读写内容
+    await record('GET  /posts (editor 应 200)', async () => ({
+      res: await call('GET', '/posts', { token: editorToken }),
+      expect: 200,
+    }));
+  }
+
+  // 7. 公开评论：访客没有 token 也必须能提交
+  const commentTarget = await call('POST', '/posts', {
+    token,
+    body: { title: `${MARK} 评论目标`, content: '<p>x</p>', category: '未分类', status: 'published' },
+  });
+  const targetPostId = commentTarget.body?.data?.id;
+  if (targetPostId) {
+    cleanup.push(['delete', `/posts/${targetPostId}`, token]);
+
+    const guestComment = await record('POST /public/comments (匿名)', async () => ({
+      res: await call('POST', '/public/comments', {
+        body: { postId: targetPostId, author: '访客', email: `${MARK}@example.com`, content: '这是一条冒烟评论' },
+      }),
+      expect: 201,
+    }));
+    if (guestComment.body?.data?.id) {
+      cleanup.push(['delete', `/comments/${guestComment.body.data.id}`, token]);
+    }
+
+    await record('POST /public/comments 邮箱非法', async () => ({
+      res: await call('POST', '/public/comments', {
+        body: { postId: targetPostId, author: '访客', email: 'not-an-email', content: 'x' },
+      }),
+      expect: 400,
+    }));
+
+    await record('GET  /public/posts/:id/comments', async () => ({
+      res: await call('GET', `/public/posts/${targetPostId}/comments`),
+      expect: 200,
+    }));
+
+    // 定时发布字段是否真的能落库（历史上 posts 表根本没有这一列）
+    await record('PUT  /posts/:id 写入 publishDate', async () => ({
+      res: await call('PUT', `/posts/${targetPostId}`, {
+        token,
+        body: { status: 'future', publishDate: '2099-01-01T00:00:00.000Z' },
+      }),
+      expect: 200,
+    }));
+    await record('PUT  /posts/:id 清空 publishDate', async () => ({
+      res: await call('PUT', `/posts/${targetPostId}`, {
+        token,
+        body: { status: 'draft', publishDate: null },
+      }),
+      expect: 200,
+    }));
+  }
+
+  // 8. 备份
+  const backupCreated = await record('POST /backups', async () => ({
+    res: await call('POST', '/backups', { token }),
+    expect: 201,
+  }));
+  await record('GET  /backups', async () => ({
+    res: await call('GET', '/backups', { token }),
+    expect: 200,
+  }));
+  const backupId = backupCreated.body?.data?.id;
+  if (backupId) {
+    await record('DELETE /backups/:id', async () => ({
+      res: await call('DELETE', `/backups/${encodeURIComponent(backupId)}`, { token }),
+      expect: 200,
+    }));
+  }
+  await record('DELETE /backups/:id 非法 id', async () => ({
+    res: await call('DELETE', '/backups/..%2F..%2Fpackage.json', { token }),
+    expect: 404,
+  }));
+
+  // 9. 校验失败路径
   await record('POST /posts 缺字段', async () => ({
     res: await call('POST', '/posts', { token, body: { title: '' } }),
     expect: 400,
@@ -348,7 +465,7 @@ async function main() {
     expect: 401,
   }));
 
-  // 7. 清理
+  // 10. 清理，放在最后（用户要在评论等资源之前删掉）
   for (const [method, path, tk] of cleanup) {
     await call(method === 'delete' ? 'DELETE' : 'GET', path, { token: tk });
   }

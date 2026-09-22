@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-09-22T12:19:05.426Z",
+  "savedAt": "2026-09-22T12:33:34.707Z",
   "apiBase": "http://localhost:3002/api",
   "note": "shape 字段是契约形状（叶子值只留类型）；message 仅供参考不参与 diff",
   "results": [
@@ -73,6 +73,7 @@
             "created_at": "string",
             "excerpt": "string",
             "id": "string",
+            "publish_date": "null",
             "status": "string",
             "sticky": "number",
             "title": "string",
@@ -349,6 +350,7 @@
             "created_at": "string",
             "excerpt": "string",
             "id": "string",
+            "publish_date": "null",
             "status": "string",
             "sticky": "number",
             "title": "string",
@@ -405,6 +407,7 @@
           "created_at": "string",
           "excerpt": "string",
           "id": "string",
+          "publish_date": "null",
           "status": "string",
           "sticky": "number",
           "title": "string",
@@ -427,6 +430,7 @@
           "created_at": "string",
           "excerpt": "string",
           "id": "string",
+          "publish_date": "null",
           "status": "string",
           "sticky": "number",
           "title": "string",
@@ -659,9 +663,232 @@
       "expect": 200,
       "shape": {
         "message": "string",
+        "success": "bool:false"
+      },
+      "message": "通知表不存在，请重新初始化数据库"
+    },
+    {
+      "name": "POST /users 建 editor 账号",
+      "status": 201,
+      "expect": 201,
+      "shape": {
+        "data": {
+          "created_at": "string",
+          "email": "string",
+          "id": "string",
+          "role": "string",
+          "status": "string",
+          "updated_at": "string",
+          "username": "string"
+        },
+        "message": "string",
         "success": "bool:true"
       },
-      "message": "示例通知已创建"
+      "message": "用户创建成功"
+    },
+    {
+      "name": "POST /auth/login (editor)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "message": "string",
+        "success": "bool:true",
+        "token": "string",
+        "user": {
+          "email": "string",
+          "id": "string",
+          "role": "string",
+          "status": "string",
+          "username": "string"
+        }
+      },
+      "message": "登录成功"
+    },
+    {
+      "name": "GET  /users (editor 应 403)",
+      "status": 403,
+      "expect": 403,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "权限不足"
+    },
+    {
+      "name": "POST /backups (editor 应 403)",
+      "status": 403,
+      "expect": 403,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "权限不足"
+    },
+    {
+      "name": "GET  /posts (editor 应 200)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": [
+          {
+            "author": "string",
+            "category": "string",
+            "content": "string",
+            "created_at": "string",
+            "excerpt": "string",
+            "id": "string",
+            "publish_date": "null",
+            "status": "string",
+            "sticky": "number",
+            "title": "string",
+            "updated_at": "string"
+          }
+        ],
+        "success": "bool:true"
+      }
+    },
+    {
+      "name": "POST /public/comments (匿名)",
+      "status": 201,
+      "expect": 201,
+      "shape": {
+        "data": {
+          "author": "string",
+          "content": "string",
+          "created_at": "string",
+          "email": "string",
+          "id": "string",
+          "parent_id": "null",
+          "post_id": "string",
+          "status": "string",
+          "updated_at": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "评论已提交，审核通过后显示"
+    },
+    {
+      "name": "POST /public/comments 邮箱非法",
+      "status": 400,
+      "expect": 400,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "邮箱格式不正确"
+    },
+    {
+      "name": "GET  /public/posts/:id/comments",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": [],
+        "success": "bool:true"
+      }
+    },
+    {
+      "name": "PUT  /posts/:id 写入 publishDate",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "author": "string",
+          "category": "string",
+          "content": "string",
+          "created_at": "string",
+          "excerpt": "string",
+          "id": "string",
+          "publish_date": "string",
+          "status": "string",
+          "sticky": "number",
+          "title": "string",
+          "updated_at": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "文章更新成功"
+    },
+    {
+      "name": "PUT  /posts/:id 清空 publishDate",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "author": "string",
+          "category": "string",
+          "content": "string",
+          "created_at": "string",
+          "excerpt": "string",
+          "id": "string",
+          "publish_date": "null",
+          "status": "string",
+          "sticky": "number",
+          "title": "string",
+          "updated_at": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "文章更新成功"
+    },
+    {
+      "name": "POST /backups",
+      "status": 201,
+      "expect": 201,
+      "shape": {
+        "data": {
+          "createdAt": "string",
+          "id": "string",
+          "name": "string",
+          "size": "number",
+          "type": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "备份创建成功"
+    },
+    {
+      "name": "GET  /backups",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": [
+          {
+            "createdAt": "string",
+            "id": "string",
+            "name": "string",
+            "size": "number",
+            "type": "string"
+          }
+        ],
+        "success": "bool:true"
+      }
+    },
+    {
+      "name": "DELETE /backups/:id",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "备份已删除"
+    },
+    {
+      "name": "DELETE /backups/:id 非法 id",
+      "status": 404,
+      "expect": 404,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "备份不存在"
     },
     {
       "name": "POST /posts 缺字段",
