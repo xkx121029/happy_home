@@ -21,6 +21,53 @@ export const getAuthToken = () => {
   return authToken;
 };
 
+// 后端返回的是数据库原始行（snake_case，且布尔位列是 0/1），而全部页面读的是
+// camelCase（post.updatedAt / post.publishDate / comment.parentId ...）。
+// 两边一直没有对齐，于是排序、分页、定时发布提示、评论嵌套读到的都是 undefined。
+// 这里在响应解析的唯一入口统一规整，所有消费者（含直接调 API 的页面）一次性受益。
+// （Phase 5 拆分后端时会改由各模块 dto.js 承担转换，这一层随之简化）
+const toCamelCase = (key) => key.replace(/_([a-z])/g, (_, ch) => ch.toUpperCase());
+
+// 这些列在库里的类型是 INTEGER，但语义是布尔
+const BOOLEAN_FIELDS = new Set(['sticky', 'enabled', 'isRead']);
+
+// 这两个字段在库里以 JSON 字符串存储
+const JSON_FIELDS = new Set(['items', 'config']);
+
+export function normalizeEntity(entity) {
+  if (Array.isArray(entity)) return entity.map(normalizeEntity);
+  if (!entity || typeof entity !== 'object') return entity;
+
+  const result = {};
+  for (const [rawKey, value] of Object.entries(entity)) {
+    const key = toCamelCase(rawKey);
+    if (BOOLEAN_FIELDS.has(key)) {
+      result[key] = value === 1 || value === true;
+    } else if (JSON_FIELDS.has(key) && typeof value === 'string') {
+      try {
+        result[key] = JSON.parse(value);
+      } catch {
+        result[key] = value;
+      }
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
+// 只规整 data 载荷，不动 success/message/count 这类外层信封字段
+function normalizeResponse(payload) {
+  if (!payload || typeof payload !== 'object') return payload;
+  const result = { ...payload };
+  if (Array.isArray(payload.data)) {
+    result.data = payload.data.map(normalizeEntity);
+  } else if (payload.data && typeof payload.data === 'object') {
+    result.data = normalizeEntity(payload.data);
+  }
+  return result;
+}
+
 export const apiRequest = async (endpoint, options = {}) => {
   const headers = {
     'Content-Type': 'application/json',
@@ -60,7 +107,7 @@ export const apiRequest = async (endpoint, options = {}) => {
     throw new Error(data?.message || `API 请求失败（HTTP ${response.status}）`);
   }
 
-  return data;
+  return normalizeResponse(data);
 };
 
 // Auth

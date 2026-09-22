@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+﻿import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { 
   authAPI, postsAPI, pagesAPI, usersAPI, categoriesAPI, tagsAPI,
   menusAPI, widgetsAPI, mediaAPI, commentsAPI, settingsAPI, publicSettingsAPI, publicAPI,
@@ -7,45 +7,6 @@ import {
 } from '../services/api';
 
 const DataContext = createContext();
-
-// 后端返回的是数据库原始行（snake_case，且布尔位是 0/1），而所有页面读的是
-// camelCase（post.updatedAt / post.publishDate / comment.parentId ...）。
-// 两边一直没有对齐，于是排序、定时发布提示、评论嵌套等功能读到的全是 undefined。
-// 这里在数据进入 state 的唯一入口做一次规整。
-// （Phase 5 拆分后端时会改由各模块的 dto.js 统一转换，这一层随之简化）
-const toCamelCase = (key) => key.replace(/_([a-z])/g, (_, ch) => ch.toUpperCase());
-
-// 这些列的库内类型是 INTEGER，但语义是布尔
-const BOOLEAN_FIELDS = new Set(['sticky', 'enabled', 'isRead', 'is_read']);
-
-function normalizeEntity(entity) {
-  if (Array.isArray(entity)) return entity.map(normalizeEntity);
-  if (!entity || typeof entity !== 'object') return entity;
-
-  const result = {};
-  for (const [rawKey, value] of Object.entries(entity)) {
-    const key = toCamelCase(rawKey);
-    if (BOOLEAN_FIELDS.has(key)) {
-      result[key] = value === 1 || value === true;
-    } else if (key === 'items' || key === 'config') {
-      // menus.items 与 widgets.config 在库里是 JSON 字符串
-      if (typeof value === 'string') {
-        try {
-          result[key] = JSON.parse(value);
-        } catch {
-          result[key] = value;
-        }
-      } else {
-        result[key] = value;
-      }
-    } else {
-      result[key] = value;
-    }
-  }
-  return result;
-}
-
-const normalizeList = (data) => (Array.isArray(data) ? data.map(normalizeEntity) : data);
 
 export const DataProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -106,15 +67,15 @@ export const DataProvider = ({ children }) => {
         settingsAPI.getAll(),
       ]);
 
-      setPosts(normalizeList(postsRes.data) || []);
-      setPages(normalizeList(pagesRes.data) || []);
-      setUsers(normalizeList(usersRes.data) || []);
-      setCategories(normalizeList(categoriesRes.data) || []);
-      setTags(normalizeList(tagsRes.data) || []);
-      setMenus(normalizeList(menusRes.data) || []);
-      setWidgets(normalizeList(widgetsRes.data) || []);
-      setMediaItems(normalizeList(mediaRes.data) || []);
-      setComments(normalizeList(commentsRes.data) || []);
+      setPosts(postsRes.data || []);
+      setPages(pagesRes.data || []);
+      setUsers(usersRes.data || []);
+      setCategories(categoriesRes.data || []);
+      setTags(tagsRes.data || []);
+      setMenus(menusRes.data || []);
+      setWidgets(widgetsRes.data || []);
+      setMediaItems(mediaRes.data || []);
+      setComments(commentsRes.data || []);
       setSettings(settingsRes.data || {});
     } catch (error) {
       console.error('Error loading data:', error);
@@ -132,8 +93,8 @@ export const DataProvider = ({ children }) => {
         publicSettingsAPI.getAll(),
       ]);
 
-      setPosts(normalizeList(postsRes.data) || []);
-      setPages(normalizeList(pagesRes.data) || []);
+      setPosts(postsRes.data || []);
+      setPages(pagesRes.data || []);
       setSettings(settingsRes.data || {});
     } catch (error) {
       console.error('Error loading public data:', error);
@@ -160,7 +121,7 @@ export const DataProvider = ({ children }) => {
   // Posts
   const getPosts = async (params = {}) => {
     const response = await postsAPI.getAll(params);
-    setPosts(normalizeList(response.data) || []);
+    setPosts(response.data || []);
     return response;
   };
 
@@ -171,13 +132,13 @@ export const DataProvider = ({ children }) => {
 
   const createPost = async (data) => {
     const response = await postsAPI.create(data);
-    setPosts(prev => [normalizeEntity(response.data), ...prev]);
+    setPosts(prev => [response.data, ...prev]);
     return response;
   };
 
   const updatePost = async (id, data) => {
     const response = await postsAPI.update(id, data);
-    const updated = normalizeEntity(response.data);
+    const updated = response.data;
     setPosts(prev => prev.map(p => p.id === id ? updated : p));
     return response;
   };
