@@ -60,6 +60,17 @@ function createTables() {
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
 
+  if (!process.env.INITIAL_ADMIN_PASSWORD) {
+    console.log('');
+    console.log('====================================================');
+    console.log('  已创建初始管理员账号');
+    console.log('  用户名：admin');
+    console.log('  初始口令：' + initialPassword);
+    console.log('  请登录后立即修改，或在 .env 里设置 INITIAL_ADMIN_PASSWORD');
+    console.log('====================================================');
+    console.log('');
+  }
+
     CREATE TABLE posts (
       id TEXT PRIMARY KEY,
       title TEXT NOT NULL,
