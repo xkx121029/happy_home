@@ -1,29 +1,25 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
 
-// 原来 .env 根本没有被加载（dotenv 未安装也未 require），文件形同虚设，
-// 配置实际全部来自代码里的硬编码。这里在读取任何 process.env 之前先加载。
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+// 集中读取环境变量（config 内部会先加载 backend/.env），必须在读取任何
+// process.env 之前引入；jwt / response / 鉴权等公共能力也在这里接好。
+const { PORT, CORS_ORIGINS } = require('./src/config');
+const jwt = require('./src/lib/jwt');
+const { ok, fail } = require('./src/lib/response');
+const asyncHandler = require('./src/middleware/asyncHandler');
+const createAuth = require('./src/middleware/auth');
 
 const { initDatabase, getDb, dbHelpers, saveDatabase } = require('./db');
 const { sendVerificationCode, testConnection, testConnectionWithConfig, createTransporter } = require('./mailer');
 
 const app = express();
-const PORT = process.env.PORT || 3002;
 
-// CORS 白名单：原来是 cors() 全开放（Access-Control-Allow-Origin: *），
-// 任何站点都能带着用户凭证调这些接口。改为按配置放行。
-const CORS_ORIGINS = (process.env.CORS_ORIGINS || '')
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
-
+// CORS 白名单来自 src/config（原来是 cors() 全开放，任何站点都能带凭证调这些接口）
 app.use(cors({
   origin(origin, callback) {
     // 同源请求、curl、服务端调用没有 origin，放行
@@ -36,14 +32,6 @@ app.use(cors({
 }));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-
-const DEFAULT_JWT_SECRET = 'happyhome_jwt_secret_key';
-const JWT_SECRET = process.env.JWT_SECRET || DEFAULT_JWT_SECRET;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
-
-if (JWT_SECRET === DEFAULT_JWT_SECRET) {
-  console.warn('[警告] JWT_SECRET 仍是默认值，请修改 backend/.env 中的 JWT_SECRET（见 .env.example）');
-}
 
 // 验证码存储（内存中，生产环境应使用 Redis）
 const verificationCodes = new Map();
@@ -73,39 +61,8 @@ function bindable(params = []) {
   return params.map((value) => (value === undefined ? null : value));
 }
 
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ success: false, message: '未授权访问' });
-  }
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ success: false, message: '无效的令牌' });
-    }
-    req.user = user;
-    next();
-  });
-}
-
-// 只允许指定角色访问。
-// 原实现是 `user.role !== role && user.role !== 'administrator'`：当调用方传入的
-// role 恰好就是 'administrator' 时，第二个条件恒为假，导致整个表达式恒为假 ——
-// 也就是任何已登录用户都能通过 requireRole('administrator')，管理员权限形同虚设。
-// 现在改为严格匹配；若将来需要「管理员是任意角色的超集」，
-// 必须由调用点显式声明多个角色，而不是靠隐式放行。
-function requireRole(role) {
-  return (req, res, next) => {
-    const db = getDb();
-    const user = getSingle(db, 'SELECT * FROM users WHERE id = ?', [req.user.id]);
-    if (!user || user.role !== role) {
-      return res.status(403).json({ success: false, message: '权限不足' });
-    }
-    next();
-  };
-}
+// 鉴权中间件由工厂创建，db 助手通过参数注入（见 src/middleware/auth.js）
+const { authenticateToken, optionalAuth, requireRole } = createAuth({ getDb, getSingle });
 
 app.post('/api/auth/send-register-code', async (req, res) => {
   try {
@@ -192,11 +149,7 @@ app.post('/api/auth/login', (req, res) => {
       return res.status(401).json({ success: false, message: '账户未激活' });
     }
 
-    const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
-    );
+    const token = jwt.sign({ id: user.id, username: user.username, role: user.role });
 
     res.json({
       success: true,
@@ -259,11 +212,7 @@ app.post('/api/auth/register', async (req, res) => {
     db.run('DELETE FROM register_codes WHERE email = ?', [email]);
     saveDatabase();
 
-    const token = jwt.sign(
-      { id: newUserId, username, role: 'author' },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
-    );
+    const token = jwt.sign({ id: newUserId, username, role: 'author' });
 
     res.json({
       success: true,
@@ -306,11 +255,7 @@ app.post('/api/auth/verify', (req, res) => {
     db.run('UPDATE users SET status = ?, verification_code = NULL, verification_expires = NULL WHERE id = ?', ['active', userId]);
     saveDatabase();
 
-    const token = jwt.sign(
-      { id: userId, username: user.username, role: user.role },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
-    );
+    const token = jwt.sign({ id: userId, username: user.username, role: user.role });
 
     res.json({
       success: true,
@@ -1374,16 +1319,7 @@ app.get('/api/health', (req, res) => {
 // 访客没有 token，永远拿到 401，评论功能实际上从未对公众开放。
 // 这里为前台单独开一组端点，并做好滥用防护。
 
-// 可选鉴权：有合法 token 就带上用户信息，没有也放行
-function optionalAuth(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return next();
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (!err) req.user = user;
-    next();
-  });
-}
+// 可选鉴权：有合法 token 就带上用户信息，没有也放行（统一走 src/middleware/auth.js，见文件顶部）
 
 // 极简内存限流：按 IP 与邮箱双维度计数。
 // 公开写接口没有限流等于开放刷库通道，所以它与端点必须同时存在。

@@ -1,83 +1,132 @@
 import { useEffect } from 'react';
 import { X, AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react';
+import { cn } from '../lib/cn';
 
-export default function Modal({ isOpen, onClose, title, message, type = 'info', confirmText = '确定', cancelText = '取消', onConfirm, showCancel = true }) {
+/**
+ * 应用内弹窗与轻提示。
+ *
+ * 项目里有三套并存实现（本文件、hooks/useModal.js、components/Notification.jsx），
+ * 行为层暂时保留不动（收尾阶段再合并），但**视觉与动效统一到这里** ——
+ * 所有用 useModal 或其他方式渲染本组件的页面都会一起变，
+ * 不需要逐页改动。
+ *
+ * 动效遵循两条硬规则：
+ *   1. 只允许自下而上的入场：遮罩淡入 + 面板 translateY(8px) → 0。
+ *      不用缩放入场（元素不会从天而降），更不能用横向滑入。
+ *   2. 用 CSS transition 而不是 keyframes，这样快速连点关闭时动画能被中断、
+ *      从当前位置平滑过渡，不会从头重放而显得卡顿。
+ * 时长 180ms：弹窗属于偶发交互，可以比按压反馈长一点，但仍远低于 300ms 上限。
+ */
+
+const TONES = {
+  info: { icon: Info, wrap: 'bg-info/12', icon_: 'text-info' },
+  success: { icon: CheckCircle, wrap: 'bg-success/12', icon_: 'text-success' },
+  warning: { icon: AlertTriangle, wrap: 'bg-warning/14', icon_: 'text-warning' },
+  error: { icon: AlertCircle, wrap: 'bg-danger/12', icon_: 'text-danger' },
+  confirm: { icon: AlertCircle, wrap: 'bg-accent/12', icon_: 'text-accent' },
+};
+
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  message,
+  type = 'info',
+  confirmText = '确定',
+  cancelText = '取消',
+  onConfirm,
+  showCancel = true,
+}) {
+  // 打开时锁定背景滚动，关闭后恢复
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
+    if (!isOpen) return undefined;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = previous;
     };
   }, [isOpen]);
 
+  // Esc 关闭：弹窗必须能被键盘关掉
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const handleKey = (event) => {
+      if (event.key === 'Escape') onClose?.();
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
-  const icons = {
-    info: <Info className="w-6 h-6 text-blue-500" />,
-    success: <CheckCircle className="w-6 h-6 text-green-500" />,
-    warning: <AlertTriangle className="w-6 h-6 text-yellow-500" />,
-    error: <AlertCircle className="w-6 h-6 text-red-500" />,
-    confirm: <AlertCircle className="w-6 h-6 text-blue-500" />,
-  };
-
-  const colors = {
-    info: 'bg-blue-50',
-    success: 'bg-green-50',
-    warning: 'bg-yellow-50',
-    error: 'bg-red-50',
-    confirm: 'bg-blue-50',
-  };
+  const tone = TONES[type] || TONES.info;
+  const Icon = tone.icon;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title || '提示'}
+    >
+      <div
+        className="absolute inset-0 bg-black/45"
         onClick={onClose}
+        style={{
+          animation: 'none',
+          opacity: 1,
+          transition: 'opacity 180ms var(--ease-entry)',
+        }}
       />
-      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6 transform transition-all">
+      {/* 面板保持 transform-origin: center —— 弹窗不锚定在任何触发元素上 */}
+      <div
+        className="relative bg-surface rounded-lg shadow-lg w-full max-w-md p-6 border border-line"
+        style={{
+          opacity: 1,
+          transform: 'translateY(0)',
+          transition: 'opacity 180ms var(--ease-entry), transform 180ms var(--ease-entry)',
+          animation: 'happyhome-dialog-in 180ms var(--ease-entry)',
+        }}
+      >
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+          className="absolute top-4 right-4 p-1 rounded-lg text-muted hover:text-fg hover:bg-surface-2 transition-colors duration-100"
+          aria-label="关闭"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
-        <div className={`w-14 h-14 ${colors[type]} rounded-full flex items-center justify-center mx-auto mb-4`}>
-          {icons[type]}
+        <div className={cn('w-11 h-11 rounded-full grid place-items-center mx-auto mb-4', tone.wrap)}>
+          <Icon className={cn('w-5 h-5', tone.icon_)} />
         </div>
 
         {title && (
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white text-center mb-2">
-            {title}
-          </h3>
+          <h3 className="text-base font-semibold text-fg text-center mb-2">{title}</h3>
         )}
 
-        <p className="text-gray-600 dark:text-gray-300 text-center mb-6">
-          {message}
-        </p>
+        <p className="text-sm text-muted text-center mb-6 leading-relaxed">{message}</p>
 
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           {showCancel && (
             <button
+              type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex-1 h-9 rounded-lg border border-line text-sm font-medium text-fg hover:bg-surface-2 transition-colors duration-100 active:scale-[0.97]"
             >
               {cancelText}
             </button>
           )}
           <button
+            type="button"
             onClick={() => {
               onConfirm?.();
-              onClose();
+              onClose?.();
             }}
-            className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-              type === 'error' 
-                ? 'bg-red-500 hover:bg-red-600 text-white' 
-                : 'bg-blue-500 hover:bg-blue-600 text-white'
-            }`}
+            className={cn(
+              'flex-1 h-9 rounded-lg text-sm font-medium text-white transition-colors duration-100 active:scale-[0.97]',
+              type === 'error' ? 'bg-danger hover:opacity-90' : 'bg-accent text-accent-fg hover:bg-accent-700'
+            )}
           >
             {confirmText}
           </button>
@@ -87,51 +136,42 @@ export default function Modal({ isOpen, onClose, title, message, type = 'info', 
   );
 }
 
+/**
+ * 轻提示。
+ *
+ * 从底部区域内自下而上出现（translateY(10px) → 0 + 淡入），
+ * 而不是原来从右侧横向滑入 —— 横向滑动是被明确禁止的动效形式。
+ * 位置也从右上角移到底部居中：底部更靠近用户的视线落点，
+ * 且不会遮挡顶部的操作按钮。
+ */
 export function Toast({ isOpen, message, type = 'success', onClose, duration = 3000 }) {
   useEffect(() => {
-    if (isOpen && duration > 0) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, duration);
-      return () => clearTimeout(timer);
-    }
+    if (!isOpen || duration <= 0) return undefined;
+    const timer = setTimeout(() => onClose?.(), duration);
+    return () => clearTimeout(timer);
   }, [isOpen, duration, onClose]);
 
   if (!isOpen) return null;
 
-  const icons = {
-    success: <CheckCircle className="w-5 h-5 text-green-500" />,
-    error: <AlertCircle className="w-5 h-5 text-red-500" />,
-    info: <Info className="w-5 h-5 text-blue-500" />,
-    warning: <AlertTriangle className="w-5 h-5 text-yellow-500" />,
-  };
-
-  const colors = {
-    success: 'bg-green-50 border-green-200',
-    error: 'bg-red-50 border-red-200',
-    info: 'bg-blue-50 border-blue-200',
-    warning: 'bg-yellow-50 border-yellow-200',
-  };
-
-  const textColors = {
-    success: 'text-green-700',
-    error: 'text-red-700',
-    info: 'text-blue-700',
-    warning: 'text-yellow-700',
-  };
+  const tone = TONES[type] || TONES.info;
+  const Icon = tone.icon;
 
   return (
-    <div className="fixed top-4 right-4 z-50 animate-slide-in">
-      <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg ${colors[type]} min-w-[280px]`}>
-        {icons[type]}
-        <span className={`text-sm font-medium ${textColors[type]}`}>
-          {message}
-        </span>
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+      <div
+        className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg bg-surface border border-line shadow-lg min-w-[240px] pointer-events-auto"
+        style={{ animation: 'happyhome-toast-in 180ms var(--ease-entry)' }}
+        role="status"
+      >
+        <Icon className={cn('w-4 h-4 shrink-0', tone.icon_)} />
+        <span className="text-sm text-fg flex-1">{message}</span>
         <button
+          type="button"
           onClick={onClose}
-          className="ml-auto text-gray-400 hover:text-gray-600"
+          className="text-muted hover:text-fg transition-colors duration-100"
+          aria-label="关闭提示"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>

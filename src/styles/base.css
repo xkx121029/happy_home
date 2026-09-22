@@ -118,3 +118,31 @@
     display: none;
   }
 }
+/*
+ * 入场关键帧。只做「自下而上」，不含缩放与横向位移。
+ *
+ * 这里用 @keyframes 而不是 transition，是因为弹窗与提示是挂载即入场
+ * （没有前一个状态可供过渡）。它们都是一次性的、不会被快速连点反复触发，
+ * 所以不存在「keyframes 无法中断」的问题 —— 那条规则针对的是可反复触发的交互。
+ */
+@keyframes happyhome-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes happyhome-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
