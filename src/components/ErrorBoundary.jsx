@@ -45,7 +45,7 @@ export default class ErrorBoundary extends Component {
     };
     
     // 尝试发送到服务器（如果配置了错误收集服务）
-    if (process.env.NODE_ENV === 'production') {
+    if (import.meta.env.PROD) {
       console.error('[ErrorBoundary] Error logged:', errorLog);
       // 可以在这里添加错误上报逻辑，如 Sentry
       // fetch('/api/errors', { method: 'POST', body: JSON.stringify(errorLog) });
@@ -120,7 +120,7 @@ export default class ErrorBoundary extends Component {
                 </div>
 
                 {/* 技术详情 - 可展开 */}
-                {process.env.NODE_ENV === 'development' && errorInfo && (
+                {import.meta.env.DEV && errorInfo && (
                   <div className="mb-6">
                     <button
                       onClick={this.toggleDetails}

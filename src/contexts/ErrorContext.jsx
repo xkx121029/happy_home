@@ -368,7 +368,7 @@ export function ErrorProvider({ children }) {
     };
     
     // 在开发环境打印
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log('[ActionLog]', log);
     }
     

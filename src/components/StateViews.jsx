@@ -132,7 +132,7 @@ export function ErrorState({
         </p>
         
         {/* 技术详情（仅开发环境） */}
-        {showDetails && process.env.NODE_ENV === 'development' && error && (
+        {showDetails && import.meta.env.DEV && error && (
           <div className="mb-6 text-left bg-gray-100 dark:bg-gray-800 rounded-lg p-4 max-h-40 overflow-auto">
             <p className="text-xs font-mono text-red-600 dark:text-red-400 break-all">
               {error.stack || error.message || String(error)}

@@ -436,7 +436,7 @@ export function ErrorToast({
     });
   }
   
-  if (error?.details?.originalError && process.env.NODE_ENV === 'development') {
+  if (error?.details?.originalError && import.meta.env.DEV) {
     defaultActions.push({
       label: '查看详情',
       icon: ChevronRight,
