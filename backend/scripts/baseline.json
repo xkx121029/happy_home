@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-09-22T12:49:20.269Z",
+  "savedAt": "2026-09-22T13:29:43.967Z",
   "apiBase": "http://localhost:3002/api",
   "note": "shape 字段是契约形状（叶子值只留类型）；message 仅供参考不参与 diff",
   "results": [
@@ -611,6 +611,16 @@
     },
     {
       "name": "GET  /public/posts/:id/comments",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": "array",
+        "success": "bool:true"
+      }
+    },
+    {
+      "name": "GET  /public/comments/recent",
       "status": 200,
       "expect": 200,
       "shape": {
