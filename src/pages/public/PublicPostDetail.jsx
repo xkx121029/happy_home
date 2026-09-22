@@ -3,7 +3,7 @@ import { ArrowLeft, Calendar, User, Tag, MessageSquare, Send, Reply, Share2 } fr
 import { useEffect, useState } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { commentsAPI } from '../../services/api';
-import { sanitizeHtml } from '../../utils/sanitize';
+import { sanitizeHtml } from '../../lib/sanitize';
 import SidebarWidgets from '../../components/SidebarWidgets';
 import SocialShare from '../../components/SocialShare';
 

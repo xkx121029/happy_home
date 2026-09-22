@@ -6,7 +6,6 @@ import { NetworkProvider, useNetwork } from './contexts/NetworkContext';
 import { NotificationProvider, useNotification } from './components/Notification';
 import ErrorBoundary from './components/ErrorBoundary';
 import NetworkStatusBanner from './components/NetworkStatus';
-import Modal from './components/Modal';
 import { usersAPI, mediaAPI } from './services/api';
 
 import Header from './components/Header';

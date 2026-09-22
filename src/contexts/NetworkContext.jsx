@@ -1,26 +1,26 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 /**
- * 网络状态上下文
- * 统一管理整个应用的网络状态，避免重复监听
+ * 全局网络状态。
+ *
+ * 只负责一件事：把浏览器的 online/offline 事件收敛成一处状态，
+ * 避免每个组件各注册一遍监听。
+ *
+ * 原先还有一套「离线操作队列」的计数与同步接口（pendingCount /
+ * updatePendingCount / syncOfflineRequests），但整套机制从未真正工作过
+ * （键名不一致 + 只清队不重发），已随 enhancedApi 一并删除。
  */
 const NetworkContext = createContext(null);
 
 export function NetworkProvider({ children }) {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator === 'undefined' ? true : navigator.onLine
+  );
 
-  // 统一的网络状态监听器（只注册一次）
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-    };
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
 
-    const handleOffline = () => {
-      setIsOnline(false);
-    };
-
-    // 只在这里注册全局监听器
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
@@ -30,46 +30,8 @@ export function NetworkProvider({ children }) {
     };
   }, []);
 
-  // 加载待处理的离线请求计数
-  useEffect(() => {
-    try {
-      const queue = JSON.parse(localStorage.getItem('happyhome_offline_queue') || '[]');
-      setPendingCount(queue.length);
-    } catch {
-      setPendingCount(0);
-    }
-  }, []);
-
-  // 更新待处理计数的方法
-  const updatePendingCount = useCallback((count) => {
-    setPendingCount(count);
-  }, []);
-
-  // 同步离线请求的方法
-  const syncOfflineRequests = useCallback(async () => {
-    if (!isOnline || pendingCount === 0) return;
-
-    try {
-      const queue = JSON.parse(localStorage.getItem('happyhome_offline_queue') || '[]');
-      localStorage.removeItem('happyhome_offline_queue');
-      setPendingCount(0);
-      
-      return { success: true, synced: queue.length };
-    } catch (error) {
-      console.error('同步离线请求失败:', error);
-      return { success: false, error: error.message };
-    }
-  }, [isOnline, pendingCount]);
-
-  const value = {
-    isOnline,
-    pendingCount,
-    updatePendingCount,
-    syncOfflineRequests,
-  };
-
   return (
-    <NetworkContext.Provider value={value}>
+    <NetworkContext.Provider value={{ isOnline }}>
       {children}
     </NetworkContext.Provider>
   );

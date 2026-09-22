@@ -12,7 +12,7 @@ import {
   X,
   Lightbulb
 } from 'lucide-react';
-import { tutorialAPI } from '../utils/dataStore';
+import { tutorialAPI } from '../lib/tutorialProgress';
 import { useData } from '../contexts/DataContext';
 
 export default function TutorialSystem() {
