@@ -1,33 +1,6 @@
-// ------------------------------------------------------------------ 路由装配
-//
-// 各 domain 模块通过依赖注入拿到 db 助手、鉴权中间件、响应助手与配置，
-// 模块之间不互相 require，也就不存在循环依赖。
-
-const deps = {
-  config,
-  mailer,
-  getDb,
-  dbHelpers,
-  saveDatabase,
-  initDatabase,
-  execQuery,
-  getSingle,
-  bindable,
-  uuidv4,
-  authenticateToken,
-  optionalAuth,
-  requireRole,
-  jwt,
-  password,
-  ok,
-  fail,
-  asyncHandler,
-  checkCommentRate,
-};
-
-app.use(require('./src/modules/health/routes')(deps));
-app.use(require('./src/modules/auth/routes')(deps));
-app.use(require('./src/modules/posts/routes')(deps));
-app.use(require('./src/modules/pages/routes')(deps));
-app.use(require('./src/modules/categories/routes')(deps));
-app.use(require('./src/modules/tags/routes')(deps));
+app.use(require('./src/modules/comments/routes')(deps));
+app.use(require('./src/modules/menus/routes')(deps));
+app.use(require('./src/modules/widgets/routes')(deps));
+app.use(require('./src/modules/media/routes')(deps));
+app.use(require('./src/modules/settings/routes')(deps));
+app.use(require('./src/modules/users/routes')(deps));

@@ -1,11 +1,11 @@
 {
   "remove": [
-    { "from": "app.get('/api/health',", "to": "公开评论（访客可用）" },
-    { "from": "app.post('/api/auth/send-register-code'", "to": "app.get('/api/posts', authenticateToken" },
-    { "from": "app.get('/api/posts', authenticateToken", "to": "app.get('/api/pages', authenticateToken" },
-    { "from": "app.get('/api/pages', authenticateToken", "to": "app.get('/api/categories', authenticateToken" },
-    { "from": "app.get('/api/categories', authenticateToken", "to": "app.get('/api/tags', authenticateToken" },
-    { "from": "app.get('/api/tags', authenticateToken", "to": "app.post('/api/comments', authenticateToken" }
+    { "from": "app.post('/api/comments', authenticateToken", "to": "app.get('/api/menus', authenticateToken" },
+    { "from": "app.get('/api/menus', authenticateToken", "to": "app.get('/api/widgets', authenticateToken" },
+    { "from": "app.get('/api/widgets', authenticateToken", "to": "app.get('/api/media', authenticateToken" },
+    { "from": "app.get('/api/media', authenticateToken", "to": "app.get('/api/settings', authenticateToken" },
+    { "from": "app.get('/api/settings', authenticateToken", "to": "app.get('/api/users', authenticateToken" },
+    { "from": "app.get('/api/users', authenticateToken", "to": "app.get('/api/public/posts'," }
   ],
   "insertAt": "async function startServer() {",
   "insertFile": "_migrate.insert.txt"
