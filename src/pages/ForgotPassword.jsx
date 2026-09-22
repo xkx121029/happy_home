@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowLeft, Send, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import PasswordStrength from '../components/PasswordStrength';
+import { passwordResetAPI } from '../services/api';
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -30,15 +31,12 @@ export default function ForgotPassword() {
     }
 
     try {
-      const response = await fetch('/api/auth/send-verification-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-      const result = await response.json();
-      
+      // 原来这里是裸 fetch('/api/auth/send-verification-code')。
+      // 相对路径在开发环境下会打到 Vite 自己的地址，而 dev server 当时没有配代理，
+      // 于是重置密码的三步流程全部 404。统一走 api 层后既修掉这个问题，
+      // 也不再重复维护一份请求头与错误处理。
+      const result = await passwordResetAPI.sendCode(email);
+
       if (result.success) {
         setSuccess('验证码已发送到您的邮箱');
         setStep(2);
@@ -89,15 +87,8 @@ export default function ForgotPassword() {
     }
 
     try {
-      const response = await fetch('/api/auth/verify-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, code: verificationCode }),
-      });
-      const result = await response.json();
-      
+      const result = await passwordResetAPI.verifyCode(email, verificationCode);
+
       if (result.success) {
         setStep(3);
       } else {
@@ -127,15 +118,8 @@ export default function ForgotPassword() {
     }
 
     try {
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, code: verificationCode, newPassword }),
-      });
-      const result = await response.json();
-      
+      const result = await passwordResetAPI.reset(email, verificationCode, newPassword);
+
       if (result.success) {
         setSuccess('密码重置成功！');
         setTimeout(() => {

@@ -1,4 +1,4 @@
-﻿import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { 
   authAPI, postsAPI, pagesAPI, usersAPI, categoriesAPI, tagsAPI,
   menusAPI, widgetsAPI, mediaAPI, commentsAPI, settingsAPI, publicSettingsAPI, publicAPI,
@@ -24,6 +24,8 @@ export const DataProvider = ({ children }) => {
   const [mediaItems, setMediaItems] = useState([]);
   const [comments, setComments] = useState([]);
   const [settings, setSettings] = useState({});
+  const [backups, setBackups] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   // Initialize
   useEffect(() => {
@@ -336,6 +338,30 @@ export const DataProvider = ({ children }) => {
     return response;
   };
 
+  // Backups
+  const loadBackups = async () => {
+    const response = await backupsAPI.getAll();
+    setBackups(response.data || []);
+    return response;
+  };
+
+  // Notifications
+  const getNotifications = async () => {
+    const response = await notificationsAPI.getAll();
+    setNotifications(response.data || []);
+    return response;
+  };
+
+  const markNotificationAsRead = async (id) => {
+    await notificationsAPI.markAsRead(id);
+    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, isRead: true } : n)));
+  };
+
+  const deleteNotification = async (id) => {
+    await notificationsAPI.delete(id);
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
   const value = {
     currentUser,
     isAuthenticated,
@@ -408,6 +434,32 @@ export const DataProvider = ({ children }) => {
     // Settings
     getSettings,
     updateSettings,
+
+    // Backups / Notifications
+    backups,
+    loadBackups,
+    notifications,
+    getNotifications,
+    markNotificationAsRead,
+    deleteNotification,
+
+    // ------------------------------------------------ 过渡兼容层（Phase 4 删除）
+    // 多个页面直接解构了 xxxAPI 对象（Posts 取 postsAPI、Widgets 取 widgetsAPI、
+    // SEO 取 settingsAPI、前台详情取 commentsAPI ...），但 value 里从来没有提供过它们。
+    // 解构结果是 undefined，一调用就抛错 —— 置顶、切换部件、保存 SEO 全部因此失效。
+    // 这里把 API 对象透传出去，页面改为调用语义化方法后即可移除。
+    // 字段命名与布尔转换已由 services/api 在响应层统一处理，无需再次包装。
+    postsAPI,
+    pagesAPI,
+    usersAPI,
+    categoriesAPI,
+    tagsAPI,
+    menusAPI,
+    widgetsAPI,
+    mediaAPI,
+    commentsAPI,
+    settingsAPI,
+    backupsAPI,
   };
 
   return (

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { DataProvider, useData } from './contexts/DataContext';
 import { ErrorProvider } from './contexts/ErrorContext';
@@ -61,23 +61,12 @@ function AppContent() {
     loadAllData
   } = useData();
 
-  useEffect(() => {
-    const checkScheduledPosts = () => {
-      const now = new Date();
-      posts.forEach(post => {
-        if (post.status === 'future' && post.publishDate) {
-          const publishTime = new Date(post.publishDate);
-          if (publishTime <= now) {
-            postsAPI.update(post.id, { status: 'published', publishDate: null });
-          }
-        }
-      });
-    };
-
-    checkScheduledPosts();
-    const interval = setInterval(checkScheduledPosts, 60000);
-    return () => clearInterval(interval);
-  }, []);
+  // 定时发布已移到后端（server.js 的 publishDuePosts）。
+  // 这里原本有个 60 秒的 setInterval 调 postsAPI.update 把到期的 'future' 文章改成
+  // 'published'，但它是三重失效的：依赖数组为空导致闭包永远捕获首次渲染的 posts
+  // 列表；postsAPI 在这个文件里既没 import 也没解构（ReferenceError）；
+  // 而且 posts 表当时根本没有 publish_date 列，写进去也无处可存。
+  // 顺带一提，它绕过 Context 直接改后端，即便成功 UI 也不会刷新。
 
   const handleDarkModeToggle = useCallback(() => {
     setDarkMode(prev => {
