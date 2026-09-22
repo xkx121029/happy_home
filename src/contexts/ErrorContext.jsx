@@ -259,8 +259,10 @@ export function ErrorProvider({ children }) {
         type = ErrorType.AUTH_UNAUTHORIZED;
         message = '登录已过期，请重新登录';
         severity = ErrorSeverity.WARNING;
-        // 自动跳转到未授权页面
-        window.location.href = '/unauthorized';
+        // 原来这里用 window.location.href 硬跳转到 /unauthorized：
+        // 整页重载会丢掉所有内存状态，用户还会在重新登录后回到首页而不是原页面。
+        // 401 的处理已经收敛到两处 —— lib/http.js 清掉失效 token，
+        // 路由守卫 RequireAuth 检测到未登录后跳登录页并记住来路。这里不再插手导航。
         break;
       case 403:
         type = ErrorType.AUTH_FORBIDDEN;

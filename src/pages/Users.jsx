@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal';
 import { useModal } from '../hooks/useModal';
 import { useData } from '../contexts/DataContext';
+import { usersAPI } from '../services/api';
 
 const roleOptions = [
   { id: 'administrator', label: '管理员', color: 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300' },
@@ -22,7 +23,7 @@ const statusOptions = [
 export default function Users() {
   const { confirm, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   // 原来靠 props 拿 users 与各种回调，现在页面自取 Context
-  const { users, usersAPI, loadAllData } = useData();
+  const { users, loadAllData } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState('');
   const navigate = useNavigate();

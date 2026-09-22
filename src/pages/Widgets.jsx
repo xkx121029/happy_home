@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Layout, Plus, Trash2, GripVertical, X, Settings, Eye, EyeOff, FileText, Folder, Tag, Search, MessageSquare, Globe, ArrowUp, ArrowDown } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import { widgetsAPI } from '../services/api';
 
 const widgetTypes = [
   { type: 'recent_posts', name: '最新文章', icon: FileText, description: '显示最新发布的文章列表' },
@@ -12,7 +13,7 @@ const widgetTypes = [
 ];
 
 export default function Widgets() {
-  const { widgets, widgetsAPI } = useData();
+  const { widgets } = useData();
   const [selectedWidget, setSelectedWidget] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [configValues, setConfigValues] = useState({});

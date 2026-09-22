@@ -8,13 +8,17 @@ const path = require('path');
 
 // 集中读取环境变量（config 内部会先加载 backend/.env），必须在读取任何
 // process.env 之前引入；jwt / response / 鉴权等公共能力也在这里接好。
-const { PORT, CORS_ORIGINS } = require('./src/config');
+const config = require('./src/config');
+const { PORT, CORS_ORIGINS } = config;
 const jwt = require('./src/lib/jwt');
+const password = require('./src/lib/password');
 const { ok, fail } = require('./src/lib/response');
 const asyncHandler = require('./src/middleware/asyncHandler');
 const createAuth = require('./src/middleware/auth');
+const { checkCommentRate } = require('./src/middleware/rateLimit');
 
 const { initDatabase, getDb, dbHelpers, saveDatabase } = require('./db');
+const mailer = require('./mailer');
 const { sendVerificationCode, testConnection, testConnectionWithConfig, createTransporter } = require('./mailer');
 
 const app = express();
@@ -41,679 +45,6 @@ const { execQuery, getSingle, bindable } = require('./src/db/repo');
 
 // 鉴权中间件由工厂创建，db 助手通过参数注入（见 src/middleware/auth.js）
 const { authenticateToken, optionalAuth, requireRole } = createAuth({ getDb, getSingle });
-
-app.post('/api/auth/send-register-code', async (req, res) => {
-  try {
-    const { email } = req.body;
-    const db = getDb();
-
-    if (!email) {
-      return res.status(400).json({ success: false, message: '请提供邮箱地址' });
-    }
-
-    const existingUser = getSingle(db, 'SELECT id FROM users WHERE email = ?', [email]);
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: '该邮箱已被注册' });
-    }
-
-    const verificationCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-
-    db.run(
-      'INSERT OR REPLACE INTO register_codes (email, code, expires_at) VALUES (?, ?, ?)',
-      [email, verificationCode, expiresAt]
-    );
-    saveDatabase();
-
-    const mailer = require('./mailer');
-    let mailSent = false;
-    
-    try {
-      const result = await mailer.sendVerificationEmail(email, '用户', verificationCode);
-      if (result.success) {
-        mailSent = true;
-        console.log(`注册验证码已发送到 ${email}`);
-      } else {
-        console.warn('发送验证邮件失败:', result.message);
-      }
-    } catch (mailError) {
-      console.warn('发送验证邮件失败:', mailError.message);
-    }
-
-    db.run(
-      'INSERT INTO notifications (id, user_id, type, title, message, link) VALUES (?, ?, ?, ?, ?, ?)',
-      [uuidv4(), null, 'register_request', '新用户注册请求', `用户请求注册，邮箱：${email}，邮件发送：${mailSent ? '成功' : '失败'}`, '/admin/users']
-    );
-    saveDatabase();
-
-    if (!mailSent) {
-      return res.status(500).json({ 
-        success: false, 
-        message: '邮件发送失败，请稍后重试或联系管理员' 
-      });
-    }
-
-    res.json({
-      success: true,
-      message: '验证码已发送到您的邮箱，请在10分钟内完成注册',
-      email
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.post('/api/auth/login', (req, res) => {
-  try {
-    const { username, password } = req.body;
-    const db = getDb();
-
-    if (!username || !password) {
-      return res.status(400).json({ success: false, message: '请输入用户名和密码' });
-    }
-
-    const user = getSingle(db, 'SELECT * FROM users WHERE username = ? OR email = ?', [username, username]);
-    if (!user) {
-      return res.status(401).json({ success: false, message: '用户名或密码错误' });
-    }
-
-    const isPasswordValid = bcrypt.compareSync(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ success: false, message: '用户名或密码错误' });
-    }
-
-    if (user.status !== 'active') {
-      return res.status(401).json({ success: false, message: '账户未激活' });
-    }
-
-    const token = jwt.sign({ id: user.id, username: user.username, role: user.role });
-
-    res.json({
-      success: true,
-      message: '登录成功',
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        status: user.status
-      }
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.post('/api/auth/register', async (req, res) => {
-  try {
-    const { username, email, password, code } = req.body;
-    const db = getDb();
-
-    if (!username || !email || !password || !code) {
-      return res.status(400).json({ success: false, message: '请填写所有字段，包括验证码' });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({ success: false, message: '密码长度至少6位' });
-    }
-
-    const existingUser = getSingle(db, 'SELECT id FROM users WHERE username = ? OR email = ?', [username, email]);
-    if (existingUser) {
-      return res.status(400).json({ success: false, message: '用户名或邮箱已存在' });
-    }
-
-    const registerCode = getSingle(db, 'SELECT * FROM register_codes WHERE email = ?', [email]);
-    if (!registerCode) {
-      return res.status(400).json({ success: false, message: '请先获取验证码' });
-    }
-
-    if (registerCode.code !== code.toUpperCase()) {
-      return res.status(400).json({ success: false, message: '验证码错误' });
-    }
-
-    if (new Date(registerCode.expires_at) < new Date()) {
-      db.run('DELETE FROM register_codes WHERE email = ?', [email]);
-      saveDatabase();
-      return res.status(400).json({ success: false, message: '验证码已过期，请重新获取' });
-    }
-
-    const newUserId = uuidv4();
-
-    db.run(
-      'INSERT INTO users (id, username, email, password, role, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [newUserId, username, email, bcrypt.hashSync(password, 10), 'author', 'active']
-    );
-    
-    db.run('DELETE FROM register_codes WHERE email = ?', [email]);
-    saveDatabase();
-
-    const token = jwt.sign({ id: newUserId, username, role: 'author' });
-
-    res.json({
-      success: true,
-      message: '注册成功！',
-      token,
-      user: { id: newUserId, username, email, role: 'author', status: 'active' }
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.post('/api/auth/verify', (req, res) => {
-  try {
-    const { userId, code } = req.body;
-    const db = getDb();
-
-    if (!userId || !code) {
-      return res.status(400).json({ success: false, message: '请提供用户ID和验证码' });
-    }
-
-    const user = getSingle(db, 'SELECT * FROM users WHERE id = ?', [userId]);
-    if (!user) {
-      return res.status(404).json({ success: false, message: '用户不存在' });
-    }
-
-    if (user.status === 'active') {
-      return res.status(400).json({ success: false, message: '用户已验证' });
-    }
-
-    if (user.verification_code !== code.toUpperCase()) {
-      return res.status(400).json({ success: false, message: '验证码错误' });
-    }
-
-    if (new Date(user.verification_expires) < new Date()) {
-      return res.status(400).json({ success: false, message: '验证码已过期，请重新获取' });
-    }
-
-    db.run('UPDATE users SET status = ?, verification_code = NULL, verification_expires = NULL WHERE id = ?', ['active', userId]);
-    saveDatabase();
-
-    const token = jwt.sign({ id: userId, username: user.username, role: user.role });
-
-    res.json({
-      success: true,
-      message: '邮箱验证成功！',
-      token,
-      user: { id: userId, username: user.username, email: user.email, role: user.role, status: 'active' }
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.post('/api/auth/resend-verification', async (req, res) => {
-  try {
-    const { userId } = req.body;
-    const db = getDb();
-
-    if (!userId) {
-      return res.status(400).json({ success: false, message: '请提供用户ID' });
-    }
-
-    const user = getSingle(db, 'SELECT * FROM users WHERE id = ?', [userId]);
-    if (!user) {
-      return res.status(404).json({ success: false, message: '用户不存在' });
-    }
-
-    if (user.status === 'active') {
-      return res.status(400).json({ success: false, message: '用户已验证' });
-    }
-
-    const verificationCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-
-    db.run('UPDATE users SET verification_code = ?, verification_expires = ? WHERE id = ?', [verificationCode, expiresAt, userId]);
-    saveDatabase();
-
-    const mailer = require('./mailer');
-    
-    try {
-      await mailer.sendVerificationEmail(user.email, user.username, verificationCode);
-      console.log(`验证邮件已重新发送到 ${user.email}`);
-    } catch (mailError) {
-      console.warn('发送验证邮件失败:', mailError.message);
-    }
-
-    res.json({
-      success: true,
-      message: '验证邮件已重新发送，请查收邮箱'
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.get('/api/auth/me', authenticateToken, (req, res) => {
-  try {
-    const db = getDb();
-    const user = getSingle(db, 'SELECT * FROM users WHERE id = ?', [req.user.id]);
-    if (!user) {
-      return res.status(404).json({ success: false, message: '用户不存在' });
-    }
-
-    res.json({
-      success: true,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        created_at: user.created_at,
-        updated_at: user.updated_at
-      }
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.get('/api/posts', authenticateToken, (req, res) => {
-  try {
-    const db = getDb();
-    let sql = 'SELECT * FROM posts';
-    const params = [];
-    const conditions = [];
-
-    if (req.query.status) {
-      conditions.push('status = ?');
-      params.push(req.query.status);
-    }
-
-    if (req.query.category) {
-      conditions.push('category = ?');
-      params.push(req.query.category);
-    }
-
-    if (req.query.search) {
-      conditions.push('(title LIKE ? OR content LIKE ?)');
-      params.push(`%${req.query.search}%`, `%${req.query.search}%`);
-    }
-
-    if (conditions.length > 0) {
-      sql += ' WHERE ' + conditions.join(' AND ');
-    }
-
-    sql += ' ORDER BY created_at DESC';
-
-    const posts = execQuery(db, sql, params);
-    res.json({ success: true, data: posts, count: posts.length });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.get('/api/posts/:id', authenticateToken, (req, res) => {
-  try {
-    const db = getDb();
-    const post = getSingle(db, 'SELECT * FROM posts WHERE id = ?', [req.params.id]);
-    if (!post) {
-      return res.status(404).json({ success: false, message: '文章不存在' });
-    }
-    res.json({ success: true, data: post });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.post('/api/posts', authenticateToken, (req, res) => {
-  try {
-    const { title, content, excerpt, category, status, sticky, publishDate } = req.body;
-    const db = getDb();
-
-    if (!title || !content) {
-      return res.status(400).json({ success: false, message: '请填写标题和内容' });
-    }
-
-    const newPostId = uuidv4();
-    const postExcerpt = excerpt || content.substring(0, 100).replace(/<[^>]*>/g, '') + '...';
-
-    db.run(
-      'INSERT INTO posts (id, title, content, excerpt, category, status, author, sticky, publish_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [newPostId, title, content, postExcerpt, category || '未分类', status || 'draft', req.user.username, sticky ? 1 : 0, publishDate || null]
-    );
-    saveDatabase();
-
-    const newPost = getSingle(db, 'SELECT * FROM posts WHERE id = ?', [newPostId]);
-    res.status(201).json({ success: true, message: '文章创建成功', data: newPost });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.put('/api/posts/:id', authenticateToken, (req, res) => {
-  try {
-    const { title, content, excerpt, category, status, sticky, publishDate } = req.body;
-    const db = getDb();
-    const post = getSingle(db, 'SELECT * FROM posts WHERE id = ?', [req.params.id]);
-
-    if (!post) {
-      return res.status(404).json({ success: false, message: '文章不存在' });
-    }
-
-    db.run(
-      'UPDATE posts SET title = COALESCE(?, title), content = COALESCE(?, content), excerpt = COALESCE(?, excerpt), category = COALESCE(?, category), status = COALESCE(?, status), sticky = COALESCE(?, sticky), publish_date = COALESCE(?, publish_date), updated_at = datetime("now") WHERE id = ?',
-      bindable([title, content, excerpt, category, status, sticky === undefined ? undefined : (sticky ? 1 : 0), publishDate || undefined, req.params.id])
-    );
-    // COALESCE 的语义是「没传就保持原值」，因此无法把列改回 NULL。
-    // 「取消定时发布」需要真的清空 publish_date，这里单独处理。
-    if ('publishDate' in req.body && !publishDate) {
-      db.run('UPDATE posts SET publish_date = NULL WHERE id = ?', [req.params.id]);
-    }
-    saveDatabase();
-
-    const updatedPost = getSingle(db, 'SELECT * FROM posts WHERE id = ?', [req.params.id]);
-    res.json({ success: true, message: '文章更新成功', data: updatedPost });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.delete('/api/posts/:id', authenticateToken, (req, res) => {
-  try {
-    const db = getDb();
-    const post = getSingle(db, 'SELECT * FROM posts WHERE id = ?', [req.params.id]);
-    if (!post) {
-      return res.status(404).json({ success: false, message: '文章不存在' });
-    }
-
-    db.run('DELETE FROM posts WHERE id = ?', [req.params.id]);
-    db.run('DELETE FROM post_tags WHERE post_id = ?', [req.params.id]);
-    db.run('DELETE FROM post_categories WHERE post_id = ?', [req.params.id]);
-    db.run('DELETE FROM comments WHERE post_id = ?', [req.params.id]);
-    db.run('DELETE FROM revisions WHERE post_id = ?', [req.params.id]);
-    saveDatabase();
-
-    res.json({ success: true, message: '文章删除成功', data: post });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.get('/api/pages', authenticateToken, (req, res) => {
-  try {
-    const db = getDb();
-    let sql = 'SELECT * FROM pages';
-    const params = [];
-    const conditions = [];
-
-    if (req.query.status) {
-      conditions.push('status = ?');
-      params.push(req.query.status);
-    }
-
-    if (req.query.search) {
-      conditions.push('(title LIKE ? OR slug LIKE ?)');
-      params.push(`%${req.query.search}%`, `%${req.query.search}%`);
-    }
-
-    if (conditions.length > 0) {
-      sql += ' WHERE ' + conditions.join(' AND ');
-    }
-
-    sql += ' ORDER BY created_at DESC';
-
-    const pages = execQuery(db, sql, params);
-    res.json({ success: true, data: pages, count: pages.length });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.get('/api/pages/:id', authenticateToken, (req, res) => {
-  try {
-    const db = getDb();
-    const page = getSingle(db, 'SELECT * FROM pages WHERE id = ?', [req.params.id]);
-    if (!page) {
-      return res.status(404).json({ success: false, message: '页面不存在' });
-    }
-    res.json({ success: true, data: page });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.post('/api/pages', authenticateToken, (req, res) => {
-  try {
-    const { title, content, slug, status } = req.body;
-    const db = getDb();
-
-    if (!title || !content) {
-      return res.status(400).json({ success: false, message: '请填写标题和内容' });
-    }
-
-    const newPageId = uuidv4();
-    const pageSlug = slug || title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-');
-
-    db.run(
-      'INSERT INTO pages (id, title, content, slug, status, author) VALUES (?, ?, ?, ?, ?, ?)',
-      [newPageId, title, content, pageSlug, status || 'draft', req.user.username]
-    );
-    saveDatabase();
-
-    const newPage = getSingle(db, 'SELECT * FROM pages WHERE id = ?', [newPageId]);
-    res.status(201).json({ success: true, message: '页面创建成功', data: newPage });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.put('/api/pages/:id', authenticateToken, (req, res) => {
-  try {
-    const { title, content, slug, status } = req.body;
-    const db = getDb();
-    const page = getSingle(db, 'SELECT * FROM pages WHERE id = ?', [req.params.id]);
-
-    if (!page) {
-      return res.status(404).json({ success: false, message: '页面不存在' });
-    }
-
-    db.run(
-      'UPDATE pages SET title = COALESCE(?, title), content = COALESCE(?, content), slug = COALESCE(?, slug), status = COALESCE(?, status), updated_at = datetime("now") WHERE id = ?',
-      bindable([title, content, slug, status, req.params.id])
-    );
-    saveDatabase();
-
-    const updatedPage = getSingle(db, 'SELECT * FROM pages WHERE id = ?', [req.params.id]);
-    res.json({ success: true, message: '页面更新成功', data: updatedPage });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.delete('/api/pages/:id', authenticateToken, (req, res) => {
-  try {
-    const db = getDb();
-    const page = getSingle(db, 'SELECT * FROM pages WHERE id = ?', [req.params.id]);
-    if (!page) {
-      return res.status(404).json({ success: false, message: '页面不存在' });
-    }
-
-    db.run('DELETE FROM pages WHERE id = ?', [req.params.id]);
-    saveDatabase();
-
-    res.json({ success: true, message: '页面删除成功', data: page });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.get('/api/categories', authenticateToken, (req, res) => {
-  try {
-    const db = getDb();
-    const categories = execQuery(db, 'SELECT * FROM categories ORDER BY created_at DESC');
-    res.json({ success: true, data: categories, count: categories.length });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.post('/api/categories', authenticateToken, (req, res) => {
-  try {
-    const { name, slug, description, parent } = req.body;
-    const db = getDb();
-
-    if (!name) {
-      return res.status(400).json({ success: false, message: '请输入分类名称' });
-    }
-
-    const newCategoryId = uuidv4();
-    const categorySlug = slug || name.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-');
-
-    db.run(
-      'INSERT INTO categories (id, name, slug, description, parent) VALUES (?, ?, ?, ?, ?)',
-      [newCategoryId, name, categorySlug, description || '', parent || null]
-    );
-    saveDatabase();
-
-    const newCategory = getSingle(db, 'SELECT * FROM categories WHERE id = ?', [newCategoryId]);
-    res.status(201).json({ success: true, message: '分类创建成功', data: newCategory });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.put('/api/categories/:id', authenticateToken, (req, res) => {
-  try {
-    const { name, slug, description, parent } = req.body;
-    const db = getDb();
-    const category = getSingle(db, 'SELECT * FROM categories WHERE id = ?', [req.params.id]);
-
-    if (!category) {
-      return res.status(404).json({ success: false, message: '分类不存在' });
-    }
-
-    db.run(
-      'UPDATE categories SET name = COALESCE(?, name), slug = COALESCE(?, slug), description = COALESCE(?, description), parent = ? WHERE id = ?',
-      bindable([name, slug, description, parent || null, req.params.id])
-    );
-    saveDatabase();
-
-    const updatedCategory = getSingle(db, 'SELECT * FROM categories WHERE id = ?', [req.params.id]);
-    res.json({ success: true, message: '分类更新成功', data: updatedCategory });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.delete('/api/categories/:id', authenticateToken, (req, res) => {
-  try {
-    const db = getDb();
-    const category = getSingle(db, 'SELECT * FROM categories WHERE id = ?', [req.params.id]);
-    if (!category) {
-      return res.status(404).json({ success: false, message: '分类不存在' });
-    }
-
-    const hasChildren = getSingle(db, 'SELECT id FROM categories WHERE parent = ?', [req.params.id]);
-    if (hasChildren) {
-      return res.status(400).json({ success: false, message: '请先删除子分类' });
-    }
-
-    db.run('DELETE FROM categories WHERE id = ?', [req.params.id]);
-    db.run('DELETE FROM post_categories WHERE category_id = ?', [req.params.id]);
-    saveDatabase();
-
-    res.json({ success: true, message: '分类删除成功', data: category });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.get('/api/tags', authenticateToken, (req, res) => {
-  try {
-    const db = getDb();
-    const tags = execQuery(db, 'SELECT * FROM tags ORDER BY created_at DESC');
-    res.json({ success: true, data: tags, count: tags.length });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.post('/api/tags', authenticateToken, (req, res) => {
-  try {
-    const { name, slug } = req.body;
-    const db = getDb();
-
-    if (!name) {
-      return res.status(400).json({ success: false, message: '请输入标签名称' });
-    }
-
-    const newTagId = uuidv4();
-    const tagSlug = slug || name.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-');
-
-    db.run('INSERT INTO tags (id, name, slug) VALUES (?, ?, ?)', [newTagId, name, tagSlug]);
-    saveDatabase();
-
-    const newTag = getSingle(db, 'SELECT * FROM tags WHERE id = ?', [newTagId]);
-    res.status(201).json({ success: true, message: '标签创建成功', data: newTag });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.put('/api/tags/:id', authenticateToken, (req, res) => {
-  try {
-    const { name, slug } = req.body;
-    const db = getDb();
-    const tag = getSingle(db, 'SELECT * FROM tags WHERE id = ?', [req.params.id]);
-
-    if (!tag) {
-      return res.status(404).json({ success: false, message: '标签不存在' });
-    }
-
-    db.run('UPDATE tags SET name = COALESCE(?, name), slug = COALESCE(?, slug) WHERE id = ?', bindable([name, slug, req.params.id]));
-    saveDatabase();
-
-    const updatedTag = getSingle(db, 'SELECT * FROM tags WHERE id = ?', [req.params.id]);
-    res.json({ success: true, message: '标签更新成功', data: updatedTag });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
-
-app.delete('/api/tags/:id', authenticateToken, (req, res) => {
-  try {
-    const db = getDb();
-    const tag = getSingle(db, 'SELECT * FROM tags WHERE id = ?', [req.params.id]);
-    if (!tag) {
-      return res.status(404).json({ success: false, message: '标签不存在' });
-    }
-
-    db.run('DELETE FROM tags WHERE id = ?', [req.params.id]);
-    db.run('DELETE FROM post_tags WHERE tag_id = ?', [req.params.id]);
-    saveDatabase();
-
-    res.json({ success: true, message: '标签删除成功', data: tag });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: '服务器错误' });
-  }
-});
 
 app.post('/api/comments', authenticateToken, (req, res) => {
   try {
@@ -1287,10 +618,6 @@ app.get('/api/public/settings', (req, res) => {
   }
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'API 运行正常', timestamp: new Date().toISOString() });
-});
-
 // ------------------------------------------------------- 公开评论（访客可用）
 //
 // 原来前台提交评论走的是 POST /api/comments，而那个端点挂了 authenticateToken：
@@ -1299,36 +626,7 @@ app.get('/api/health', (req, res) => {
 
 // 可选鉴权：有合法 token 就带上用户信息，没有也放行（统一走 src/middleware/auth.js，见文件顶部）
 
-// 极简内存限流：按 IP 与邮箱双维度计数。
-// 公开写接口没有限流等于开放刷库通道，所以它与端点必须同时存在。
-// 阈值可通过环境变量调整：本地反复跑冒烟测试时可以把上限调高。
-const COMMENT_RATE_LIMIT = {
-  windowMs: Number(process.env.COMMENT_RATE_LIMIT_WINDOW_MS) || 10 * 60 * 1000,
-  max: Number(process.env.COMMENT_RATE_LIMIT_MAX) || 10,
-};
-const commentRateBuckets = new Map();
-
-function checkCommentRate(key) {
-  const now = Date.now();
-  const bucket = commentRateBuckets.get(key);
-  if (!bucket || now - bucket.start > COMMENT_RATE_LIMIT.windowMs) {
-    commentRateBuckets.set(key, { start: now, count: 1 });
-    return { allowed: true, remaining: COMMENT_RATE_LIMIT.max - 1 };
-  }
-  if (bucket.count >= COMMENT_RATE_LIMIT.max) {
-    return { allowed: false, remaining: 0 };
-  }
-  bucket.count += 1;
-  return { allowed: true, remaining: COMMENT_RATE_LIMIT.max - bucket.count };
-}
-
-// 定期清理过期计数，避免内存随访客量无界增长
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, bucket] of commentRateBuckets) {
-    if (now - bucket.start > COMMENT_RATE_LIMIT.windowMs) commentRateBuckets.delete(key);
-  }
-}, COMMENT_RATE_LIMIT.windowMs).unref();
+// 访客评论限流已抽到 src/middleware/rateLimit.js（由 checkCommentRate 注入使用）
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -1945,6 +1243,39 @@ function startScheduler() {
   setInterval(publishDuePosts, PUBLISH_CHECK_INTERVAL).unref();
 }
 
+// ------------------------------------------------------------------ 路由装配
+//
+// 各 domain 模块通过依赖注入拿到 db 助手、鉴权中间件、响应助手与配置，
+// 模块之间不互相 require，也就不存在循环依赖。
+
+const deps = {
+  config,
+  mailer,
+  getDb,
+  dbHelpers,
+  saveDatabase,
+  initDatabase,
+  execQuery,
+  getSingle,
+  bindable,
+  uuidv4,
+  authenticateToken,
+  optionalAuth,
+  requireRole,
+  jwt,
+  password,
+  ok,
+  fail,
+  asyncHandler,
+  checkCommentRate,
+};
+
+app.use(require('./src/modules/health/routes')(deps));
+app.use(require('./src/modules/auth/routes')(deps));
+app.use(require('./src/modules/posts/routes')(deps));
+app.use(require('./src/modules/pages/routes')(deps));
+app.use(require('./src/modules/categories/routes')(deps));
+app.use(require('./src/modules/tags/routes')(deps));
 async function startServer() {
   await initDatabase();
 

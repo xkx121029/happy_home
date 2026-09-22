@@ -1,0 +1,12 @@
+{
+  "remove": [
+    { "from": "app.get('/api/health',", "to": "公开评论（访客可用）" },
+    { "from": "app.post('/api/auth/send-register-code'", "to": "app.get('/api/posts', authenticateToken" },
+    { "from": "app.get('/api/posts', authenticateToken", "to": "app.get('/api/pages', authenticateToken" },
+    { "from": "app.get('/api/pages', authenticateToken", "to": "app.get('/api/categories', authenticateToken" },
+    { "from": "app.get('/api/categories', authenticateToken", "to": "app.get('/api/tags', authenticateToken" },
+    { "from": "app.get('/api/tags', authenticateToken", "to": "app.post('/api/comments', authenticateToken" }
+  ],
+  "insertAt": "async function startServer() {",
+  "insertFile": "_migrate.insert.txt"
+}

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { ArrowLeft, Save, User, Mail, Shield } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
+import { usersAPI } from '../services/api';
 
 const roleOptions = [
   { id: 'administrator', label: '管理员', color: 'bg-red-100 text-red-700' },
@@ -20,7 +21,7 @@ const statusOptions = [
 export default function UserEditor() {
   const { id } = useParams();
   // 原来靠 props 拿到待编辑用户与保存/取消回调，现在页面自取 Context
-  const { users, usersAPI, loadAllData } = useData();
+  const { users, loadAllData } = useData();
   const user = id ? users.find(u => u.id === id) : null;
   const [username, setUsername] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
