@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Save, Eye, Calendar, Tag, Pin, Clock, History, RotateCcw, Trash2, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
@@ -53,7 +53,9 @@ export default function PostEditor({ onSave }) {
           setPublishDate(fetchedPost.publishDate || '');
         }
       } else {
-        console.log('Post not found in local posts array');
+        // 本地列表里找不到这篇文章：可能是文章还没加载完，或者链接指向了不存在的 id。
+        // 原来这里只打一行 console.log 就结束了，用户看到的是一个空白编辑器，
+        // 完全不知道发生了什么。实际上面的 useEffect 会在 posts 加载完后重试。
       }
     }
   }, [id, posts]);

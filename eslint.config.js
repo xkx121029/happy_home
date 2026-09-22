@@ -38,6 +38,10 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+      // console.log 是调试残留的高发区，禁止新增。
+      // console.error / warn 保留：错误路径上的诊断信息不该被删掉，
+      // 删了反而让线上问题无从排查。
+      'no-console': ['warn', { allow: ['error', 'warn'] }],
     },
   },
 
