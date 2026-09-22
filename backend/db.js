@@ -29,6 +29,9 @@ function initDatabase() {
         createTables();
         insertInitialData();
       }
+
+      // 老库也要补齐新增的列与索引，否则新功能会静默失效
+      runMigrations({ isNewDatabase: !dbExists });
       
       resolve();
     } catch (error) {
@@ -344,11 +347,88 @@ function insertInitialData() {
 }
 
 function saveDatabase() {
-  if (db) {
-    const data = db.export();
-    const buffer = Buffer.from(data);
-    fs.writeFileSync(DB_PATH, buffer);
+  if (!db) return;
+  const data = db.export();
+  const buffer = Buffer.from(data);
+  // 原来是直接 writeFileSync 覆盖原文件：一旦进程在写入中途退出，数据库就废了。
+  // 改为「先写临时文件，再原子替换」，任何时刻磁盘上至少有一份完整可用的库。
+  const tmpPath = `${DB_PATH}.tmp`;
+  fs.writeFileSync(tmpPath, buffer);
+  fs.renameSync(tmpPath, DB_PATH);
+}
+
+// ------------------------------------------------------------------ 迁移
+//
+// 背景：schema 曾经在 init-db.js 与 db.js 里各写一份，而且只在「库文件不存在」时
+// 执行建表。结果是已经存在的 happyhome.db 永远拿不到后来新增的列 —— posts.publish_date
+// 就是这样丢失的，前端的「定时发布」写不进任何数据，从头到尾都是空转。
+//
+// 这里用 SQLite 内建的 PRAGMA user_version 做一个最小可用的迁移器：
+// 每个迁移只做一件幂等的事（加列 / 加索引），执行后推进版本号。
+// 只允许「可逆性最好」的操作：ADD COLUMN 与 CREATE INDEX，不重建表。
+
+function columnExists(database, table, column) {
+  const rows = database.exec(`PRAGMA table_info(${table})`);
+  if (!rows.length) return false;
+  const nameIndex = rows[0].columns.indexOf('name');
+  return rows[0].values.some((row) => row[nameIndex] === column);
+}
+
+function getUserVersion(database) {
+  const result = database.exec('PRAGMA user_version');
+  return result.length ? result[0].values[0][0] : 0;
+}
+
+const MIGRATIONS = [
+  {
+    id: 1,
+    name: 'posts 增加 publish_date 列（定时发布所需）',
+    up(database) {
+      if (!columnExists(database, 'posts', 'publish_date')) {
+        database.run('ALTER TABLE posts ADD COLUMN publish_date TEXT');
+      }
+    },
+  },
+  {
+    id: 2,
+    name: '常用查询索引',
+    up(database) {
+      database.run('CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status)');
+      database.run('CREATE INDEX IF NOT EXISTS idx_posts_publish_date ON posts(publish_date)');
+      database.run('CREATE INDEX IF NOT EXISTS idx_comments_post_status ON comments(post_id, status)');
+      database.run('CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read)');
+    },
+  },
+];
+
+function backupDatabaseFile() {
+  if (!fs.existsSync(DB_PATH)) return null;
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const backupPath = `${DB_PATH}.bak-${stamp}`;
+  fs.copyFileSync(DB_PATH, backupPath);
+  console.log('数据库已备份到', backupPath);
+  return backupPath;
+}
+
+function runMigrations({ isNewDatabase = false } = {}) {
+  if (!db) return;
+  const current = getUserVersion(db);
+  const pending = MIGRATIONS.filter((m) => m.id > current);
+  if (pending.length === 0) return;
+
+  // sql.js 是整库导出后覆盖写盘，迁移中途失败会毁库，所以先备份再动。
+  // 全新库没有可丢的数据，跳过备份以免堆一堆无意义的 .bak 文件。
+  if (!isNewDatabase) {
+    backupDatabaseFile();
   }
+
+  for (const migration of pending) {
+    console.log(`应用迁移 ${migration.id}: ${migration.name}`);
+    migration.up(db);
+    db.run(`PRAGMA user_version = ${migration.id}`);
+  }
+  saveDatabase();
+  console.log(`迁移完成，user_version = ${getUserVersion(db)}`);
 }
 
 const dbHelpers = {
