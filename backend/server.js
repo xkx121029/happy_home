@@ -4,18 +4,46 @@ const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
+const fs = require('fs');
+const path = require('path');
+
+// 原来 .env 根本没有被加载（dotenv 未安装也未 require），文件形同虚设，
+// 配置实际全部来自代码里的硬编码。这里在读取任何 process.env 之前先加载。
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
 const { initDatabase, getDb, dbHelpers, saveDatabase } = require('./db');
 const { sendVerificationCode, testConnection, testConnectionWithConfig, createTransporter } = require('./mailer');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
 
-app.use(cors());
+// CORS 白名单：原来是 cors() 全开放（Access-Control-Allow-Origin: *），
+// 任何站点都能带着用户凭证调这些接口。改为按配置放行。
+const CORS_ORIGINS = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+app.use(cors({
+  origin(origin, callback) {
+    // 同源请求、curl、服务端调用没有 origin，放行
+    if (!origin) return callback(null, true);
+    if (CORS_ORIGINS.length === 0) return callback(null, true);
+    if (CORS_ORIGINS.includes(origin)) return callback(null, true);
+    return callback(null, false);
+  },
+  credentials: true,
+}));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
-const JWT_SECRET = 'happyhome_jwt_secret_key';
-const JWT_EXPIRES_IN = '7d';
+const DEFAULT_JWT_SECRET = 'happyhome_jwt_secret_key';
+const JWT_SECRET = process.env.JWT_SECRET || DEFAULT_JWT_SECRET;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+
+if (JWT_SECRET === DEFAULT_JWT_SECRET) {
+  console.warn('[警告] JWT_SECRET 仍是默认值，请修改 backend/.env 中的 JWT_SECRET（见 .env.example）');
+}
 
 // 验证码存储（内存中，生产环境应使用 Redis）
 const verificationCodes = new Map();
