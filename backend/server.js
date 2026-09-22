@@ -1744,7 +1744,9 @@ app.put('/api/notifications/:id/read', authenticateToken, (req, res) => {
     res.json({ success: true, message: '通知已标记为已读' });
   } catch (error) {
     console.error(error);
-    res.json({ success: true, message: '通知表不存在' });
+    // 原来这里返回 HTTP 200 + success:true，操作明明失败了前端却当成成功，
+    // 用户点「标记已读」不会有任何提示，问题也被完全掩盖。
+    res.status(500).json({ success: false, message: '通知操作失败' });
   }
 });
 
@@ -1756,7 +1758,9 @@ app.put('/api/notifications/read-all', authenticateToken, (req, res) => {
     res.json({ success: true, message: '所有通知已标记为已读' });
   } catch (error) {
     console.error(error);
-    res.json({ success: true, message: '通知表不存在' });
+    // 原来这里返回 HTTP 200 + success:true，操作明明失败了前端却当成成功，
+    // 用户点「标记已读」不会有任何提示，问题也被完全掩盖。
+    res.status(500).json({ success: false, message: '通知操作失败' });
   }
 });
 
@@ -1768,7 +1772,9 @@ app.delete('/api/notifications/:id', authenticateToken, (req, res) => {
     res.json({ success: true, message: '通知已删除' });
   } catch (error) {
     console.error(error);
-    res.json({ success: true, message: '通知表不存在' });
+    // 原来这里返回 HTTP 200 + success:true，操作明明失败了前端却当成成功，
+    // 用户点「标记已读」不会有任何提示，问题也被完全掩盖。
+    res.status(500).json({ success: false, message: '通知操作失败' });
   }
 });
 
@@ -1780,7 +1786,9 @@ app.delete('/api/notifications/clear', authenticateToken, (req, res) => {
     res.json({ success: true, message: '所有通知已清空' });
   } catch (error) {
     console.error(error);
-    res.json({ success: true, message: '通知表不存在' });
+    // 原来这里返回 HTTP 200 + success:true，操作明明失败了前端却当成成功，
+    // 用户点「标记已读」不会有任何提示，问题也被完全掩盖。
+    res.status(500).json({ success: false, message: '通知操作失败' });
   }
 });
 
@@ -1825,7 +1833,7 @@ app.post('/api/notifications/demo', authenticateToken, (req, res) => {
     res.json({ success: true, message: '示例通知已创建' });
   } catch (error) {
     console.error(error);
-    res.json({ success: false, message: '通知表不存在，请重新初始化数据库' });
+    res.status(500).json({ success: false, message: '示例通知创建失败' });
   }
 });
 
