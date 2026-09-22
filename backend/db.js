@@ -201,6 +201,12 @@ function createTables() {
   console.log('Tables created successfully');
 }
 
+// 生成一个高强度随机口令（base64url，去掉易混淆字符）
+function generateInitialPassword() {
+  const { randomBytes } = require('crypto');
+  return randomBytes(18).toString('base64url');
+}
+
 function insertInitialData() {
   console.log('Inserting initial data...');
 
