@@ -207,6 +207,10 @@ function accentScaleAt(hue, saturation, lightness, neutral, mode) {
     accent700: mode === 'light' ? mix(accent, BLACK, 0.22) : mix(accent, WHITE, 0.28),
     surface,
     badge: over(accent, 0.12, surface),
+    // 同一个徽标也会落在页面底色与二级面上（表格头 bg-bg、卡片里的 bg-surface-2），
+    // 这两个底比卡片面更深/更灰，合成后的对比度更低，必须一起校验。
+    badgeOnBg: over(accent, 0.12, toRgb(neutral[mode].bg)),
+    badgeOnSurface2: over(accent, 0.12, toRgb(neutral[mode].surface2)),
   };
 }
 
@@ -214,11 +218,13 @@ function accentScaleAt(hue, saturation, lightness, neutral, mode) {
  * 强调色在这套设计里承担的每一处「当文字用」的组合都要达标。
  *
  * 少检一条就会漏。这几条不是假想的 —— 它们对应代码里真实存在的写法：
- *   accent / accentFg   按钮底色 + 按钮文字（Button primary）
- *   accent / surface    链接、卡片强调数字、状态徽标文字
- *   accent / accent50   侧边栏选中项（Sidebar 的 bg-accent-50 text-accent）
- *   accent / accent100  评论与顶栏头像（bg-accent-100 text-accent）
- *   accent / badge      半透明徽标（StatusBadge 的 bg-accent/12 text-accent）
+ *   accent / accentFg         按钮底色 + 按钮文字（Button primary）
+ *   accent / surface          链接、卡片强调数字、状态徽标文字
+ *   accent / accent50         侧边栏选中项（Sidebar 的 bg-accent-50 text-accent）
+ *   accent / accent100        评论与顶栏头像（bg-accent-100 text-accent）
+ *   accent / badge            半透明徽标（StatusBadge 的 bg-accent/12 text-accent）
+ *   accent / badgeOnBg        同一个徽标落在页面底色上
+ *   accent / badgeOnSurface2  同一个徽标落在二级面上
  */
 function accentScalePasses(scale) {
   return (
@@ -226,7 +232,9 @@ function accentScalePasses(scale) {
     contrastOf(scale.accent, scale.surface) >= MIN_CONTRAST &&
     contrastOf(scale.accent, scale.accent50) >= MIN_CONTRAST &&
     contrastOf(scale.accent, scale.accent100) >= MIN_CONTRAST &&
-    contrastOf(scale.accent, scale.badge) >= MIN_CONTRAST
+    contrastOf(scale.accent, scale.badge) >= MIN_CONTRAST &&
+    contrastOf(scale.accent, scale.badgeOnBg) >= MIN_CONTRAST &&
+    contrastOf(scale.accent, scale.badgeOnSurface2) >= MIN_CONTRAST
   );
 }
 

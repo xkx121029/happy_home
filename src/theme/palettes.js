@@ -27,7 +27,8 @@ export const NEUTRALS = {
       surface: '255 253 250',
       surface2: '244 239 232',
       fg: '28 24 20',
-      muted: '118 108 98',
+      // 116 106 97 而非 118 108 98：后者在二级面（bg-surface-2）上只有 4.49:1
+      muted: '116 106 97',
       border: '226 218 208',
     },
     dark: {
@@ -111,7 +112,7 @@ export const NEUTRALS = {
       surface: '255 252 245',
       surface2: '244 237 223',
       fg: '32 27 18',
-      muted: '124 111 88',
+      muted: '117 105 83',
       border: '230 219 197',
     },
     dark: {
@@ -132,7 +133,7 @@ export const NEUTRALS = {
       surface: '255 255 255',
       surface2: '241 241 241',
       fg: '17 17 17',
-      muted: '112 112 112',
+      muted: '109 109 109',
       border: '226 226 226',
     },
     dark: {
