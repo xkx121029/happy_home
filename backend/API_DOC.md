@@ -573,6 +573,98 @@ Authorization: Bearer <your_token>
 
 ---
 
+## 文章修订接口
+
+修订快照由后端在**保存文章时**自动写入（`PUT /api/posts/:id`，且只在标题/正文/摘要
+真的变了时才记）。前端不负责创建修订，只有下面四个读写操作。
+
+### 44. 获取某篇文章的修订列表
+
+```
+GET /api/posts/:id/revisions
+Authorization: Bearer <token>
+```
+
+响应：
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "postId": "string",
+      "title": "string",
+      "excerpt": "string",
+      "author": "string",
+      "createdAt": "ISO8601 string",
+      "contentLength": 1024
+    }
+  ],
+  "count": 3
+}
+```
+
+> 列表**刻意不返回 `content`**：一篇文章可能存了几十个版本，每个版本带上完整正文
+> 会让响应膨胀到几百 KB，而列表根本用不到。需要正文请调详情接口。
+
+### 45. 获取单个修订详情
+
+```
+GET /api/revisions/:id
+Authorization: Bearer <token>
+```
+
+响应里会**一并带上当前版本**，对比视图因此不必再发一次请求：
+```json
+{
+  "success": true,
+  "data": { "id": "...", "content": "<p>改之前的正文</p>", "...": "..." },
+  "current": { "id": "...", "content": "<p>现在的正文</p>", "...": "..." }
+}
+```
+
+### 46. 回滚到某个修订
+
+```
+POST /api/revisions/:id/restore
+Authorization: Bearer <token>
+```
+
+把文章的标题、正文、摘要覆盖回该版本，返回回滚后的文章。**回滚前会先把当前版本
+留一份快照**，否则「回滚」这个动作本身不可撤销 —— 点错一次就再也回不到刚才的样子。
+
+### 47. 删除某个修订
+
+```
+DELETE /api/revisions/:id
+Authorization: Bearer <token>
+```
+
+---
+
+## Feed 与站点地图
+
+这两个接口挂在站点根路径下（不在 `/api` 前缀里），**无需认证** —— 它们就是给
+爬虫和阅读器用的。链接前缀取「设置 → 常规 → 网站地址」（`siteUrl`）。
+
+### 48. RSS 2.0 订阅源
+
+```
+GET /feed.xml
+```
+
+返回 `application/rss+xml`，内容为最近若干篇已发布文章。前台页脚有入口链接。
+
+### 49. sitemap.xml
+
+```
+GET /sitemap.xml
+```
+
+返回 `application/xml`，包含首页、所有已发布文章与所有已发布页面。
+
+---
+
 ## 权限说明
 
 | 角色 | 权限 |
@@ -714,5 +806,18 @@ class AuthInterceptor(private val token: String) : Interceptor {
   "size": "string",
   "type": "string",
   "uploadedAt": "ISO8601 string"
+}
+```
+
+### Revision
+```json
+{
+  "id": "string",
+  "postId": "string",
+  "title": "string",
+  "content": "string (HTML，仅详情接口返回)",
+  "excerpt": "string",
+  "author": "string",
+  "createdAt": "ISO8601 string"
 }
 ```
