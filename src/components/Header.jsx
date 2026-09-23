@@ -226,7 +226,7 @@ export default function Header() {
                               )}
                               {/* 字段名是 createdAt（后端 created_at 已由 api 层规整），
                                   原来读的 created_at 取不到值，时间永远显示 Invalid Date */}
-                              <p className="text-xs text-muted/70 mt-1">
+                              <p className="text-xs text-muted mt-1">
                                 {formatDate(notification.createdAt, { style: 'datetime' })}
                               </p>
                             </div>

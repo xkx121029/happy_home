@@ -54,7 +54,7 @@ export default function Sidebar() {
       <nav className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-5">
         {ADMIN_NAV_GROUPS.map((group) => (
           <div key={group.id}>
-            <p className="px-3 mb-1.5 text-xs font-medium text-muted/70 tracking-wide">
+            <p className="px-3 mb-1.5 text-xs font-medium text-muted tracking-wide">
               {group.label}
             </p>
             <ul className="space-y-0.5">
