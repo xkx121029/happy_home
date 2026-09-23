@@ -23,7 +23,7 @@ module.exports = function createPostsRoutes(deps) {
     return converted || value;
   }
 
-  router.get('/api/posts', authenticateToken, (req, res) => {
+  router.get('/posts', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       let sql = 'SELECT * FROM posts';
@@ -59,7 +59,7 @@ module.exports = function createPostsRoutes(deps) {
     }
   });
 
-  router.get('/api/posts/:id', authenticateToken, (req, res) => {
+  router.get('/posts/:id', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const post = getSingle(db, 'SELECT * FROM posts WHERE id = ?', [req.params.id]);
@@ -73,7 +73,7 @@ module.exports = function createPostsRoutes(deps) {
     }
   });
 
-  router.post('/api/posts', authenticateToken, (req, res) => {
+  router.post('/posts', authenticateToken, (req, res) => {
     try {
       const { title, content, excerpt, category, status, sticky, publishDate } = req.body;
       const db = getDb();
@@ -99,7 +99,7 @@ module.exports = function createPostsRoutes(deps) {
     }
   });
 
-  router.put('/api/posts/:id', authenticateToken, (req, res) => {
+  router.put('/posts/:id', authenticateToken, (req, res) => {
     try {
       const { title, content, excerpt, category, status, sticky, publishDate } = req.body;
       const db = getDb();
@@ -140,7 +140,7 @@ module.exports = function createPostsRoutes(deps) {
     }
   });
 
-  router.delete('/api/posts/:id', authenticateToken, (req, res) => {
+  router.delete('/posts/:id', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const post = getSingle(db, 'SELECT * FROM posts WHERE id = ?', [req.params.id]);

@@ -5,7 +5,7 @@ module.exports = function createNotificationsRoutes(deps) {
   const { getDb, saveDatabase, execQuery, getSingle, uuidv4, authenticateToken, ok, fail } = deps;
   const router = express.Router();
 
-  router.get('/api/notifications', authenticateToken, (req, res) => {
+  router.get('/notifications', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const notifications = execQuery(
@@ -28,7 +28,7 @@ module.exports = function createNotificationsRoutes(deps) {
     }
   });
 
-  router.get('/api/notifications/unread', authenticateToken, (req, res) => {
+  router.get('/notifications/unread', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const notifications = execQuery(
@@ -43,7 +43,7 @@ module.exports = function createNotificationsRoutes(deps) {
     }
   });
 
-  router.get('/api/notifications/count', authenticateToken, (req, res) => {
+  router.get('/notifications/count', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const result = getSingle(
@@ -58,7 +58,7 @@ module.exports = function createNotificationsRoutes(deps) {
     }
   });
 
-  router.put('/api/notifications/:id/read', authenticateToken, (req, res) => {
+  router.put('/notifications/:id/read', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       db.run('UPDATE notifications SET is_read = 1 WHERE id = ?', [req.params.id]);
@@ -72,7 +72,7 @@ module.exports = function createNotificationsRoutes(deps) {
     }
   });
 
-  router.put('/api/notifications/read-all', authenticateToken, (req, res) => {
+  router.put('/notifications/read-all', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       db.run('UPDATE notifications SET is_read = 1 WHERE user_id = ? OR user_id IS NULL', [req.user.id]);
@@ -86,7 +86,7 @@ module.exports = function createNotificationsRoutes(deps) {
     }
   });
 
-  router.delete('/api/notifications/:id', authenticateToken, (req, res) => {
+  router.delete('/notifications/:id', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       db.run('DELETE FROM notifications WHERE id = ?', [req.params.id]);
@@ -100,7 +100,7 @@ module.exports = function createNotificationsRoutes(deps) {
     }
   });
 
-  router.delete('/api/notifications/clear', authenticateToken, (req, res) => {
+  router.delete('/notifications/clear', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       db.run('DELETE FROM notifications');
@@ -121,7 +121,7 @@ module.exports = function createNotificationsRoutes(deps) {
   // 而不是把实现挂在 notifications 的路由模块里。
 
   // 创建示例通知（用于演示）
-  router.post('/api/notifications/demo', authenticateToken, (req, res) => {
+  router.post('/notifications/demo', authenticateToken, (req, res) => {
     try {
       const demoNotifications = [
         { type: 'success', title: '系统启动成功', message: 'HappyHome 系统已成功启动并运行' },

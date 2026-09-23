@@ -5,7 +5,7 @@ module.exports = function createAnalyticsRoutes(deps) {
   const { authenticateToken, ok, fail } = deps;
   const router = express.Router();
 
-  router.get('/api/analytics/stats', authenticateToken, (req, res) => {
+  router.get('/analytics/stats', authenticateToken, (req, res) => {
     try {
       const now = new Date();
 
@@ -40,7 +40,7 @@ module.exports = function createAnalyticsRoutes(deps) {
     }
   });
 
-  router.post('/api/analytics/track', authenticateToken, (req, res) => {
+  router.post('/analytics/track', authenticateToken, (req, res) => {
     try {
       const { type, data } = req.body;
       console.log('Analytics track:', type, data);

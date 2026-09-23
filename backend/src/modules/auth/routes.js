@@ -12,7 +12,7 @@ module.exports = function createAuthRoutes(deps) {
   } = deps;
   const router = express.Router();
 
-  router.post('/api/auth/send-register-code', asyncHandler(async (req, res) => {
+  router.post('/auth/send-register-code', asyncHandler(async (req, res) => {
     try {
       const { email } = req.body;
       const db = getDb();
@@ -74,7 +74,7 @@ module.exports = function createAuthRoutes(deps) {
     }
   }));
 
-  router.post('/api/auth/login', (req, res) => {
+  router.post('/auth/login', (req, res) => {
     try {
       const { username, password } = req.body;
       const db = getDb();
@@ -137,7 +137,7 @@ module.exports = function createAuthRoutes(deps) {
     }
   });
 
-  router.post('/api/auth/register', asyncHandler(async (req, res) => {
+  router.post('/auth/register', asyncHandler(async (req, res) => {
     try {
       const { username, email, password, code } = req.body;
       const db = getDb();
@@ -206,7 +206,7 @@ module.exports = function createAuthRoutes(deps) {
     }
   }));
 
-  router.post('/api/auth/verify', (req, res) => {
+  router.post('/auth/verify', (req, res) => {
     try {
       const { userId, code } = req.body;
       const db = getDb();
@@ -248,7 +248,7 @@ module.exports = function createAuthRoutes(deps) {
     }
   });
 
-  router.post('/api/auth/resend-verification', asyncHandler(async (req, res) => {
+  router.post('/auth/resend-verification', asyncHandler(async (req, res) => {
     try {
       const { userId } = req.body;
       const db = getDb();
@@ -288,7 +288,7 @@ module.exports = function createAuthRoutes(deps) {
     }
   }));
 
-  router.get('/api/auth/me', authenticateToken, (req, res) => {
+  router.get('/auth/me', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const user = getSingle(db, 'SELECT * FROM users WHERE id = ?', [req.user.id]);

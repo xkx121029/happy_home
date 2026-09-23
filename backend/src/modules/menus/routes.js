@@ -5,7 +5,7 @@ module.exports = function createMenusRoutes(deps) {
   const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, authenticateToken, ok, fail } = deps;
   const router = express.Router();
 
-  router.get('/api/menus', authenticateToken, (req, res) => {
+  router.get('/menus', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const menus = execQuery(db, 'SELECT * FROM menus ORDER BY created_at DESC').map(menu => ({
@@ -19,7 +19,7 @@ module.exports = function createMenusRoutes(deps) {
     }
   });
 
-  router.post('/api/menus', authenticateToken, (req, res) => {
+  router.post('/menus', authenticateToken, (req, res) => {
     try {
       const { title, location, items } = req.body;
       const db = getDb();
@@ -43,7 +43,7 @@ module.exports = function createMenusRoutes(deps) {
     }
   });
 
-  router.put('/api/menus/:id', authenticateToken, (req, res) => {
+  router.put('/menus/:id', authenticateToken, (req, res) => {
     try {
       const { title, location, items } = req.body;
       const db = getDb();
@@ -69,7 +69,7 @@ module.exports = function createMenusRoutes(deps) {
     }
   });
 
-  router.delete('/api/menus/:id', authenticateToken, (req, res) => {
+  router.delete('/menus/:id', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const menu = getSingle(db, 'SELECT * FROM menus WHERE id = ?', [req.params.id]);

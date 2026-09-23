@@ -12,7 +12,7 @@ module.exports = function createPublicRoutes(deps) {
 
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  router.get('/api/public/posts', (req, res) => {
+  router.get('/public/posts', (req, res) => {
     try {
       const db = getDb();
       const settings = dbHelpers.getSettings();
@@ -61,7 +61,7 @@ module.exports = function createPublicRoutes(deps) {
     }
   });
 
-  router.get('/api/public/posts/:id', (req, res) => {
+  router.get('/public/posts/:id', (req, res) => {
     try {
       const db = getDb();
       const post = getSingle(db, 'SELECT * FROM posts WHERE id = ? AND status = ?', [req.params.id, 'published']);
@@ -77,7 +77,7 @@ module.exports = function createPublicRoutes(deps) {
 
   // 前台列表的分类下拉用。只返回已发布文章实际用到的分类，
   // 不暴露后台分类表（那张表可能含未启用的分类）。
-  router.get('/api/public/categories', (req, res) => {
+  router.get('/public/categories', (req, res) => {
     try {
       const db = getDb();
       const rows = execQuery(
@@ -91,7 +91,7 @@ module.exports = function createPublicRoutes(deps) {
     }
   });
 
-  router.get('/api/public/pages', (req, res) => {
+  router.get('/public/pages', (req, res) => {
     try {
       const db = getDb();
       const pages = execQuery(db, 'SELECT * FROM pages WHERE status = ? ORDER BY created_at DESC', ['published']);
@@ -102,7 +102,7 @@ module.exports = function createPublicRoutes(deps) {
     }
   });
 
-  router.get('/api/public/pages/:slug', (req, res) => {
+  router.get('/public/pages/:slug', (req, res) => {
     try {
       const db = getDb();
       const page = getSingle(db, 'SELECT * FROM pages WHERE slug = ? AND status = ?', [req.params.slug, 'published']);
@@ -131,7 +131,7 @@ module.exports = function createPublicRoutes(deps) {
     'enableComments', 'postsPerPage', 'excerptLength',
   ];
 
-  router.get('/api/public/settings', (req, res) => {
+  router.get('/public/settings', (req, res) => {
     try {
       const allSettings = dbHelpers.getSettings();
       const publicSettings = {};
@@ -145,7 +145,7 @@ module.exports = function createPublicRoutes(deps) {
     }
   });
 
-  router.post('/api/public/comments', optionalAuth, (req, res) => {
+  router.post('/public/comments', optionalAuth, (req, res) => {
     try {
       const db = getDb();
       const { postId, parentId, author, email, content } = req.body || {};
@@ -226,7 +226,7 @@ module.exports = function createPublicRoutes(deps) {
   });
 
   // 前台读取某篇文章的已审核评论（含回复，便于一次性渲染嵌套结构）
-  router.get('/api/public/posts/:id/comments', (req, res) => {
+  router.get('/public/posts/:id/comments', (req, res) => {
     try {
       const db = getDb();
       const comments = execQuery(
@@ -244,7 +244,7 @@ module.exports = function createPublicRoutes(deps) {
   // 前台侧栏「最新评论」用。原来那个部件靠 DataContext 里一份只有管理员才会加载的
   // 全量评论列表（含待审核），访客看到的一直是空的。这里提供公开的已审核评论流，
   // 并只取已发布文章下的评论，避免把草稿文章的标题泄露出去。
-  router.get('/api/public/comments/recent', (req, res) => {
+  router.get('/public/comments/recent', (req, res) => {
     try {
       const db = getDb();
       const limit = Math.min(Math.max(Number(req.query.limit) || 5, 1), 20);

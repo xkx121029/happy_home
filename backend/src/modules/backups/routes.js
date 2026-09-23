@@ -60,7 +60,7 @@ module.exports = function createBackupsRoutes(deps) {
     return fs.existsSync(full) ? full : null;
   }
 
-  router.get('/api/backups', authenticateToken, (req, res) => {
+  router.get('/backups', authenticateToken, (req, res) => {
     try {
       const backups = listBackups();
       ok(res, { data: backups, count: backups.length });
@@ -70,7 +70,7 @@ module.exports = function createBackupsRoutes(deps) {
     }
   });
 
-  router.post('/api/backups', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.post('/backups', authenticateToken, requireRole('administrator'), (req, res) => {
     try {
       if (!fs.existsSync(DB_FILE)) {
         return fail(res, 400, '数据库文件不存在，无法备份');
@@ -88,7 +88,7 @@ module.exports = function createBackupsRoutes(deps) {
     }
   });
 
-  router.get('/api/backups/:id/download', authenticateToken, (req, res) => {
+  router.get('/backups/:id/download', authenticateToken, (req, res) => {
     const filePath = resolveBackupPath(req.params.id);
     if (!filePath) {
       return fail(res, 404, '备份不存在');
@@ -96,7 +96,7 @@ module.exports = function createBackupsRoutes(deps) {
     res.download(filePath, req.params.id);
   });
 
-  router.delete('/api/backups/:id', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.delete('/backups/:id', authenticateToken, requireRole('administrator'), (req, res) => {
     try {
       const filePath = resolveBackupPath(req.params.id);
       if (!filePath) {
@@ -110,7 +110,7 @@ module.exports = function createBackupsRoutes(deps) {
     }
   });
 
-  router.post('/api/backups/:id/restore', authenticateToken, requireRole('administrator'), asyncHandler(async (req, res) => {
+  router.post('/backups/:id/restore', authenticateToken, requireRole('administrator'), asyncHandler(async (req, res) => {
     try {
       const filePath = resolveBackupPath(req.params.id);
       if (!filePath) {

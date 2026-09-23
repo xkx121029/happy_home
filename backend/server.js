@@ -113,27 +113,40 @@ const deps = {
   clearLoginFailures,
 };
 
-app.use(require('./src/modules/health/routes')(deps));
-app.use(require('./src/modules/auth/routes')(deps));
-app.use(require('./src/modules/posts/routes')(deps));
-// 修订端点必须挂在 posts 之后：/api/posts/:id/revisions 与 /api/posts/:id 前缀相同，
+/**
+ * API 版本前缀。
+ *
+ * 各模块的路由声明现在写的是相对路径（`/posts`、`/pages/:id` …），
+ * 版本号只出现在这一处 —— 将来要开 /api/v2 不必再动十几个模块文件。
+ *
+ * 两个刻意不版本化的例外：
+ *   /api/health            存活探针属于基础设施，版本化没有意义，且会打断已有的监控配置
+ *   /feed.xml /sitemap.xml 挂在站点根路径，是给爬虫与订阅器用的公开约定地址
+ */
+const API_PREFIX = '/api/v1';
+
+app.use(API_PREFIX, require('./src/modules/auth/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/posts/routes')(deps));
+// 修订端点必须挂在 posts 之后：/posts/:id/revisions 与 /posts/:id 前缀相同，
 // 顺序反了会被前面的路由先匹配走。
-app.use(require('./src/modules/revisions/routes')(deps));
-app.use(require('./src/modules/pages/routes')(deps));
-app.use(require('./src/modules/categories/routes')(deps));
-app.use(require('./src/modules/tags/routes')(deps));
-app.use(require('./src/modules/comments/routes')(deps));
-app.use(require('./src/modules/menus/routes')(deps));
-app.use(require('./src/modules/widgets/routes')(deps));
-app.use(require('./src/modules/media/routes')(deps));
-app.use(require('./src/modules/settings/routes')(deps));
-app.use(require('./src/modules/users/routes')(deps));
-app.use(require('./src/modules/notifications/routes')(deps));
-app.use(require('./src/modules/public/routes')(deps));
-app.use(require('./src/modules/analytics/routes')(deps));
-app.use(require('./src/modules/smtp/routes')(deps));
-app.use(require('./src/modules/backups/routes')(deps));
-// 订阅与索引挂在根路径（/feed.xml、/sitemap.xml），是给爬虫和订阅器用的公开约定地址
+app.use(API_PREFIX, require('./src/modules/revisions/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/pages/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/categories/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/tags/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/comments/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/menus/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/widgets/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/media/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/settings/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/users/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/notifications/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/public/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/analytics/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/smtp/routes')(deps));
+app.use(API_PREFIX, require('./src/modules/backups/routes')(deps));
+
+// 不版本化：探针与订阅源
+app.use(require('./src/modules/health/routes')(deps));
 app.use(require('./src/modules/feed/routes')(deps));
 
 // 兜底：未匹配的路由返回统一 JSON 404，异常统一走错误响应

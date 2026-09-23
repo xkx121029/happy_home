@@ -8,7 +8,7 @@ module.exports = function createUsersRoutes(deps) {
   } = deps;
   const router = express.Router();
 
-  router.get('/api/users', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.get('/users', authenticateToken, requireRole('administrator'), (req, res) => {
     try {
       const db = getDb();
       const users = execQuery(db, 'SELECT id, username, email, role, status, created_at, updated_at FROM users ORDER BY created_at DESC');
@@ -19,7 +19,7 @@ module.exports = function createUsersRoutes(deps) {
     }
   });
 
-  router.get('/api/users/:id', authenticateToken, (req, res) => {
+  router.get('/users/:id', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       // 原来只校验了登录，任何用户都能用 id 遍历出他人的资料。
@@ -39,7 +39,7 @@ module.exports = function createUsersRoutes(deps) {
     }
   });
 
-  router.post('/api/users', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.post('/users', authenticateToken, requireRole('administrator'), (req, res) => {
     try {
       const { username, email, password, role, status } = req.body;
       const db = getDb();
@@ -72,7 +72,7 @@ module.exports = function createUsersRoutes(deps) {
     }
   });
 
-  router.put('/api/users/:id', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.put('/users/:id', authenticateToken, requireRole('administrator'), (req, res) => {
     try {
       const { username, email, password, role, status } = req.body;
       const db = getDb();
@@ -108,7 +108,7 @@ module.exports = function createUsersRoutes(deps) {
     }
   });
 
-  router.delete('/api/users/:id', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.delete('/users/:id', authenticateToken, requireRole('administrator'), (req, res) => {
     try {
       const db = getDb();
       const user = getSingle(db, 'SELECT * FROM users WHERE id = ?', [req.params.id]);

@@ -13,7 +13,7 @@ module.exports = function createSmtpRoutes(deps) {
   // 验证码存储（内存中，生产环境应使用 Redis）
   const verificationCodes = new Map();
 
-  router.post('/api/auth/send-verification-code', asyncHandler(async (req, res) => {
+  router.post('/auth/send-verification-code', asyncHandler(async (req, res) => {
     try {
       const { email } = req.body;
 
@@ -54,7 +54,7 @@ module.exports = function createSmtpRoutes(deps) {
     }
   }));
 
-  router.post('/api/auth/verify-code', (req, res) => {
+  router.post('/auth/verify-code', (req, res) => {
     try {
       const { email, code } = req.body;
 
@@ -87,7 +87,7 @@ module.exports = function createSmtpRoutes(deps) {
     }
   });
 
-  router.post('/api/auth/reset-password', (req, res) => {
+  router.post('/auth/reset-password', (req, res) => {
     try {
       const { email, code, newPassword } = req.body;
 
@@ -130,7 +130,7 @@ module.exports = function createSmtpRoutes(deps) {
     }
   });
 
-  router.post('/api/smtp/test', authenticateToken, requireRole('administrator'), asyncHandler(async (req, res) => {
+  router.post('/smtp/test', authenticateToken, requireRole('administrator'), asyncHandler(async (req, res) => {
     try {
       const { useSavedConfig = true, testConfig } = req.body;
 
@@ -147,7 +147,7 @@ module.exports = function createSmtpRoutes(deps) {
     }
   }));
 
-  router.post('/api/smtp/refresh', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.post('/smtp/refresh', authenticateToken, requireRole('administrator'), (req, res) => {
     try {
       mailer.createTransporter();
       ok(res, { message: 'SMTP 配置已刷新' });

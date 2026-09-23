@@ -5,7 +5,7 @@ module.exports = function createMediaRoutes(deps) {
   const { getDb, saveDatabase, execQuery, getSingle, uuidv4, authenticateToken, ok, fail } = deps;
   const router = express.Router();
 
-  router.get('/api/media', authenticateToken, (req, res) => {
+  router.get('/media', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const media = execQuery(db, 'SELECT * FROM media ORDER BY uploaded_at DESC');
@@ -16,7 +16,7 @@ module.exports = function createMediaRoutes(deps) {
     }
   });
 
-  router.post('/api/media', authenticateToken, (req, res) => {
+  router.post('/media', authenticateToken, (req, res) => {
     try {
       const { name, url, size, type } = req.body;
       const db = getDb();
@@ -40,7 +40,7 @@ module.exports = function createMediaRoutes(deps) {
     }
   });
 
-  router.delete('/api/media/:id', authenticateToken, (req, res) => {
+  router.delete('/media/:id', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const media = getSingle(db, 'SELECT * FROM media WHERE id = ?', [req.params.id]);

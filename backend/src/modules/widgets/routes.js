@@ -5,7 +5,7 @@ module.exports = function createWidgetsRoutes(deps) {
   const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, authenticateToken, ok, fail } = deps;
   const router = express.Router();
 
-  router.get('/api/widgets', authenticateToken, (req, res) => {
+  router.get('/widgets', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       let sql = 'SELECT * FROM widgets';
@@ -31,7 +31,7 @@ module.exports = function createWidgetsRoutes(deps) {
     }
   });
 
-  router.post('/api/widgets', authenticateToken, (req, res) => {
+  router.post('/widgets', authenticateToken, (req, res) => {
     try {
       const { name, type, location, config } = req.body;
       const db = getDb();
@@ -62,7 +62,7 @@ module.exports = function createWidgetsRoutes(deps) {
     }
   });
 
-  router.put('/api/widgets/:id', authenticateToken, (req, res) => {
+  router.put('/widgets/:id', authenticateToken, (req, res) => {
     try {
       const { name, enabled, config, location, order_num } = req.body;
       const db = getDb();
@@ -92,7 +92,7 @@ module.exports = function createWidgetsRoutes(deps) {
     }
   });
 
-  router.delete('/api/widgets/:id', authenticateToken, (req, res) => {
+  router.delete('/widgets/:id', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const widget = getSingle(db, 'SELECT * FROM widgets WHERE id = ?', [req.params.id]);

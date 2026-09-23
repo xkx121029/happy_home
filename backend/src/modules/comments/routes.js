@@ -5,7 +5,7 @@ module.exports = function createCommentsRoutes(deps) {
   const { getDb, saveDatabase, execQuery, getSingle, uuidv4, authenticateToken, ok, fail } = deps;
   const router = express.Router();
 
-  router.post('/api/comments', authenticateToken, (req, res) => {
+  router.post('/comments', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const { postId, parentId, author, email, content } = req.body;
@@ -46,7 +46,7 @@ module.exports = function createCommentsRoutes(deps) {
     }
   });
 
-  router.get('/api/comments', authenticateToken, (req, res) => {
+  router.get('/comments', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       let sql = 'SELECT * FROM comments';
@@ -77,7 +77,7 @@ module.exports = function createCommentsRoutes(deps) {
     }
   });
 
-  router.put('/api/comments/:id/status', authenticateToken, (req, res) => {
+  router.put('/comments/:id/status', authenticateToken, (req, res) => {
     try {
       const { status } = req.body;
       const db = getDb();
@@ -98,7 +98,7 @@ module.exports = function createCommentsRoutes(deps) {
     }
   });
 
-  router.delete('/api/comments/:id', authenticateToken, (req, res) => {
+  router.delete('/comments/:id', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const comment = getSingle(db, 'SELECT * FROM comments WHERE id = ?', [req.params.id]);

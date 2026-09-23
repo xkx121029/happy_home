@@ -5,7 +5,7 @@ module.exports = function createPagesRoutes(deps) {
   const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, authenticateToken, ok, fail } = deps;
   const router = express.Router();
 
-  router.get('/api/pages', authenticateToken, (req, res) => {
+  router.get('/pages', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       let sql = 'SELECT * FROM pages';
@@ -36,7 +36,7 @@ module.exports = function createPagesRoutes(deps) {
     }
   });
 
-  router.get('/api/pages/:id', authenticateToken, (req, res) => {
+  router.get('/pages/:id', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const page = getSingle(db, 'SELECT * FROM pages WHERE id = ?', [req.params.id]);
@@ -50,7 +50,7 @@ module.exports = function createPagesRoutes(deps) {
     }
   });
 
-  router.post('/api/pages', authenticateToken, (req, res) => {
+  router.post('/pages', authenticateToken, (req, res) => {
     try {
       const { title, content, slug, status } = req.body;
       const db = getDb();
@@ -76,7 +76,7 @@ module.exports = function createPagesRoutes(deps) {
     }
   });
 
-  router.put('/api/pages/:id', authenticateToken, (req, res) => {
+  router.put('/pages/:id', authenticateToken, (req, res) => {
     try {
       const { title, content, slug, status } = req.body;
       const db = getDb();
@@ -100,7 +100,7 @@ module.exports = function createPagesRoutes(deps) {
     }
   });
 
-  router.delete('/api/pages/:id', authenticateToken, (req, res) => {
+  router.delete('/pages/:id', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const page = getSingle(db, 'SELECT * FROM pages WHERE id = ?', [req.params.id]);

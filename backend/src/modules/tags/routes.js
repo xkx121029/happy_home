@@ -5,7 +5,7 @@ module.exports = function createTagsRoutes(deps) {
   const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, authenticateToken, ok, fail } = deps;
   const router = express.Router();
 
-  router.get('/api/tags', authenticateToken, (req, res) => {
+  router.get('/tags', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const tags = execQuery(db, 'SELECT * FROM tags ORDER BY created_at DESC');
@@ -16,7 +16,7 @@ module.exports = function createTagsRoutes(deps) {
     }
   });
 
-  router.post('/api/tags', authenticateToken, (req, res) => {
+  router.post('/tags', authenticateToken, (req, res) => {
     try {
       const { name, slug } = req.body;
       const db = getDb();
@@ -39,7 +39,7 @@ module.exports = function createTagsRoutes(deps) {
     }
   });
 
-  router.put('/api/tags/:id', authenticateToken, (req, res) => {
+  router.put('/tags/:id', authenticateToken, (req, res) => {
     try {
       const { name, slug } = req.body;
       const db = getDb();
@@ -60,7 +60,7 @@ module.exports = function createTagsRoutes(deps) {
     }
   });
 
-  router.delete('/api/tags/:id', authenticateToken, (req, res) => {
+  router.delete('/tags/:id', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const tag = getSingle(db, 'SELECT * FROM tags WHERE id = ?', [req.params.id]);

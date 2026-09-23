@@ -5,7 +5,7 @@ module.exports = function createCategoriesRoutes(deps) {
   const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, authenticateToken, ok, fail } = deps;
   const router = express.Router();
 
-  router.get('/api/categories', authenticateToken, (req, res) => {
+  router.get('/categories', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const categories = execQuery(db, 'SELECT * FROM categories ORDER BY created_at DESC');
@@ -16,7 +16,7 @@ module.exports = function createCategoriesRoutes(deps) {
     }
   });
 
-  router.post('/api/categories', authenticateToken, (req, res) => {
+  router.post('/categories', authenticateToken, (req, res) => {
     try {
       const { name, slug, description, parent } = req.body;
       const db = getDb();
@@ -42,7 +42,7 @@ module.exports = function createCategoriesRoutes(deps) {
     }
   });
 
-  router.put('/api/categories/:id', authenticateToken, (req, res) => {
+  router.put('/categories/:id', authenticateToken, (req, res) => {
     try {
       const { name, slug, description, parent } = req.body;
       const db = getDb();
@@ -66,7 +66,7 @@ module.exports = function createCategoriesRoutes(deps) {
     }
   });
 
-  router.delete('/api/categories/:id', authenticateToken, (req, res) => {
+  router.delete('/categories/:id', authenticateToken, (req, res) => {
     try {
       const db = getDb();
       const category = getSingle(db, 'SELECT * FROM categories WHERE id = ?', [req.params.id]);
