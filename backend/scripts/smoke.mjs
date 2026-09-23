@@ -57,8 +57,10 @@ const cleanup = [];
 
 // ---------------------------------------------------------------- http 封装
 
-async function call(method, path, { body, token, headers = {}, absolute = false } = {}) {
-  const url = `${absolute ? ROOT : BASE}${path}`;
+async function call(method, path, { body, token, headers = {}, absolute = false, unversioned = false } = {}) {
+  // absolute：站点根（feed / sitemap）；unversioned：/api 下但不带版本（health）
+  const base = absolute ? ROOT : unversioned ? API_ROOT : BASE;
+  const url = `${base}${path}`;
   const opts = { method, headers: { ...headers } };
   if (body !== undefined) {
     opts.headers['Content-Type'] = 'application/json';
@@ -215,7 +217,10 @@ async function main() {
   console.log(`\nHappyHome API 冒烟测试 → ${BASE}`);
 
   // 1. 健康检查
-  await record('GET  /health', async () => ({ res: await call('GET', '/health'), expect: 200 }));
+  await record('GET  /health', async () => ({
+    res: await call('GET', '/health', { unversioned: true }),
+    expect: 200,
+  }));
 
   // 2. 鉴权
   const login = await record('POST /auth/login', async () => ({
