@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FileText, Clock, User, Calendar, ExternalLink, Pin } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSiteSettings } from '../../state/SiteSettingsContext';
 import { useData } from '../../contexts/DataContext';
 

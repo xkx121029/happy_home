@@ -1,6 +1,6 @@
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, User, Tag, MessageSquare, Send, Reply, Share2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSiteSettings } from '../../state/SiteSettingsContext';
 import { useData } from '../../contexts/DataContext';
 import { commentsAPI } from '../../services/api';
