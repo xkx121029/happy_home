@@ -87,4 +87,32 @@ export function htmlToPlainText(html, maxLength = 0) {
   return text;
 }
 
+/**
+ * HTML → 带换行结构的纯文本，返回按行切好的数组。
+ *
+ * 不能直接用 htmlToPlainText：它把 `\s+` 全压成空格，整篇正文会变成一行，
+ * 行级 diff 就退化成「整段替换」，对比视图也就没意义了。
+ * 这里把块级标签换成换行、行内标签直接去掉，保留段落结构。
+ */
+export function htmlToLines(html) {
+  if (!html) return [];
+
+  return String(html)
+    .replace(
+      /<\s*\/?\s*(br|p|div|h[1-6]|li|ul|ol|blockquote|pre|tr|table|figure|figcaption|section|article)\b[^>]*>/gi,
+      '\n'
+    )
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#0?39;/g, "'")
+    // &amp; 必须最后解，否则 &amp;lt; 会被解成 < 而不是 &lt;
+    .replace(/&amp;/gi, '&')
+    .split('\n')
+    .map((line) => line.replace(/[ \t\u00a0]+/g, ' ').trim())
+    .filter((line) => line.length > 0);
+}
+
 export default sanitizeHtml;
