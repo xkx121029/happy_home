@@ -42,7 +42,10 @@ module.exports = function createPagesRoutes(deps) {
   router.get('/pages/:id', requireAccess('pages:read', { roles: ROLE_CONTENT, anonymous: true }), (req, res) => {
     try {
       const db = getDb();
-      const page = getSingle(db, 'SELECT * FROM pages WHERE id = ?', [req.params.id]);
+      const page =
+        req.auth.level === 'public'
+          ? getSingle(db, "SELECT * FROM pages WHERE id = ? AND status = 'published'", [req.params.id])
+          : getSingle(db, 'SELECT * FROM pages WHERE id = ?', [req.params.id]);
       if (!page) {
         return fail(res, 404, '页面不存在');
       }
