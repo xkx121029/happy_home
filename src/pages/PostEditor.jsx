@@ -8,7 +8,8 @@ import { useModal, useToast } from '../hooks/useModal';
 import { useData } from '../contexts/DataContext';
 import { useSiteSettings } from '../state/SiteSettingsContext';
 import { sanitizeHtml } from '../lib/sanitize';
-import { toDateTimeInputValue } from '../lib/format';
+import { toDateTimeInputValue, formatDateTime } from '../lib/format';
+import { revisionsAPI } from '../services/api';
 
 export default function PostEditor() {
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
@@ -80,9 +81,8 @@ export default function PostEditor() {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
-  const createRevisionIfNeeded = () => {
-    // 修订功能暂未实现
-  };
+  // 快照由后端在 PUT 里写（只在正文真的变了时记），前端不需要做任何事。
+  // 这里原本留了一个空的 createRevisionIfNeeded 并在两处调用，是误导 —— 删掉。
 
   // 原来保存走 props.onSave 回调，现在页面自取 Context，成功后再跳转列表
   const handleSave = async (data) => {
@@ -100,7 +100,6 @@ export default function PostEditor() {
   };
 
   const handleSaveDraft = async () => {
-    createRevisionIfNeeded();
     const postData = {
       title: title || '无标题',
       content,
@@ -130,7 +129,6 @@ export default function PostEditor() {
       return;
     }
 
-    createRevisionIfNeeded();
     const postData = {
       title,
       content,
@@ -146,18 +144,45 @@ export default function PostEditor() {
     await handleSave({ ...postData, id: postId });
   };
 
+  const loadRevisions = async (targetPostId) => {
+    try {
+      const response = await revisionsAPI.listForPost(targetPostId);
+      setRevisions(response.data || []);
+    } catch (err) {
+      setRevisions([]);
+      showToast(err.message || '加载修订记录失败', 'error');
+    }
+  };
+
+  /**
+   * 回滚。
+   *
+   * 原来只改本地 state 再弹一句「暂未实现」—— 页面看着变了，库里一点没动，
+   * 刷新就还原。现在打真实端点：后端会先把当前版本留档，再覆盖回去，
+   * 所以「点错了」也能再滚回来。
+   */
   const handleRestoreRevision = async (revision) => {
     const confirmed = await confirm({
       title: '确认恢复',
-      message: '确定要恢复到该修订版本吗？',
+      message: `将把标题与正文回滚到 ${formatDateTime(revision.createdAt, timeZone)} 的版本。当前内容会先自动留一份快照，可以再回滚回来。`,
+      confirmText: '恢复',
     });
-    if (confirmed) {
-      setTitle(revision.title);
-      setContent(revision.content);
-      setExcerpt(revision.excerpt);
+    if (!confirmed) return;
+
+    try {
+      const response = await revisionsAPI.restore(revision.id);
+      const restored = response.data;
+      if (restored) {
+        setTitle(restored.title || '');
+        setContent(restored.content || '');
+        setExcerpt(restored.excerpt || '');
+      }
       setSelectedRevision(null);
       setShowRevisions(false);
-      showToast('修订功能暂未实现', 'warning');
+      if (postId) await loadRevisions(postId);
+      showToast('已恢复到该版本', 'success');
+    } catch (err) {
+      showToast(err.message || '恢复失败', 'error');
     }
   };
 
@@ -186,7 +211,10 @@ export default function PostEditor() {
         <div className="flex items-center gap-3">
           {postId && (
             <button
-              onClick={() => setShowRevisions(true)}
+              onClick={() => {
+                setShowRevisions(true);
+                if (postId) loadRevisions(postId);
+              }}
               className="px-4 py-2 border border-line text-fg rounded-lg font-medium hover:bg-surface-2 transition-colors flex items-center gap-2"
             >
               <History className="w-4 h-4" />
