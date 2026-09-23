@@ -1,3 +1,7 @@
+/* eslint-disable react-refresh/only-export-components --
+   这是一个纯路由表模块，不是组件模块。它导出的是 createBrowserRouter 的返回值，
+   规则只是因为文件里有 JSX（element: <XxxPage />）就把它当成组件文件。
+   静态路由表不参与 Fast Refresh，也没有可拆的组件。 */
 import { createBrowserRouter } from 'react-router-dom';
 import RootLayout from '../layouts/RootLayout';
 import AdminLayout from '../layouts/AdminLayout';

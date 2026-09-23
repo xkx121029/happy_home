@@ -40,7 +40,28 @@ export default [
       }],
       'react-refresh/only-export-components': [
         'warn',
-        { allowConstantExport: true },
+        {
+          allowConstantExport: true,
+          // Provider 与它的 hook 写在同一个文件里是 React 官方文档的写法，
+          // 而这些 hook / 常量 / HOC 会被规则当成「非组件导出」误报。
+          // 不为它们拆文件：拆了要改几十处 import，而 context 文件本来
+          // 也不享受 Fast Refresh（改它一定会整页刷新）。
+          allowExportNames: [
+            'useAuth',
+            'useData',
+            'useSiteSettings',
+            'useTheme',
+            'useNetwork',
+            'useError',
+            'useNotification',
+            'withErrorHandler',
+            'withAsyncErrorHandler',
+            'NotificationType',
+            'ErrorType',
+            'ErrorSeverity',
+            'sharePlatforms',
+          ],
+        },
       ],
       // console.log 是调试残留的高发区，禁止新增。
       // console.error / warn 保留：错误路径上的诊断信息不该被删掉，
