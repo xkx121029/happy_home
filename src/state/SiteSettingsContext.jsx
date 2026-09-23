@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useCallback, useMemo } from 'react';
 import { useResource } from '../hooks/useResource';
-import { settingsAPI, publicSettingsAPI } from '../services/api';
+import { settingsAPI } from '../services/api';
 import { globalThemeCss, resolveTheme } from '../theme/apply';
 import { useAuth } from './AuthContext';
 
@@ -26,8 +26,11 @@ export function SiteSettingsProvider({ children }) {
     refetch,
     setData,
   } = useResource(
-    // 已登录读完整设置（含 SMTP 等敏感项），访客只读公开字段
-    () => (isAuthenticated ? settingsAPI.getAll() : publicSettingsAPI.getAll()),
+    // 同一个端点，后端按身份决定返回哪些键：
+    // 访客拿前台白名单（主题、自定义代码、统计 ID 都在里面），
+    // 管理员拿全量，其余登录用户拿全量但剔除 SMTP 凭据。
+    // 以前这里要按 isAuthenticated 在两个 API 之间二选一，现在不必了。
+    () => settingsAPI.getAll(),
     {
       enabled: !initializing,
       initialData: {},

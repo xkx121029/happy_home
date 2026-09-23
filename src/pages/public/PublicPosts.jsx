@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, ChevronLeft, ChevronRight, FileText, Pin, Search, User } from 'lucide-react';
-import { publicAPI } from '../../services/api';
+import { postsAPI, categoriesAPI } from '../../services/api';
 import { useResource } from '../../hooks/useResource';
 import { useSiteSettings } from '../../state/SiteSettingsContext';
 import { excerptFrom, formatDate } from '../../lib/format';
@@ -11,8 +11,10 @@ import { excerptFrom, formatDate } from '../../lib/format';
  *
  * 原来从 DataContext 取全量文章，再在浏览器里过滤与排序 ——
  * 意味着前台会拿到后台那份含草稿的数据，而且没有任何分页，
- * 文章一多就要把整张表拉下来。现在改走公开端点，
+ * 文章一多就要把整张表拉下来。现在走 /posts 的分页模式，
  * 分页、搜索、分类筛选都在服务端完成，每页条数来自「内容」页的 postsPerPage。
+ *
+ * 合并之后不再有「公开专用」的路径：同一个 /posts，匿名调用只返回已发布内容。
  */
 export default function PublicPosts() {
   const { settings } = useSiteSettings();
@@ -22,12 +24,13 @@ export default function PublicPosts() {
   const [category, setCategory] = useState('');
 
   const { data, isLoading, error } = useResource(
-    () => publicAPI.getPosts({ page, search: search || undefined, category: category || undefined }),
+    () => postsAPI.getPage({ page, search: search || undefined, category: category || undefined }),
     { deps: [page, search, category], select: (res) => res }
   );
 
+  // 只列出已被已发布文章用到的分类；返回的是分类行对象
   const categories = useResource(
-    () => publicAPI.getCategories(),
+    () => categoriesAPI.getUsed(),
     { initialData: [], select: (res) => res?.data || [] }
   );
 
@@ -80,9 +83,12 @@ export default function PublicPosts() {
             className="h-10 px-3 rounded-lg bg-surface text-fg border border-line focus:outline-none focus:ring-2 focus:ring-accent"
           >
             <option value="">全部分类</option>
+            {/* 分类现在是行对象（合并前这个端点在 public 下返回的是名字字符串数组，
+                同一个路径两种形状没法写文档，已统一成行对象）。
+                value 用 name，因为文章表里存的分类就是名字。 */}
             {(categories.data || []).map((item) => (
-              <option key={item} value={item}>
-                {item}
+              <option key={item.id} value={item.name}>
+                {item.name}
               </option>
             ))}
           </select>

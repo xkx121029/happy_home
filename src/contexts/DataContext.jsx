@@ -82,9 +82,14 @@ export function DataProvider({ children }) {
   }, []);
 
   // 访客可见的数据（不含用户、评论等待审内容）
+  //
+  // 用 allSettled 而不是 all：这几个请求里只要有一个失败（历史上就是如此 ——
+  // 这里曾经调用四个需要 token 的端点，访客必然 401），all 会让整组 reject，
+  // 被 catch 吞掉之后 posts/pages/categories/tags/widgets 全部保持空数组，
+  // 于是访客看到的前台侧栏一个小工具都没有。一个接口挂掉不该拖垮整页。
   const loadPublicData = useCallback(async () => {
-    const [postsRes, pagesRes, categoriesRes, tagsRes, widgetsRes] = await Promise.all([
-      postsAPI.getPublicAll(),
+    const [postsRes, pagesRes, categoriesRes, tagsRes, widgetsRes] = await Promise.allSettled([
+      postsAPI.getPage({ perPage: 100 }),
       pagesAPI.getAll(),
       categoriesAPI.getAll(),
       tagsAPI.getAll(),
@@ -92,11 +97,23 @@ export function DataProvider({ children }) {
     ]);
 
     if (!mountedRef.current) return;
-    setPosts(postsRes.data || []);
-    setPages(pagesRes.data || []);
-    setCategories(categoriesRes.data || []);
-    setTags(tagsRes.data || []);
-    setWidgets(widgetsRes.data || []);
+
+    const pick = (result) => (result.status === 'fulfilled' ? result.value?.data || [] : []);
+    const failed = [postsRes, pagesRes, categoriesRes, tagsRes, widgetsRes].filter(
+      (r) => r.status === 'rejected'
+    );
+    if (failed.length) {
+      console.error(
+        `访客数据加载有 ${failed.length} 项失败：`,
+        failed.map((r) => r.reason?.message || r.reason)
+      );
+    }
+
+    setPosts(pick(postsRes));
+    setPages(pick(pagesRes));
+    setCategories(pick(categoriesRes));
+    setTags(pick(tagsRes));
+    setWidgets(pick(widgetsRes));
     // 访客不该看到用户列表与评论审核队列
     setUsers([]);
     setComments([]);

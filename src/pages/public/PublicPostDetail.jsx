@@ -34,7 +34,7 @@ export default function PublicPostDetail() {
   useEffect(() => {
     if (!post?.id) return;
     let cancelled = false;
-    commentsAPI.getPublicForPost(post.id)
+    commentsAPI.getApprovedForPost(post.id)
       .then((res) => {
         if (!cancelled) setPostComments(res.data || []);
       })
@@ -188,7 +188,7 @@ export default function PublicPostDetail() {
       return;
     }
     try {
-      await commentsAPI.createPublic({
+      await commentsAPI.submit({
         postId: post.id,
         author: commentForm.author,
         email: commentForm.email,

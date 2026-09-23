@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
-import { publicAPI } from '../../services/api';
+import { commentsAPI } from '../../services/api';
 import { formatDate } from '../../lib/format';
 import { PUBLIC_PATHS } from '../../routes/paths';
 
@@ -19,7 +19,7 @@ export default function RecentCommentsWidget({ config = {} }) {
 
   useEffect(() => {
     let cancelled = false;
-    publicAPI.getRecentComments(count)
+    commentsAPI.getRecent(count)
       .then((res) => {
         if (!cancelled) setComments(res.data || []);
       })

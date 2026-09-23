@@ -99,14 +99,17 @@ export const authAPI = {
 // --------------------------------------------------------------------- Posts
 
 export const postsAPI = {
-  getAll: (params) => apiRequest(`/posts${toQuery(params)}`),
+  // 后台列表页：全量模式。显式传 all=1 而不是「不传 page 就不分页」——
+  // 同一个 URL 出现两种响应形状会让契约没法写文档，也让客户端没法预期。
+  getAll: (params) => apiRequest(`/posts${toQuery({ all: 1, ...params })}`),
+  // 前台列表页：分页模式，响应带 total / page / perPage / totalPages
+  getPage: (params) => apiRequest(`/posts${toQuery(params)}`),
   getById: (id) => apiRequest(`/posts/${id}`),
   create: (data) => apiRequest('/posts', { method: 'POST', body: data }),
   update: (id, data) => apiRequest(`/posts/${id}`, { method: 'PUT', body: data }),
   delete: (id) => apiRequest(`/posts/${id}`, { method: 'DELETE' }),
-  getPublicAll: (params) => apiRequest(`/public/posts${toQuery(params)}`),
-  getPublicById: (id) => apiRequest(`/public/posts/${id}`),
-  getPublicComments: (id) => apiRequest(`/public/posts/${id}/comments`),
+  // 某篇文章的已审核评论（访客也能读）
+  getComments: (id) => apiRequest(`/posts/${id}/comments`),
 };
 
 // ----------------------------------------------------------------- Revisions
@@ -124,7 +127,8 @@ export const revisionsAPI = {
 
 export const pagesAPI = {
   getAll: (params) => apiRequest(`/pages${toQuery(params)}`),
-  getById: (id) => apiRequest(`/pages/${id}`),
+  // :id 同时接受 id 与 slug —— 合并前 /pages/:id 与 /public/pages/:slug 是两条路径
+  getById: (idOrSlug) => apiRequest(`/pages/${idOrSlug}`),
   create: (data) => apiRequest('/pages', { method: 'POST', body: data }),
   update: (id, data) => apiRequest(`/pages/${id}`, { method: 'PUT', body: data }),
   delete: (id) => apiRequest(`/pages/${id}`, { method: 'DELETE' }),
@@ -144,6 +148,9 @@ export const usersAPI = {
 
 export const categoriesAPI = {
   getAll: () => apiRequest('/categories'),
+  // 只返回已被已发布文章实际用到的分类（前台列表的下拉用）。
+  // 返回的仍是分类行对象，不是分类名数组。
+  getUsed: () => apiRequest('/categories?usedOnly=1'),
   create: (data) => apiRequest('/categories', { method: 'POST', body: data }),
   update: (id, data) => apiRequest(`/categories/${id}`, { method: 'PUT', body: data }),
   delete: (id) => apiRequest(`/categories/${id}`, { method: 'DELETE' }),
@@ -202,37 +209,21 @@ export const commentsAPI = {
   updateStatus: (id, status) => apiRequest(`/comments/${id}/status`, { method: 'PUT', body: { status } }),
   delete: (id) => apiRequest(`/comments/${id}`, { method: 'DELETE' }),
 
-  // 前台专用：访客没有 token，走后端新开的公开端点（已审核列表 + 提交待审）。
-  // 原来前台调用的是需要登录的 /api/comments，访客必然 401；
-  // commentsAPI.reply 更是在 api 层和后端都不存在，一调用就抛错。
-  getPublicForPost: (postId) => apiRequest(`/public/posts/${postId}/comments`),
-  createPublic: (data) => apiRequest('/public/comments', { method: 'POST', body: data }),
-  reply: (parentId, data) => apiRequest('/public/comments', { method: 'POST', body: { ...data, parentId } }),
+  // 下面两个是前台用的。合并之后不再有「公开专用」的路径 —— 同一个端点按身份
+  // 决定返回什么（匿名只看到已审核评论、提交走限流），所以这里只是语义化别名。
+  getApprovedForPost: (postId) => apiRequest(`/posts/${postId}/comments`),
+  submit: (data) => apiRequest('/comments', { method: 'POST', body: data }),
+  // 侧栏「最新评论」：已发布文章下的已审核评论
+  getRecent: (limit = 5) => apiRequest(`/comments/recent?limit=${limit}`),
 };
 
 // ------------------------------------------------------------------ Settings
 
 export const settingsAPI = {
+  // 一个端点按身份返回不同的键子集：匿名拿前台白名单，管理员拿全量，
+  // 其余登录用户拿全量但剔除 SMTP 凭据。所以不再需要 publicSettingsAPI。
   getAll: () => apiRequest('/settings'),
   update: (data) => apiRequest('/settings', { method: 'PUT', body: data }),
-};
-
-export const publicSettingsAPI = {
-  getAll: () => apiRequest('/public/settings'),
-};
-
-// -------------------------------------------------------------------- Public
-
-export const publicAPI = {
-  getPosts: (params) => apiRequest(`/public/posts${toQuery(params)}`),
-  getPostById: (id) => apiRequest(`/public/posts/${id}`),
-  getPages: () => apiRequest('/public/pages'),
-  getPageBySlug: (slug) => apiRequest(`/public/pages/${slug}`),
-  getCategories: () => apiRequest('/public/categories'),
-  getSettings: () => apiRequest('/public/settings'),
-  getComments: (postId) => apiRequest(`/public/posts/${postId}/comments`),
-  // 侧栏「最新评论」用的公开数据流（仅已发布文章下的已审核评论）
-  getRecentComments: (limit = 5) => apiRequest(`/public/comments/recent?limit=${limit}`),
 };
 
 // --------------------------------------------------------------------- Misc
