@@ -12,7 +12,10 @@ module.exports = function createPagesRoutes(deps) {
       const params = [];
       const conditions = [];
 
-      if (req.query.status) {
+      // 公开层级只能看已发布页面，且忽略 status 参数（否则 ?status=draft 就能绕过）
+      if (req.auth.level === 'public') {
+        conditions.push("status = 'published'");
+      } else if (req.query.status) {
         conditions.push('status = ?');
         params.push(req.query.status);
       }

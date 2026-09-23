@@ -10,10 +10,20 @@ module.exports = function createWidgetsRoutes(deps) {
       const db = getDb();
       let sql = 'SELECT * FROM widgets';
       const params = [];
+      const conditions = [];
 
       if (req.query.location) {
-        sql += ' WHERE location = ?';
+        conditions.push('location = ?');
         params.push(req.query.location);
+      }
+
+      // 公开层级只能看到已启用的部件：没启用的部件不该出现在访客页面上
+      if (req.auth.level === 'public') {
+        conditions.push('enabled = 1');
+      }
+
+      if (conditions.length > 0) {
+        sql += ' WHERE ' + conditions.join(' AND ');
       }
 
       sql += ' ORDER BY order_num ASC';
