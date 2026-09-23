@@ -39,10 +39,11 @@ function readEnvFile() {
 }
 
 const fileEnv = readEnvFile();
-const BASE = process.env.API_BASE || 'http://localhost:3002/api';
-// 站点根路径。feed.xml 与 sitemap.xml 挂在 / 而不是 /api 下，
-// 用绝对地址调用时走这里。
-const ROOT = BASE.replace(/\/api\/?$/, '');
+const BASE = process.env.API_BASE || 'http://localhost:3002/api/v1';
+// 站点根路径。三个不版本化的端点走这里：
+//   /feed.xml、/sitemap.xml 挂在 / 下；/api/health 挂在 /api 下（探针不版本化）
+const ROOT = BASE.replace(/\/api\/v\d+\/?$/, '');
+const API_ROOT = `${ROOT}/api`;
 const ADMIN_USER = process.env.ADMIN_USER || fileEnv.SMOKE_ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || fileEnv.SMOKE_ADMIN_PASS || 'admin123';
 
