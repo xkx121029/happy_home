@@ -118,7 +118,7 @@ export default function PublicHome() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               to="/posts"
-              className="px-8 py-4 bg-accent text-white rounded-xl font-semibold hover:bg-accent-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+              className="px-8 py-4 bg-accent text-accent-fg rounded-xl font-semibold hover:bg-accent-700 transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
             >
               浏览文章
               <FileText className="w-5 h-5" />

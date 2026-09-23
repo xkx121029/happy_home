@@ -36,6 +36,25 @@
   /* 动效曲线：入场统一用 entry，禁用 ease-in */
   --ease-entry: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-exit: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /*
+   * 圆角与字体也走变量。
+   *
+   * 这两个维度与明暗无关，所以只在这里给一份默认值；主题页切换时
+   * 由注入的样式表覆盖。它们必须覆盖到 3xl —— 只改 sm~xl 的话，
+   * 全站少量 rounded-2xl / rounded-3xl 会回落到 Tailwind 内置值，
+   * 出现「大部分圆角变了、几个没变」的割裂感。
+   */
+  --r-sm: 8px;
+  --r: 10px;
+  --r-md: 10px;
+  --r-lg: 12px;
+  --r-xl: 14px;
+  --r-2xl: 18px;
+  --r-3xl: 24px;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
 }
 
 html[data-theme='dark'] {

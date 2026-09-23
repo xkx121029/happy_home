@@ -60,7 +60,7 @@ export default function ResetPassword() {
       <div className="w-full">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center">
           <div className="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white text-2xl font-bold">H</span>
+            <span className="text-accent-fg text-2xl font-bold">H</span>
           </div>
           <p className="text-gray-500">正在验证链接...</p>
         </div>
@@ -100,7 +100,7 @@ export default function ResetPassword() {
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white text-2xl font-bold">H</span>
+            <span className="text-accent-fg text-2xl font-bold">H</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">HappyHome</h1>
           <p className="text-gray-500 mt-1">设置新密码</p>

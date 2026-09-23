@@ -91,14 +91,9 @@ export default {
       },
 
       fontFamily: {
-        // 系统字体栈：零网络请求、中文有真字形、渲染质量高。
-        // 原来的 Inter 没有中文字形，中文实际回退到别的字体，字形不统一，
-        // 而且 Inter 本身就是 SaaS 模板的默认选择。
-        sans: [
-          'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI',
-          'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
-          'Noto Sans CJK SC', 'sans-serif',
-        ],
+        // 指向 CSS 变量而不是写死字体栈，主题页才能整体换字体。
+        // 变量本身在 tokens.css 里给了默认值，所以不设主题时行为与原来完全一致。
+        sans: ['var(--font-sans)'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
       },
 
@@ -115,12 +110,15 @@ export default {
       },
 
       borderRadius: {
-        // 「纸」的意象对应偏小的圆角，刻意不做 rounded-2xl 的气泡感
-        sm: '8px',
-        DEFAULT: '10px',
-        md: '10px',
-        lg: '12px',
-        xl: '14px',
+        // 「纸」的意象对应偏小的圆角，刻意不做 rounded-2xl 的气泡感。
+        // 全部指向变量，主题页可以整体切换锐利 / 标准 / 圆润。
+        sm: 'var(--r-sm)',
+        DEFAULT: 'var(--r)',
+        md: 'var(--r-md)',
+        lg: 'var(--r-lg)',
+        xl: 'var(--r-xl)',
+        '2xl': 'var(--r-2xl)',
+        '3xl': 'var(--r-3xl)',
       },
 
       boxShadow: {

@@ -124,7 +124,7 @@ export default function TutorialSystem() {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
       <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="bg-accent p-6 text-white">
+        <div className="bg-accent p-6 text-accent-fg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Lightbulb className="w-8 h-8" />

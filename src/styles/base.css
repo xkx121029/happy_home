@@ -21,7 +21,7 @@
     margin: 0;
     background-color: rgb(var(--c-bg));
     color: rgb(var(--c-fg));
-    font-family: theme('fontFamily.sans');
+    font-family: var(--font-sans);
     font-size: 15px;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
@@ -49,6 +49,41 @@
   :focus-visible {
     outline: 2px solid rgb(var(--c-accent));
     outline-offset: 2px;
+  }
+
+  /*
+   * 取色滑杆。原生 range 在各浏览器外观差异极大，必须清掉默认外观自己画；
+   * 但清掉之后 WebKit 会连滑块一起隐藏，所以 ::-webkit-slider-thumb 必须补上，
+   * 否则滑杆会变成一条完全无法拖动的色带。
+   */
+  input[type='range'].tone-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 10px;
+    border-radius: 999px;
+    border: 1px solid rgb(var(--c-border));
+  }
+
+  input[type='range'].tone-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid rgb(0 0 0 / 0.25);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+    cursor: pointer;
+  }
+
+  input[type='range'].tone-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid rgb(0 0 0 / 0.25);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+    cursor: pointer;
   }
 
   /* 主题切换时颜色平滑过渡，避免明暗切换的突兀跳变 */

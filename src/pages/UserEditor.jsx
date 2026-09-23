@@ -94,7 +94,7 @@ export default function UserEditor() {
             <div className="md:col-span-2">
               <div className="flex items-center gap-6 mb-6">
                 <div className="w-24 h-24 bg-accent rounded-full flex items-center justify-center">
-                  <User className="w-12 h-12 text-white" />
+                  <User className="w-12 h-12 text-accent-fg" />
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{username || '新用户'}</h3>

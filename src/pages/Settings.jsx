@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Settings as SettingsIcon, Globe, Palette, Shield, Bell, Mail, Database,
   Layout, Type, Search, Eye, Lock, FileText, User, Server, Code,
@@ -11,6 +12,7 @@ import { useSiteSettings } from '../state/SiteSettingsContext';
 import { useData } from '../contexts/DataContext';
 import { smtpAPI, notificationsAPI } from '../services/api';
 import { filterSettings } from '../utils/allowedSettings';
+import { ADMIN_PATHS } from '../routes/paths';
 import Modal, { Toast } from '../components/Modal';
 import { useModal, useToast } from '../hooks/useModal';
 
@@ -51,33 +53,12 @@ const settingCategories = {
       { value: 'ja-JP', label: '日本語' },
     ]},
   ],
-  appearance: [
-    { key: 'theme', label: '主题', type: 'select', options: [
-      { value: 'default', label: '默认主题' },
-      { value: 'dark', label: '深色主题' },
-      { value: 'light', label: '浅色主题' },
-      { value: 'ocean', label: '海洋蓝' },
-      { value: 'forest', label: '森林绿' },
-    ]},
-    { key: 'primaryColor', label: '主色调', type: 'color', defaultValue: '#3b82f6' },
-    { key: 'secondaryColor', label: '次要色', type: 'color', defaultValue: '#8b5cf6' },
-    { key: 'accentColor', label: '强调色', type: 'color', defaultValue: '#ec4899' },
-    { key: 'fontFamily', label: '字体', type: 'select', options: [
-      { value: 'system', label: '系统默认' },
-      { value: 'serif', label: '宋体/Serif' },
-      { value: 'sans-serif', label: '黑体/Sans-serif' },
-    ]},
-    { key: 'fontSize', label: '字体大小', type: 'range', min: 12, max: 24, defaultValue: 16 },
-    { key: 'layout', label: '布局', type: 'select', options: [
-      { value: 'wide', label: '宽屏' },
-      { value: 'boxed', label: '盒装' },
-      { value: 'full', label: '全宽' },
-    ]},
-    { key: 'sidebarPosition', label: '侧边栏位置', type: 'select', options: [
-      { value: 'left', label: '左侧' },
-      { value: 'right', label: '右侧' },
-    ]},
-  ],
+  // 外观分类整体移到了独立的「主题定制」页。
+  //
+  // 这里原来有 8 个字段：主题 / 主色调 / 次要色 / 强调色 / 字体 / 字体大小 /
+  // 布局 / 侧边栏位置。其中 7 个没有任何代码读取过 —— 改完点保存不会发生任何事；
+  // 唯一生效的 primaryColor 又与主题页的强调色重复，两处都能改必然互相打架。
+  // 现在统一由主题页负责，这里只留一个跳转入口。
   content: [
     { key: 'postsPerPage', label: '每页文章数', type: 'number', min: 5, max: 100, defaultValue: 10 },
     { key: 'excerptLength', label: '摘要长度', type: 'number', min: 50, max: 500, defaultValue: 150 },
@@ -596,6 +577,26 @@ export default function Settings() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {activeTab === 'appearance' && (
+              <div className="flex items-start gap-3 py-2">
+                <Palette className="w-5 h-5 text-muted mt-0.5 shrink-0" />
+                <div className="min-w-0">
+                  <h3 className="text-sm font-medium text-fg">主题与外观在独立页面里调整</h3>
+                  <p className="text-sm text-muted mt-1">
+                    预设主题、中性色系、强调色、圆角与字体统一在「主题定制」中设置，
+                    带明暗双预览，保存后全站立即生效。
+                  </p>
+                  <Link
+                    to={ADMIN_PATHS.themes}
+                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:opacity-80"
+                  >
+                    前往主题定制
+                    <ExternalLink className="w-4 h-4" />
+                  </Link>
+                </div>
               </div>
             )}
 

@@ -211,7 +211,7 @@ export default function PublicPostDetail() {
   const getAvatar = (author) => {
     const initial = (author || '').charAt(0).toUpperCase() || '?';
     return (
-      <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center text-white font-medium">
+      <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center text-accent-fg font-medium">
         {initial}
       </div>
     );

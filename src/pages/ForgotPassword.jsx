@@ -144,7 +144,7 @@ export default function ForgotPassword() {
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white text-2xl font-bold">H</span>
+            <span className="text-accent-fg text-2xl font-bold">H</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">HappyHome</h1>
           <p className="text-gray-500 mt-1">密码重置</p>

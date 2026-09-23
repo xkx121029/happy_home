@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useCallback, useMemo } from 'react';
 import { useResource } from '../hooks/useResource';
 import { settingsAPI, publicSettingsAPI } from '../services/api';
+import { globalThemeCss, resolveTheme } from '../theme/apply';
 import { useAuth } from './AuthContext';
 
 /**
@@ -47,19 +48,26 @@ export function SiteSettingsProvider({ children }) {
     }
   }, [settings?.siteName]);
 
-  // 主题色写进 CSS 变量，实现设置页改色即时生效
+  // 主题（中性色系 / 强调色 / 圆角 / 字体）写进一份动态样式表。
+  //
+  // 这里刻意不用 documentElement.style.setProperty：内联样式优先级高于样式表，
+  // 一旦把亮色的 --c-accent 写成内联属性，tokens.css 里 html[data-theme='dark']
+  // 那一整块暗色覆盖就永久失效 —— 切到暗色时强调色不会跟着变。
+  // 生成 :root 与暗色两条规则交给层叠决定，明暗切换才能继续正常工作。
   useEffect(() => {
-    const hex = settings?.primaryColor;
-    if (!hex || typeof hex !== 'string') return;
-    const match = hex.trim().match(/^#?([0-9a-f]{6})$/i);
-    if (!match) return;
+    const STYLE_ID = 'happyhome-theme';
+    let element = document.getElementById(STYLE_ID);
 
-    const value = match[1];
-    const r = parseInt(value.slice(0, 2), 16);
-    const g = parseInt(value.slice(2, 4), 16);
-    const b = parseInt(value.slice(4, 6), 16);
-    document.documentElement.style.setProperty('--c-accent', `${r} ${g} ${b}`);
-  }, [settings?.primaryColor]);
+    if (!element) {
+      element = document.createElement('style');
+      element.id = STYLE_ID;
+    }
+
+    element.textContent = globalThemeCss(resolveTheme(settings));
+    // 每次都追加到 head 末尾：dev 环境下 Vite 会持续注入样式，
+    // 不移动的话我们的规则会被后插入的样式压在下面，改主题看不到效果。
+    document.head.appendChild(element);
+  }, [settings]);
 
   const value = useMemo(
     () => ({ settings: settings || {}, isLoading, error, refetch, updateSettings }),
