@@ -103,6 +103,7 @@ module.exports = function createApiKeysRoutes(deps) {
       data: {
         groups: permissions.SCOPE_GROUPS,
         defaults: permissions.READONLY_SCOPES,
+        highRisk: [...permissions.HIGH_RISK_SCOPES],
         wildcard: permissions.WILDCARD_SCOPE,
       },
     });
