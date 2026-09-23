@@ -20,8 +20,10 @@ export default function PublicHome() {
   const siteName = settings?.siteName || 'HappyHome';
   const siteDescription = settings?.siteDescription || '一个功能强大、易于使用的建站平台';
 
-  // SEO 设置
-  const seo = settings?.seo || {};
+  // SEO 设置。必须 useMemo：settings?.seo || {} 每次渲染都会产生新对象，
+  // 直接塞进 useEffect 的依赖数组会让下面那段「写 document.title」的副作用
+  // 每渲染一次就重跑一次。
+  const seo = useMemo(() => settings?.seo || {}, [settings?.seo]);
   const siteUrl = settings?.siteUrl || '';
 
   // 更新页面 SEO 标签

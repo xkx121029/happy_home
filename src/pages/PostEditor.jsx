@@ -65,7 +65,7 @@ export default function PostEditor() {
         // 完全不知道发生了什么。实际上面的 useEffect 会在 posts 加载完后重试。
       }
     }
-  }, [id, posts]);
+  }, [id, posts, categories, timeZone]);
 
   const handleAddTag = (e) => {
     if (e.key === 'Enter' && newTag.trim()) {

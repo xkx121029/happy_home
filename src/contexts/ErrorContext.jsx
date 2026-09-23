@@ -369,8 +369,10 @@ export function ErrorProvider({ children }) {
       user,
     };
     
-    // 在开发环境打印
+    // 在开发环境打印。这里刻意用 console.log：它是给开发者看的操作流水，
+    // 不是错误也不是警告，归到 console.error/warn 里反而会让控制台更难读。
     if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console -- 见上：仅 DEV 下的诊断输出
       console.log('[ActionLog]', log);
     }
     

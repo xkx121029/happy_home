@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Bell, 
   BellOff, 
@@ -44,11 +44,7 @@ export default function Notifications() {
   const [filterType, setFilterType] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    loadNotifications();
-  }, []);
-
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     setIsLoading(true);
     try {
       await getNotifications();
@@ -57,7 +53,11 @@ export default function Notifications() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getNotifications]);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
 
   const handleRefresh = () => {
     loadNotifications();

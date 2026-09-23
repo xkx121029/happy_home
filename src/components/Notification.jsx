@@ -129,6 +129,13 @@ function NotificationItem({ notification, onClose, onAction }) {
     };
   }, [type, duration]);
   
+  const handleClose = useCallback(() => {
+    setIsExiting(true);
+    closeTimeoutRef.current = setTimeout(() => {
+      onClose(id);
+    }, 300);
+  }, [id, onClose]);
+
   // 自动关闭
   useEffect(() => {
     if (type === NotificationType.LOADING || duration === 0) {
@@ -141,7 +148,7 @@ function NotificationItem({ notification, onClose, onAction }) {
     }, effectiveDuration);
     
     return () => clearTimeout(timeout);
-  }, [type, duration]);
+  }, [type, duration, handleClose]);
   
   // 清理closeTimeoutRef
   useEffect(() => {
@@ -152,13 +159,6 @@ function NotificationItem({ notification, onClose, onAction }) {
       }
     };
   }, []);
-  
-  const handleClose = useCallback(() => {
-    setIsExiting(true);
-    closeTimeoutRef.current = setTimeout(() => {
-      onClose(id);
-    }, 300);
-  }, [id, onClose]);
   
   const handleAction = useCallback((action) => {
     if (action.onClick) {
