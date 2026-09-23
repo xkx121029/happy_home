@@ -114,23 +114,11 @@ module.exports = function createNotificationsRoutes(deps) {
     }
   });
 
-  // 创建通知的辅助函数（保留原实现，当前无调用点）
-  // eslint-disable-next-line no-unused-vars -- 保留给后续模块调用，删掉会丢失实现
-  function createNotification(userId, type, title, message, link = null) {
-    try {
-      const db = getDb();
-      const id = uuidv4();
-      db.run(
-        'INSERT INTO notifications (id, user_id, type, title, message, link) VALUES (?, ?, ?, ?, ?, ?)',
-        [id, userId, type, title, message, link]
-      );
-      saveDatabase();
-      return { success: true, id };
-    } catch (error) {
-      console.error('创建通知失败:', error);
-      return { success: false, error: error.message };
-    }
-  }
+  // 这里原本有一个没人调用的 createNotification 辅助函数（lint 一直报未使用）。
+  // 它想封装的那条 INSERT 实际上在 auth / comments / public 三个模块里各写了一遍，
+  // 只是从来没被接上。与其留一份永远不执行的副本，不如删掉 ——
+  // 真要收敛的话，应该把三个模块的写入统一到一个被它们共同依赖的地方，
+  // 而不是把实现挂在 notifications 的路由模块里。
 
   // 创建示例通知（用于演示）
   router.post('/api/notifications/demo', authenticateToken, (req, res) => {
