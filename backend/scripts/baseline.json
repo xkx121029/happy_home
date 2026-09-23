@@ -1,6 +1,6 @@
 {
-  "savedAt": "2026-09-23T13:15:44.885Z",
-  "apiBase": "http://localhost:3002/api",
+  "savedAt": "2026-09-23T15:17:50.501Z",
+  "apiBase": "http://localhost:3002/api/v1",
   "note": "shape 字段是契约形状（叶子值只留类型）；message 仅供参考不参与 diff",
   "results": [
     {
@@ -61,6 +61,20 @@
     },
     {
       "name": "GET  /posts",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": "array",
+        "page": "number",
+        "perPage": "number",
+        "success": "bool:true",
+        "total": "number",
+        "totalPages": "number"
+      }
+    },
+    {
+      "name": "GET  /posts?all=1",
       "status": 200,
       "expect": 200,
       "shape": {
@@ -174,6 +188,9 @@
           "siteDescription": "string",
           "siteName": "string",
           "siteUrl": "string",
+          "smtpHost": "string",
+          "smtpPass": "string",
+          "smtpUser": "string",
           "textColor": "string",
           "theme": {
             "accent": "string",
@@ -223,7 +240,7 @@
       }
     },
     {
-      "name": "GET  /public/posts",
+      "name": "GET  /posts?page=1 (匿名)",
       "status": 200,
       "expect": 200,
       "shape": {
@@ -237,7 +254,21 @@
       }
     },
     {
-      "name": "GET  /public/pages",
+      "name": "GET  /posts?search=的 (匿名)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": "array",
+        "page": "number",
+        "perPage": "number",
+        "success": "bool:true",
+        "total": "number",
+        "totalPages": "number"
+      }
+    },
+    {
+      "name": "GET  /pages (匿名)",
       "status": 200,
       "expect": 200,
       "shape": {
@@ -247,7 +278,27 @@
       }
     },
     {
-      "name": "GET  /public/settings",
+      "name": "GET  /categories?usedOnly=1 (匿名)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": "array",
+        "success": "bool:true"
+      }
+    },
+    {
+      "name": "GET  /posts?all=1 (匿名应 403)",
+      "status": 403,
+      "expect": 403,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "匿名调用不能使用全量模式"
+    },
+    {
+      "name": "GET  /settings (匿名只给白名单)",
       "status": 200,
       "expect": 200,
       "shape": {
@@ -270,43 +321,6 @@
           "timezone": "string"
         },
         "success": "bool:true"
-      }
-    },
-    {
-      "name": "GET  /public/categories",
-      "status": 200,
-      "expect": 200,
-      "shape": {
-        "data": "array",
-        "success": "bool:true"
-      }
-    },
-    {
-      "name": "GET  /public/posts?page=1",
-      "status": 200,
-      "expect": 200,
-      "shape": {
-        "count": "number",
-        "data": "array",
-        "page": "number",
-        "perPage": "number",
-        "success": "bool:true",
-        "total": "number",
-        "totalPages": "number"
-      }
-    },
-    {
-      "name": "GET  /public/posts?search=的",
-      "status": 200,
-      "expect": 200,
-      "shape": {
-        "count": "number",
-        "data": "array",
-        "page": "number",
-        "perPage": "number",
-        "success": "bool:true",
-        "total": "number",
-        "totalPages": "number"
       }
     },
     {
@@ -818,11 +832,53 @@
       "shape": {
         "count": "number",
         "data": "array",
+        "page": "number",
+        "perPage": "number",
+        "success": "bool:true",
+        "total": "number",
+        "totalPages": "number"
+      }
+    },
+    {
+      "name": "GET  /settings (editor 不得含 SMTP 凭据)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "accentColor": "string",
+          "adminEmail": "string",
+          "backgroundColor": "string",
+          "commentsModeration": "bool:true",
+          "customCSS": "string",
+          "customJS": "string",
+          "enableDarkMode": "bool:false",
+          "fontFamily": "string",
+          "footerCode": "string",
+          "headCode": "string",
+          "language": "string",
+          "layout": "string",
+          "postsPerPage": "number",
+          "primaryColor": "string",
+          "registrationEnabled": "bool:true",
+          "secondaryColor": "string",
+          "siteDescription": "string",
+          "siteName": "string",
+          "siteUrl": "string",
+          "textColor": "string",
+          "theme": {
+            "accent": "string",
+            "font": "string",
+            "neutral": "string",
+            "presetId": "string",
+            "radius": "string"
+          },
+          "timezone": "string"
+        },
         "success": "bool:true"
       }
     },
     {
-      "name": "POST /public/comments (匿名)",
+      "name": "POST /comments (匿名)",
       "status": 201,
       "expect": 201,
       "shape": {
@@ -843,7 +899,7 @@
       "message": "评论已提交，审核通过后显示"
     },
     {
-      "name": "POST /public/comments 邮箱非法",
+      "name": "POST /comments 邮箱非法",
       "status": 400,
       "expect": 400,
       "shape": {
@@ -853,7 +909,7 @@
       "message": "邮箱格式不正确"
     },
     {
-      "name": "GET  /public/posts/:id/comments",
+      "name": "GET  /posts/:id/comments",
       "status": 200,
       "expect": 200,
       "shape": {
@@ -863,7 +919,7 @@
       }
     },
     {
-      "name": "GET  /public/comments/recent",
+      "name": "GET  /comments/recent",
       "status": 200,
       "expect": 200,
       "shape": {
