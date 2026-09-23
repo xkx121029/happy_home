@@ -5,6 +5,7 @@ import Modal, { Toast } from '../components/Modal';
 import { useModal, useToast } from '../hooks/useModal';
 import { useSiteSettings } from '../state/SiteSettingsContext';
 import { useData } from '../contexts/DataContext';
+import { formatDateTime } from '../lib/format';
 
 export default function Posts() {
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
@@ -209,7 +210,7 @@ export default function Posts() {
                       {post.status === 'future' && post.publishDate && (
                         <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {new Date(post.publishDate).toLocaleString()}
+                          {formatDateTime(post.publishDate, settings?.timezone)}
                         </span>
                       )}
                     </div>

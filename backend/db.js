@@ -6,6 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const createSettings = require('./src/db/settings');
 const repo = require('./src/db/repo');
+const { wallTimeToUtc } = require('./src/lib/datetime');
 
 const DB_PATH = path.join(__dirname, 'happyhome.db');
 
@@ -465,6 +466,45 @@ const MIGRATIONS = [
       database.run(
         "UPDATE settings SET value = 'true' WHERE key = 'registrationEnabled' AND value = 'false'"
       );
+    },
+  },
+  {
+    id: 4,
+    name: 'publish_date 统一为 UTC ISO（修掉定时发布提前 8 小时触发）',
+    up(database) {
+      // 前端提交的是没有时区的墙上时间（2026-09-23T10:00），而 SQLite 的
+      // datetime() 把它当 UTC 解析、datetime('now') 也是 UTC —— 于是
+      // Asia/Shanghai 下定时发布提前 8 小时触发。这里把历史值按站点时区
+      // 换算成 UTC，之后写入路径也统一用 UTC，读的时候不必再做时区运算。
+      let timeZone = 'Asia/Shanghai';
+      const settingsRows = database.exec("SELECT value FROM settings WHERE key = 'timezone'");
+      if (settingsRows.length && settingsRows[0].values.length) {
+        const stored = settingsRows[0].values[0][0];
+        try {
+          timeZone = JSON.parse(stored);
+        } catch {
+          timeZone = stored;
+        }
+      }
+
+      const result = database.exec(
+        'SELECT id, publish_date FROM posts WHERE publish_date IS NOT NULL'
+      );
+      if (!result.length) return;
+
+      const idIndex = result[0].columns.indexOf('id');
+      const dateIndex = result[0].columns.indexOf('publish_date');
+
+      for (const row of result[0].values) {
+        const id = row[idIndex];
+        const raw = row[dateIndex];
+        const converted = wallTimeToUtc(raw, timeZone);
+        // 已经带时区的值（冒烟测试写的 ISO Z 串）会被规整成同一格式，
+        // 没有时区的才真正发生偏移
+        if (converted && converted !== raw) {
+          database.run('UPDATE posts SET publish_date = ? WHERE id = ?', [converted, id]);
+        }
+      }
     },
   },
 ];

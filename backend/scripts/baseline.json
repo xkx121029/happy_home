@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-09-23T13:02:52.958Z",
+  "savedAt": "2026-09-23T13:15:44.885Z",
   "apiBase": "http://localhost:3002/api",
   "note": "shape 字段是契约形状（叶子值只留类型）；message 仅供参考不参与 diff",
   "results": [
@@ -273,6 +273,55 @@
       }
     },
     {
+      "name": "GET  /public/categories",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": "array",
+        "success": "bool:true"
+      }
+    },
+    {
+      "name": "GET  /public/posts?page=1",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": "array",
+        "page": "number",
+        "perPage": "number",
+        "success": "bool:true",
+        "total": "number",
+        "totalPages": "number"
+      }
+    },
+    {
+      "name": "GET  /public/posts?search=的",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": "array",
+        "page": "number",
+        "perPage": "number",
+        "success": "bool:true",
+        "total": "number",
+        "totalPages": "number"
+      }
+    },
+    {
+      "name": "GET  /feed.xml",
+      "status": 200,
+      "expect": 200,
+      "shape": {}
+    },
+    {
+      "name": "GET  /sitemap.xml",
+      "status": 200,
+      "expect": 200,
+      "shape": {}
+    },
+    {
       "name": "POST /posts",
       "status": 201,
       "expect": 201,
@@ -447,6 +496,177 @@
         "success": "bool:true"
       },
       "message": "媒体文件上传成功"
+    },
+    {
+      "name": "POST /posts (修订用)",
+      "status": 201,
+      "expect": 201,
+      "shape": {
+        "data": {
+          "author": "string",
+          "category": "string",
+          "content": "string",
+          "created_at": "string",
+          "excerpt": "string",
+          "id": "string",
+          "publish_date": "null",
+          "status": "string",
+          "sticky": "number",
+          "title": "string",
+          "updated_at": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "文章创建成功"
+    },
+    {
+      "name": "GET  /posts/:id/revisions (应为空)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": "array",
+        "success": "bool:true"
+      }
+    },
+    {
+      "name": "PUT  /posts/:id 只改状态（不应留档）",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "author": "string",
+          "category": "string",
+          "content": "string",
+          "created_at": "string",
+          "excerpt": "string",
+          "id": "string",
+          "publish_date": "null",
+          "status": "string",
+          "sticky": "number",
+          "title": "string",
+          "updated_at": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "文章更新成功"
+    },
+    {
+      "name": "GET  /posts/:id/revisions (仍应为空)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": "array",
+        "success": "bool:true"
+      }
+    },
+    {
+      "name": "PUT  /posts/:id 改正文（应留档）",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "author": "string",
+          "category": "string",
+          "content": "string",
+          "created_at": "string",
+          "excerpt": "string",
+          "id": "string",
+          "publish_date": "null",
+          "status": "string",
+          "sticky": "number",
+          "title": "string",
+          "updated_at": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "文章更新成功"
+    },
+    {
+      "name": "GET  /posts/:id/revisions",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": "array",
+        "success": "bool:true"
+      }
+    },
+    {
+      "name": "GET  /revisions/:id",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "current": {
+          "author": "string",
+          "category": "string",
+          "content": "string",
+          "created_at": "string",
+          "excerpt": "string",
+          "id": "string",
+          "publish_date": "null",
+          "status": "string",
+          "sticky": "number",
+          "title": "string",
+          "updated_at": "string"
+        },
+        "data": {
+          "author": "string",
+          "content": "string",
+          "created_at": "string",
+          "excerpt": "string",
+          "id": "string",
+          "post_id": "string",
+          "title": "string"
+        },
+        "success": "bool:true"
+      }
+    },
+    {
+      "name": "POST /revisions/:id/restore",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "author": "string",
+          "category": "string",
+          "content": "string",
+          "created_at": "string",
+          "excerpt": "string",
+          "id": "string",
+          "publish_date": "null",
+          "status": "string",
+          "sticky": "number",
+          "title": "string",
+          "updated_at": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "已回滚到该版本"
+    },
+    {
+      "name": "DELETE /revisions/:id",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "author": "string",
+          "content": "string",
+          "created_at": "string",
+          "excerpt": "string",
+          "id": "string",
+          "post_id": "string",
+          "title": "string"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "修订版本已删除"
     },
     {
       "name": "POST /menus",

@@ -1,10 +1,27 @@
 const express = require('express');
+const { wallTimeToUtc } = require('../../lib/datetime');
+const { snapshotRevision, hasContentChange } = require('../../lib/revisionSnapshot');
 
 // 文章（posts）CRUD。注意 PUT 的 COALESCE 部分更新语义与 publish_date 的单独特判，
 // 这些都是冒烟测试守住的回归点，搬迁时保持逻辑逐字不变。
 module.exports = function createPostsRoutes(deps) {
-  const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, authenticateToken, ok, fail } = deps;
+  const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, dbHelpers, authenticateToken, ok, fail } = deps;
   const router = express.Router();
+
+  /**
+   * 把 publishDate 规整成 UTC ISO。
+   *
+   * 前端 `datetime-local` 提交的是没有时区的墙上时间，SQLite 会把它当 UTC 解析，
+   * 于是定时发布在 Asia/Shanghai 下提前 8 小时触发。这里在写入时就换算成 UTC，
+   * 此后「是否到点」的比较全是同一基准，不需要在读的时候再做时区运算。
+   */
+  function normalizePublishDate(value) {
+    if (!value) return value;
+    const timeZone = dbHelpers.getSettings().timezone || 'Asia/Shanghai';
+    const converted = wallTimeToUtc(value, timeZone);
+    // 解析不了就原样存下去（保持旧行为），总比丢数据好
+    return converted || value;
+  }
 
   router.get('/api/posts', authenticateToken, (req, res) => {
     try {
@@ -70,7 +87,7 @@ module.exports = function createPostsRoutes(deps) {
 
       db.run(
         'INSERT INTO posts (id, title, content, excerpt, category, status, author, sticky, publish_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [newPostId, title, content, postExcerpt, category || '未分类', status || 'draft', req.user.username, sticky ? 1 : 0, publishDate || null]
+        [newPostId, title, content, postExcerpt, category || '未分类', status || 'draft', req.user.username, sticky ? 1 : 0, normalizePublishDate(publishDate) || null]
       );
       saveDatabase();
 
@@ -92,9 +109,21 @@ module.exports = function createPostsRoutes(deps) {
         return fail(res, 404, '文章不存在');
       }
 
+      // 留档要在覆盖之前：记的是「改之前长什么样」。
+      // 只在正文真的变了时才记 —— 每次保存都存的话，改一个错别字和改一整段
+      // 会产生同样多的记录，历史很快就没用了。
+      if (hasContentChange(post, { title, content, excerpt })) {
+        snapshotRevision({
+          db,
+          post,
+          settings: dbHelpers.getSettings(),
+          id: uuidv4(),
+        });
+      }
+
       db.run(
         'UPDATE posts SET title = COALESCE(?, title), content = COALESCE(?, content), excerpt = COALESCE(?, excerpt), category = COALESCE(?, category), status = COALESCE(?, status), sticky = COALESCE(?, sticky), publish_date = COALESCE(?, publish_date), updated_at = datetime("now") WHERE id = ?',
-        bindable([title, content, excerpt, category, status, sticky === undefined ? undefined : (sticky ? 1 : 0), publishDate || undefined, req.params.id])
+        bindable([title, content, excerpt, category, status, sticky === undefined ? undefined : (sticky ? 1 : 0), normalizePublishDate(publishDate) || undefined, req.params.id])
       );
       // COALESCE 的语义是「没传就保持原值」，因此无法把列改回 NULL。
       // 「取消定时发布」需要真的清空 publish_date，这里单独处理。

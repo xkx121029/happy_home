@@ -6,11 +6,15 @@ import ContentPreview from '../components/ContentPreview';
 import Modal, { Toast } from '../components/Modal';
 import { useModal, useToast } from '../hooks/useModal';
 import { useData } from '../contexts/DataContext';
+import { useSiteSettings } from '../state/SiteSettingsContext';
 import { sanitizeHtml } from '../lib/sanitize';
+import { toDateTimeInputValue } from '../lib/format';
 
 export default function PostEditor() {
   const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
+  const { settings } = useSiteSettings();
+  const timeZone = settings?.timezone;
   const { id } = useParams();
   // 原来保存走 props.onSave 回调，现在页面自取 Context 的语义化方法
   const { posts, getPost, categories, createPost, updatePost } = useData();
@@ -51,7 +55,8 @@ export default function PostEditor() {
         setIsSticky(fetchedPost.sticky || false);
         if (fetchedPost.status === 'future') {
           setPublishType('scheduled');
-          setPublishDate(fetchedPost.publishDate || '');
+          // 库里存的是 UTC，输入框要的是站点时区的墙上时间
+          setPublishDate(toDateTimeInputValue(fetchedPost.publishDate, timeZone));
         }
       } else {
         // 本地列表里找不到这篇文章：可能是文章还没加载完，或者链接指向了不存在的 id。

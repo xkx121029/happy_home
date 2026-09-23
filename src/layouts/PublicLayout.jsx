@@ -39,6 +39,16 @@ export default function PublicLayout() {
     injectHtml(document.body, 'footer-code', settings?.footerCode);
   }, [settings?.footerCode]);
 
+  // 订阅自动发现：订阅器靠这个 <link> 找到 feed，不必让用户手动粘贴地址。
+  // 用相对路径，免得 siteUrl 没配好时指向错误的域名。
+  useEffect(() => {
+    injectHtml(
+      document.head,
+      'feed-discovery',
+      `<link rel="alternate" type="application/rss+xml" title="${(settings?.siteName || 'HappyHome').replace(/"/g, '&quot;')}" href="/feed.xml">`
+    );
+  }, [settings?.siteName]);
+
   // 统计脚本只在前台注入 —— 后台不需要统计自己
   const analytics = settings?.seo;
   useEffect(() => {

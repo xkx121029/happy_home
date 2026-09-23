@@ -104,6 +104,17 @@ export const postsAPI = {
   getPublicComments: (id) => apiRequest(`/public/posts/${id}/comments`),
 };
 
+// ----------------------------------------------------------------- Revisions
+
+export const revisionsAPI = {
+  // 列表不含正文，只用来渲染「什么时候谁改了什么」
+  listForPost: (postId) => apiRequest(`/posts/${postId}/revisions`),
+  // 详情会一并带上当前版本，对比视图不必再发一次请求
+  getById: (id) => apiRequest(`/revisions/${id}`),
+  restore: (id) => apiRequest(`/revisions/${id}/restore`, { method: 'POST' }),
+  delete: (id) => apiRequest(`/revisions/${id}`, { method: 'DELETE' }),
+};
+
 // --------------------------------------------------------------------- Pages
 
 export const pagesAPI = {

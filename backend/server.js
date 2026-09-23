@@ -51,6 +51,10 @@ const { authenticateToken, optionalAuth, requireRole } = createAuth({ getDb, get
 // 首次渲染时的 posts 列表，加上 posts 表当时根本没有 publish_date 列，
 // 所以「定时发布」从头到尾没有生效过一次。移到后端用一条 SQL 完成，
 // 既不依赖有没有人打开管理页面，也不需要在前端保存一份会过期的副本。
+//
+// 时区：publish_date 一律存 UTC ISO（写入时由 src/lib/datetime.js 按站点时区
+// 换算），所以这里直接与 datetime('now') 比较即可。原来存的是没有时区的墙上
+// 时间，被当成 UTC 解析，Asia/Shanghai 下会提前 8 小时触发。
 function publishDuePosts() {
   try {
     const db = getDb();
@@ -112,6 +116,9 @@ const deps = {
 app.use(require('./src/modules/health/routes')(deps));
 app.use(require('./src/modules/auth/routes')(deps));
 app.use(require('./src/modules/posts/routes')(deps));
+// 修订端点必须挂在 posts 之后：/api/posts/:id/revisions 与 /api/posts/:id 前缀相同，
+// 顺序反了会被前面的路由先匹配走。
+app.use(require('./src/modules/revisions/routes')(deps));
 app.use(require('./src/modules/pages/routes')(deps));
 app.use(require('./src/modules/categories/routes')(deps));
 app.use(require('./src/modules/tags/routes')(deps));
@@ -126,6 +133,8 @@ app.use(require('./src/modules/public/routes')(deps));
 app.use(require('./src/modules/analytics/routes')(deps));
 app.use(require('./src/modules/smtp/routes')(deps));
 app.use(require('./src/modules/backups/routes')(deps));
+// 订阅与索引挂在根路径（/feed.xml、/sitemap.xml），是给爬虫和订阅器用的公开约定地址
+app.use(require('./src/modules/feed/routes')(deps));
 
 // 兜底：未匹配的路由返回统一 JSON 404，异常统一走错误响应
 app.use(notFound);

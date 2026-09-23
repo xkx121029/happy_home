@@ -40,6 +40,9 @@ function readEnvFile() {
 
 const fileEnv = readEnvFile();
 const BASE = process.env.API_BASE || 'http://localhost:3002/api';
+// 站点根路径。feed.xml 与 sitemap.xml 挂在 / 而不是 /api 下，
+// 用绝对地址调用时走这里。
+const ROOT = BASE.replace(/\/api\/?$/, '');
 const ADMIN_USER = process.env.ADMIN_USER || fileEnv.SMOKE_ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || fileEnv.SMOKE_ADMIN_PASS || 'admin123';
 
@@ -53,8 +56,8 @@ const cleanup = [];
 
 // ---------------------------------------------------------------- http 封装
 
-async function call(method, path, { body, token, headers = {} } = {}) {
-  const url = `${BASE}${path}`;
+async function call(method, path, { body, token, headers = {}, absolute = false } = {}) {
+  const url = `${absolute ? ROOT : BASE}${path}`;
   const opts = { method, headers: { ...headers } };
   if (body !== undefined) {
     opts.headers['Content-Type'] = 'application/json';
@@ -121,6 +124,20 @@ async function record(name, fn) {
     body: VERBOSE ? res.body : undefined,
   });
   return res;
+}
+
+/**
+ * 给刚记录的那条用例追加一个断言。
+ *
+ * record 只能校验 HTTP 状态码，而有些契约不在状态码里 ——
+ * 比如「只改状态不应该产生修订」「feed 响应里必须有根节点」。
+ * 这类断言靠这里补，失败时会把原因写进 message。
+ */
+function assertLast(condition, detail) {
+  if (condition) return;
+  const last = results[results.length - 1];
+  last.pass = false;
+  last.message = detail;
 }
 
 function printResults() {
@@ -240,9 +257,30 @@ async function main() {
     ['GET  /public/posts', '/public/posts'],
     ['GET  /public/pages', '/public/pages'],
     ['GET  /public/settings', '/public/settings'],
+    ['GET  /public/categories', '/public/categories'],
+    ['GET  /public/posts?page=1', '/public/posts?page=1'],
+    ['GET  /public/posts?search=的', '/public/posts?search=%E7%9A%84'],
   ];
   for (const [name, path] of publics) {
     await record(name, async () => ({ res: await call('GET', path), expect: 200 }));
+  }
+
+  // 4b. 站点根路径下的订阅与索引（不挂在 /api 下，必须走绝对地址）。
+  //     返回的是 XML，会被 call 归成 __nonJson；这里额外断言内容里
+  //     确实带上了根节点，否则「返回 200 但内容是空的」也会被判通过。
+  const feeds = [
+    ['GET  /feed.xml', '/feed.xml', '<rss version="2.0"'],
+    ['GET  /sitemap.xml', '/sitemap.xml', '<urlset'],
+  ];
+  for (const [name, path, marker] of feeds) {
+    const res = await record(name, async () => ({
+      res: await call('GET', path, { absolute: true }),
+      expect: 200,
+    }));
+    if (!String(res.body?.__nonJson || '').includes(marker)) {
+      results[results.length - 1].pass = false;
+      results[results.length - 1].message = `响应缺少根节点 ${marker}`;
+    }
   }
 
   // 5. 写路径：建 → 部分改 → 删。建完登记清理。
@@ -296,6 +334,81 @@ async function main() {
         res: await call('PUT', `${r.path}/${id}`, { token, body: r.patch }),
         expect: 200,
       }));
+    }
+  }
+
+  // 5b. 文章修订：保存时自动留档 → 列表 → 详情 → 回滚 → 删除。
+  //     在本次改造之前 revisions 表建了却没有任何代码写入过，
+  //     所以这里同时守住「该留档时留档」和「不该留档时别留」两个方向。
+  {
+    const created = await record('POST /posts (修订用)', async () => ({
+      res: await call('POST', '/posts', {
+        token,
+        body: { title: `${MARK} 修订`, content: '<p>第一版</p>', category: '未分类', status: 'draft' },
+      }),
+      expect: 201,
+    }));
+    const revisionPostId = created.body?.data?.id;
+
+    if (revisionPostId) {
+      cleanup.push(['delete', `/posts/${revisionPostId}`, token]);
+
+      const empty = await record('GET  /posts/:id/revisions (应为空)', async () => ({
+        res: await call('GET', `/posts/${revisionPostId}/revisions`, { token }),
+        expect: 200,
+      }));
+      assertLast(empty.body?.count === 0, `新建文章的修订数应为 0，实际 ${empty.body?.count}`);
+
+      // 只改状态不算内容变更，不该产生修订
+      await record('PUT  /posts/:id 只改状态（不应留档）', async () => ({
+        res: await call('PUT', `/posts/${revisionPostId}`, { token, body: { sticky: true } }),
+        expect: 200,
+      }));
+
+      const stillEmpty = await record('GET  /posts/:id/revisions (仍应为空)', async () => ({
+        res: await call('GET', `/posts/${revisionPostId}/revisions`, { token }),
+        expect: 200,
+      }));
+      assertLast(
+        stillEmpty.body?.count === 0,
+        `只改元信息不应留档，实际产生了 ${stillEmpty.body?.count} 条`
+      );
+
+      // 改正文应产生一条快照
+      await record('PUT  /posts/:id 改正文（应留档）', async () => ({
+        res: await call('PUT', `/posts/${revisionPostId}`, {
+          token,
+          body: { content: '<p>第二版</p>' },
+        }),
+        expect: 200,
+      }));
+
+      const list = await record('GET  /posts/:id/revisions', async () => ({
+        res: await call('GET', `/posts/${revisionPostId}/revisions`, { token }),
+        expect: 200,
+      }));
+      assertLast(list.body?.count === 1, `改一次正文应留 1 条修订，实际 ${list.body?.count}`);
+      assertLast(
+        list.body?.data?.[0]?.content === undefined,
+        '列表不应返回正文，否则响应体会随版本数膨胀'
+      );
+
+      const revisionId = list.body?.data?.[0]?.id;
+
+      if (revisionId) {
+        await record('GET  /revisions/:id', async () => ({
+          res: await call('GET', `/revisions/${revisionId}`, { token }),
+          expect: 200,
+        }));
+        await record('POST /revisions/:id/restore', async () => ({
+          res: await call('POST', `/revisions/${revisionId}/restore`, { token }),
+          expect: 200,
+        }));
+        await record('DELETE /revisions/:id', async () => ({
+          res: await call('DELETE', `/revisions/${revisionId}`, { token }),
+          expect: 200,
+        }));
+      }
     }
   }
 

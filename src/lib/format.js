@@ -20,6 +20,49 @@ export function excerptFrom(post, maxLength = 150) {
 }
 
 /**
+ * 把 UTC 时间按站点时区换算成 `YYYY-MM-DDTHH:mm:ss`。
+ *
+ * 用 sv-SE 区域是因为它的日期格式天然就是 ISO 形状（`YYYY-MM-DD HH:mm:ss`），
+ * 不必手工拼 Intl 的 parts。时区传空则回退到浏览器本地时区。
+ */
+export function toZonedIso(value, timeZone) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const formatter = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: timeZone || undefined,
+    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+  return formatter.format(date).replace(' ', 'T');
+}
+
+/**
+ * 转成 `<input type="datetime-local">` 需要的墙上时间。
+ *
+ * 不做这层换算的话，编辑一篇定时文章时输入框里显示的是 UTC 时刻，
+ * 比站点时间早 8 小时 —— 用户只要点一下保存，发布时间就被悄悄改了。
+ */
+export function toDateTimeInputValue(value, timeZone) {
+  return toZonedIso(value, timeZone).slice(0, 16);
+}
+
+/** 按站点时区格式化日期时间，用于列表与详情展示。 */
+export function formatDateTime(value, timeZone) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('zh-CN', {
+    timeZone: timeZone || undefined,
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
+}
+
+/**
  * 字节数转可读字符串。
  * @param {number} bytes
  * @param {{ base?: number, decimals?: number, zeroLabel?: string }} [options]
