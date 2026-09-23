@@ -8,7 +8,7 @@
  *     队列永远不会被真正消费
  * 现在能力与实现都收敛在这里，services/api.js 只负责声明路径与方法。
  */
-import { API_BASE_URL, REQUEST_TIMEOUT } from './env';
+import { API_BASE_URL, API_UNVERSIONED_URL, REQUEST_TIMEOUT } from './env';
 import { STORAGE_KEYS, readRaw, remove } from './storage';
 
 /**
@@ -66,7 +66,10 @@ const RETRY_DELAYS = [300, 900];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function rawRequest(endpoint, { method = 'GET', body, headers = {}, auth = true, signal } = {}) {
+async function rawRequest(
+  endpoint,
+  { method = 'GET', body, headers = {}, auth = true, signal, unversioned = false } = {}
+) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
@@ -86,8 +89,11 @@ async function rawRequest(endpoint, { method = 'GET', body, headers = {}, auth =
     }
   }
 
+  // 存活探针这类端点刻意不版本化，走不带版本号的基址
+  const base = unversioned ? API_UNVERSIONED_URL : API_BASE_URL;
+
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const response = await fetch(`${base}${endpoint}`, {
       method,
       headers: finalHeaders,
       body: body === undefined ? undefined : JSON.stringify(body),

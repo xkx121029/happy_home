@@ -238,7 +238,8 @@ export const publicAPI = {
 // --------------------------------------------------------------------- Misc
 
 export const healthAPI = {
-  check: () => apiRequest('/health', { auth: false }),
+  // 存活探针刻意不版本化，走不带版本号的基址
+  check: () => apiRequest('/health', { auth: false, unversioned: true }),
 };
 
 export const smtpAPI = {
