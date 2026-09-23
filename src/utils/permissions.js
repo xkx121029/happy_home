@@ -161,7 +161,7 @@ export function hasPermission(user, permission) {
 
   // 解析权限字符串
   const [resource, action] = permission.split('.');
-  const [targetAction, owner] = action.split(':');
+  const [, owner] = action.split(':');
 
   // 检查通配符权限
   if (rolePerms.includes(`${resource}.*`)) {

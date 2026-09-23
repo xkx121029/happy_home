@@ -25,9 +25,6 @@ export default function Categories() {
            (cat.description && cat.description.toLowerCase().includes(searchQuery.toLowerCase()));
   });
 
-  // 构建层级结构
-  const rootCategories = filteredCategories.filter(cat => cat.parent === null);
-  
   const getChildren = (parentId) => {
     return filteredCategories.filter(cat => cat.parent === parentId);
   };
@@ -148,8 +145,6 @@ export default function Categories() {
   };
 
   const renderCategoryRow = (category, level = 0) => {
-    const children = getChildren(category.id);
-    
     return (
       <tr key={category.id} className="hover:bg-surface-2">
         <td className="px-4 py-4">

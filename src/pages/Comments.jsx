@@ -7,7 +7,7 @@ import Modal from '../components/Modal';
 
 export default function Comments() {
   const { comments, posts, deleteComment, updateCommentStatus, createComment } = useData();
-  const { warning, success, error } = useNotification();
+  const { warning } = useNotification();
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedComments, setSelectedComments] = useState([]);

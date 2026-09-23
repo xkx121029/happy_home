@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Edit, Trash2, Shield, Users, Check, X, ChevronRight } from 'lucide-react';
-import { roles as defaultRoles, rolePermissions, permissions as permConfig, getGroupedPermissions, getRolePermissionList } from '../utils/permissions';
+import { roles as defaultRoles, getGroupedPermissions, getRolePermissionList } from '../utils/permissions';
 
 export default function Roles() {
   const [roles, setRoles] = useState(defaultRoles);

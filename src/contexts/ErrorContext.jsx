@@ -429,7 +429,7 @@ export function useError() {
 /**
  * HOC - 为组件提供错误处理能力
  */
-export function withErrorHandler(Component, errorHandler) {
+export function withErrorHandler(Component, _errorHandler) {
   return function ErrorHandledComponent(props) {
     const error = useError();
     return <Component {...props} error={error} />;
