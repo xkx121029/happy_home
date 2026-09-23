@@ -58,6 +58,7 @@ export const ADMIN_PATHS = {
   roles: '/admin/roles',
   notifications: '/admin/notifications',
   backup: '/admin/system/backup',
+  apiKeys: '/admin/system/api-keys',
   settings: '/admin/settings',
 
   help: '/admin/help',
@@ -109,6 +110,7 @@ export const ADMIN_NAV_GROUPS = [
       { id: 'notifications', label: '通知', path: ADMIN_PATHS.notifications, match: 'prefix', icon: 'Bell' },
       { id: 'users', label: '用户', path: ADMIN_PATHS.users, match: 'prefix', icon: 'Users' },
       { id: 'roles', label: '角色管理', path: ADMIN_PATHS.roles, match: 'prefix', icon: 'Shield' },
+      { id: 'apiKeys', label: 'API 密钥', path: ADMIN_PATHS.apiKeys, match: 'prefix', icon: 'KeyRound' },
       { id: 'backup', label: '备份', path: ADMIN_PATHS.backup, match: 'prefix', icon: 'Database' },
       { id: 'settings', label: '设置', path: ADMIN_PATHS.settings, match: 'prefix', icon: 'Settings', excludePrefixes: [ADMIN_PATHS.themes, ADMIN_PATHS.seo, ADMIN_PATHS.customCss, ADMIN_PATHS.socialShare] },
       { id: 'analytics', label: '数据分析', path: ADMIN_PATHS.analytics, match: 'prefix', icon: 'BarChart3' },

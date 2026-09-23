@@ -275,5 +275,20 @@ export const backupsAPI = {
   getDownloadUrl: (id) => `${API_BASE_URL}/backups/${id}/download`,
 };
 
+// ----------------------------------------------------------------- API 密钥
+//
+// 对外开放 API 的长期凭据。明文只在 create / rotate 的响应里出现一次，
+// 所以这两个方法的返回值里带 key 字段，其余方法都没有 —— 页面据此决定
+// 是否弹一次性横幅。
+export const apiKeysAPI = {
+  getAll: () => apiRequest('/api-keys'),
+  // scope 目录（分组、标签、默认勾选项）由后端下发，前端不抄一份
+  getScopes: () => apiRequest('/api-keys/scopes'),
+  create: (data) => apiRequest('/api-keys', { method: 'POST', body: data }),
+  revoke: (id) => apiRequest(`/api-keys/${id}/revoke`, { method: 'POST' }),
+  rotate: (id) => apiRequest(`/api-keys/${id}/rotate`, { method: 'POST' }),
+  remove: (id) => apiRequest(`/api-keys/${id}`, { method: 'DELETE' }),
+};
+
 export { http };
 export default http;

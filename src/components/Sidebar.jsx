@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, FileText, FolderOpen, Image, Palette, Users, BarChart3,
   Settings, HelpCircle, Globe, Tag, FolderTree, Menu as MenuIcon, Search,
-  MessageSquare, Layout, Database, Share2, Code, History, Shield, Bell,
+  MessageSquare, Layout, Database, Share2, Code, History, Shield, Bell, KeyRound,
 } from 'lucide-react';
 import { ADMIN_FOOTER_ITEMS, ADMIN_NAV_GROUPS, isNavItemActive } from '../routes/paths';
 
@@ -10,7 +10,7 @@ import { ADMIN_FOOTER_ITEMS, ADMIN_NAV_GROUPS, isNavItemActive } from '../routes
 const ICONS = {
   LayoutDashboard, FileText, FolderOpen, Image, Palette, Users, BarChart3,
   Settings, HelpCircle, Globe, Tag, FolderTree, Menu: MenuIcon, Search,
-  MessageSquare, Layout, Database, Share2, Code, History, Shield, Bell,
+  MessageSquare, Layout, Database, Share2, Code, History, Shield, Bell, KeyRound,
 };
 
 /**

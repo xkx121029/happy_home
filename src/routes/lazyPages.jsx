@@ -57,6 +57,7 @@ export const UserEditorPage = wrap(() => import('../pages/UserEditor'));
 export const RolesPage = wrap(() => import('../pages/Roles'));
 export const NotificationsPage = wrap(() => import('../pages/Notifications'));
 export const BackupPage = wrap(() => import('../pages/Backup'));
+export const ApiKeysPage = wrap(() => import('../pages/ApiKeys'));
 export const SettingsPage = wrap(() => import('../pages/Settings'));
 export const HelpPage = wrap(() => import('../pages/Help'));
 

@@ -15,7 +15,7 @@ import {
   PagesPage, PageEditorPage, MediaPage, CommentsPage,
   CategoriesPage, TagsPage, MenusPage, WidgetsPage,
   ThemesPage, SEOPage, CustomCSSPage, SocialShareSettingsPage,
-  UsersPage, UserEditorPage, RolesPage, NotificationsPage, BackupPage, SettingsPage, HelpPage,
+  UsersPage, UserEditorPage, RolesPage, NotificationsPage, BackupPage, ApiKeysPage, SettingsPage, HelpPage,
   PublicHomePage, PublicPostsPage, PublicPostDetailPage, PublicPageDetailPage,
 } from './lazyPages';
 import RouteError from '../app/RouteError';
@@ -110,6 +110,15 @@ export const router = createBrowserRouter([
               },
               { path: 'notifications', element: <NotificationsPage /> },
               { path: 'system/backup', element: <BackupPage /> },
+              // 与角色管理同理：界面只对管理员展示，真正的权限控制在后端
+              {
+                path: 'system/api-keys',
+                element: (
+                  <RequireRole role="administrator">
+                    <ApiKeysPage />
+                  </RequireRole>
+                ),
+              },
               { path: 'settings', element: <SettingsPage /> },
               { path: 'help', element: <HelpPage /> },
             ],
