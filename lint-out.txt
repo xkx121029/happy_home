@@ -1,0 +1,137 @@
+﻿
+> happy_home@0.1.0-alpha lint
+> eslint . && node scripts/check-tokens.mjs
+
+
+D:\xkx\xkx_appproj\happy_home\backend\db.js
+  17:22  error  Promise executor functions should not be async  no-async-promise-executor
+
+D:\xkx\xkx_appproj\happy_home\backend\src\modules\analytics\routes.js
+  11:13  error  'today' is assigned a value but never used  no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\backend\src\modules\notifications\routes.js
+  118:12  error  'createNotification' is defined but never used  no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\components\Notification.jsx
+   10:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  144:6   warning  React Hook useEffect has a missing dependency: 'handleClose'. Either include it or remove the dependency array                  react-hooks/exhaustive-deps
+  286:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  388:5   error    'clearAll' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                        no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\components\PasswordStrength.jsx
+  30:26  error  Unnecessary escape character: \[  no-useless-escape
+  30:43  error  Unnecessary escape character: \/  no-useless-escape
+  99:29  error  Unnecessary escape character: \[  no-useless-escape
+  99:46  error  Unnecessary escape character: \/  no-useless-escape
+
+D:\xkx\xkx_appproj\happy_home\src\components\RichTextEditor.jsx
+  7:10  error  'useData' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\components\SocialShare.jsx
+   10:19  error    'title' is defined but never used. Allowed unused args must match /^_/u                                                         no-unused-vars
+   10:26  error    'excerpt' is defined but never used. Allowed unused args must match /^_/u                                                       no-unused-vars
+   17:26  error    'excerpt' is defined but never used. Allowed unused args must match /^_/u                                                       no-unused-vars
+  211:10  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\xkx\xkx_appproj\happy_home\src\components\StateViews.jsx
+  177:9  error  'Icon' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\components\ui\Card.jsx
+  10:28  error  'Tag' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\contexts\DataContext.jsx
+  392:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\xkx\xkx_appproj\happy_home\src\contexts\ErrorContext.jsx
+    7:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+   31:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  374:7   warning  Unexpected console statement. Only these console methods are allowed: error, warn                                               no-console
+  421:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  432:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  432:34  error    'Component' is defined but never used. Allowed unused args must match /^_/u                                                     no-unused-vars
+  432:45  error    'errorHandler' is defined but never used. Allowed unused args must match /^_/u                                                  no-unused-vars
+  442:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\xkx\xkx_appproj\happy_home\src\contexts\NetworkContext.jsx
+  40:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\xkx\xkx_appproj\happy_home\src\pages\Categories.jsx
+   29:9   error  'rootCategories' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  151:11  error  'children' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u        no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\pages\Comments.jsx
+  10:20  error  'success' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  10:29  error  'error' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u    no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\pages\Login.jsx
+   9:11  error  'settings' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u             no-unused-vars
+  12:28  error  'setShowVerification' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  19:10  error  'loading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u              no-unused-vars
+  21:18  error  'setUserId' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u            no-unused-vars
+  26:10  error  'codeCountdown' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u        no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\pages\Menus.jsx
+   13:20  error  'alert' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+   84:26  error  'type' is defined but never used. Allowed unused args must match /^_/u                 no-unused-vars
+   84:32  error  'data' is defined but never used. Allowed unused args must match /^_/u                 no-unused-vars
+  100:35  error  'itemId' is defined but never used. Allowed unused args must match /^_/u               no-unused-vars
+  111:29  error  'itemId' is defined but never used. Allowed unused args must match /^_/u               no-unused-vars
+  125:26  error  'targetItem' is defined but never used. Allowed unused args must match /^_/u           no-unused-vars
+  131:27  error  'itemId' is defined but never used. Allowed unused args must match /^_/u               no-unused-vars
+  131:35  error  'direction' is defined but never used. Allowed unused args must match /^_/u            no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\pages\Notifications.jsx
+  39:28  error    'isModalOpen' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                           no-unused-vars
+  39:41  error    'modalConfig' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                           no-unused-vars
+  39:54  error    'closeModal' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                            no-unused-vars
+  40:30  error    'isToastOpen' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                           no-unused-vars
+  40:43  error    'toastConfig' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                           no-unused-vars
+  40:56  error    'closeToast' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                            no-unused-vars
+  48:6   warning  React Hook useEffect has a missing dependency: 'loadNotifications'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  74:35  error    'title' is defined but never used. Allowed unused args must match /^_/u                                               no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\pages\PostEditor.jsx
+   1:31  error    'useMemo' is defined but never used. Allowed unused vars must match /^[A-Z_]/u                                                  no-unused-vars
+  21:18  error    'getPost' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                         no-unused-vars
+  68:6   warning  React Hook useEffect has missing dependencies: 'categories' and 'timeZone'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+D:\xkx\xkx_appproj\happy_home\src\pages\Posts.jsx
+  11:20  error  'alert' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\pages\ResetPassword.jsx
+  9:10  error  'token' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\pages\Revisions.jsx
+  37:20  error  'alert' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\pages\Roles.jsx
+  3:33  error  'rolePermissions' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  3:65  error  'permConfig' is defined but never used. Allowed unused vars must match /^[A-Z_]/u       no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\pages\Themes.jsx
+  53:31  error  'Icon' is defined but never used. Allowed unused args must match /^_/u  no-unused-vars
+
+D:\xkx\xkx_appproj\happy_home\src\pages\public\PublicHome.jsx
+  24:9  warning  The 'seo' logical expression could make the dependencies of useEffect Hook (at line 104) change on every render. Move it inside the useEffect callback. Alternatively, wrap the initialization of 'seo' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+D:\xkx\xkx_appproj\happy_home\src\pages\public\PublicPostDetail.jsx
+  50:9  warning  The 'seo' logical expression could make the dependencies of useEffect Hook (at line 153) change on every render. Move it inside the useEffect callback. Alternatively, wrap the initialization of 'seo' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+D:\xkx\xkx_appproj\happy_home\src\routes\router.jsx
+   33:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  126:16  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\xkx\xkx_appproj\happy_home\src\state\AuthContext.jsx
+  104:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\xkx\xkx_appproj\happy_home\src\state\SiteSettingsContext.jsx
+  84:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\xkx\xkx_appproj\happy_home\src\state\ThemeContext.jsx
+  56:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\xkx\xkx_appproj\happy_home\src\utils\permissions.js
+  164:10  error  'targetAction' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+✖ 70 problems (49 errors, 21 warnings)
+
