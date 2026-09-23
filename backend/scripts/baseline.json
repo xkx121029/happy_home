@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-09-23T15:17:50.501Z",
+  "savedAt": "2026-09-23T15:22:07.626Z",
   "apiBase": "http://localhost:3002/api/v1",
   "note": "shape 字段是契约形状（叶子值只留类型）；message 仅供参考不参与 diff",
   "results": [
@@ -1020,6 +1020,194 @@
         "success": "bool:false"
       },
       "message": "备份不存在"
+    },
+    {
+      "name": "POST /api-keys",
+      "status": 201,
+      "expect": 201,
+      "shape": {
+        "data": {
+          "created_at": "string",
+          "created_by": "string",
+          "expires_at": "null",
+          "id": "string",
+          "key": "string",
+          "key_prefix": "string",
+          "last_used_at": "null",
+          "name": "string",
+          "request_count": "number",
+          "revoked_at": "null",
+          "scopes": "array"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "密钥创建成功，请立即保存明文，此后再无法查看"
+    },
+    {
+      "name": "GET  /api-keys",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": "array",
+        "success": "bool:true"
+      }
+    },
+    {
+      "name": "POST /api-keys 无 scopes",
+      "status": 400,
+      "expect": 400,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "请至少选择一项权限"
+    },
+    {
+      "name": "POST /api-keys 有效期已过",
+      "status": 400,
+      "expect": 400,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "有效期必须晚于当前时间"
+    },
+    {
+      "name": "GET  /posts (密钥有 posts:read)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": "array",
+        "page": "number",
+        "perPage": "number",
+        "success": "bool:true",
+        "total": "number",
+        "totalPages": "number"
+      }
+    },
+    {
+      "name": "GET  /users (密钥无 users:read 应 403)",
+      "status": 403,
+      "expect": 403,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "该密钥没有 users:read 权限"
+    },
+    {
+      "name": "GET  /api-keys (密钥应 403)",
+      "status": 403,
+      "expect": 403,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "该密钥没有 apikeys:read 权限"
+    },
+    {
+      "name": "POST /api-keys/:id/rotate",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "created_at": "string",
+          "created_by": "string",
+          "expires_at": "null",
+          "id": "string",
+          "key": "string",
+          "key_prefix": "string",
+          "last_used_at": "null",
+          "name": "string",
+          "request_count": "number",
+          "revoked_at": "null",
+          "scopes": "array"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "密钥已轮换，旧密钥立即失效，请保存新的明文"
+    },
+    {
+      "name": "GET  /posts (轮换后的旧密钥应 403)",
+      "status": 403,
+      "expect": 403,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "无效的令牌"
+    },
+    {
+      "name": "GET  /posts (轮换后的新密钥应 200)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": "array",
+        "page": "number",
+        "perPage": "number",
+        "success": "bool:true",
+        "total": "number",
+        "totalPages": "number"
+      }
+    },
+    {
+      "name": "POST /api-keys/:id/revoke",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "created_at": "string",
+          "created_by": "string",
+          "expires_at": "null",
+          "id": "string",
+          "key_prefix": "string",
+          "last_used_at": "null",
+          "name": "string",
+          "request_count": "number",
+          "revoked_at": "string",
+          "scopes": "array"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "密钥已撤销"
+    },
+    {
+      "name": "GET  /posts (撤销后应 403)",
+      "status": 403,
+      "expect": 403,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "无效的令牌"
+    },
+    {
+      "name": "DELETE /api-keys/:id",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "created_at": "string",
+          "created_by": "string",
+          "expires_at": "null",
+          "id": "string",
+          "key_prefix": "string",
+          "last_used_at": "null",
+          "name": "string",
+          "request_count": "number",
+          "revoked_at": "string",
+          "scopes": "array"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "密钥已删除"
     },
     {
       "name": "POST /posts 缺字段",

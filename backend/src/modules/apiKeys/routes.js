@@ -93,6 +93,21 @@ module.exports = function createApiKeysRoutes(deps) {
     }
   });
 
+  /**
+   * scope 目录。后台新建密钥的复选框直接按这个结构渲染 ——
+   * 标签只在 lib/permissions 里写一份，前端不再抄一遍，
+   * 将来加 scope 时不会出现「后端支持但界面勾不到」。
+   */
+  router.get('/api-keys/scopes', requireAccess('apikeys:read', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
+    ok(res, {
+      data: {
+        groups: permissions.SCOPE_GROUPS,
+        defaults: permissions.READONLY_SCOPES,
+        wildcard: permissions.WILDCARD_SCOPE,
+      },
+    });
+  });
+
   router.post('/api-keys', requireAccess('apikeys:write', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
     try {
       const input = validateInput(req.body);
