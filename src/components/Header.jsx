@@ -164,7 +164,7 @@ export default function Header() {
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-danger text-white text-[11px] font-semibold rounded-full grid place-items-center">
+                  <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-danger text-danger-fg text-[11px] font-semibold rounded-full grid place-items-center">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
@@ -206,7 +206,7 @@ export default function Header() {
                       notifications.map((notification) => (
                         <div
                           key={notification.id}
-                          className={`p-4 border-b border-line last:border-0 hover:bg-surface-2 cursor-pointer transition-colors duration-100 ${
+                          className={`p-4 border-b border-line last:border-0 hover:bg-surface-2 cursor-pointer transition-colors duration-100${
                             !notification.isRead ? 'bg-accent-50/60' : ''
                           }`}
                           onClick={() => handleNotificationClick(notification)}
@@ -216,7 +216,7 @@ export default function Header() {
                               {getNotificationIcon(notification.type)}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className={`text-sm ${!notification.isRead ? 'font-semibold text-fg' : 'text-fg/80'}`}>
+                              <p className={`text-sm${!notification.isRead ? 'font-semibold text-fg' : 'text-fg/80'}`}>
                                 {notification.title}
                               </p>
                               {notification.message && (

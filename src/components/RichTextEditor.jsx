@@ -289,18 +289,18 @@ export default function RichTextEditor({ value, onChange, placeholder = '开始�
   };
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800">
+    <div className="border border-line rounded-lg overflow-hidden bg-surface">
       {/* 工具栏 */}
-      <div className="flex flex-wrap items-center gap-1 p-2 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+      <div className="flex flex-wrap items-center gap-1 p-2 bg-bg  border-b border-line">
         {toolbarButtons.map((btn, index) => (
           btn.type === 'divider' ? (
-            <div key={`divider-${index}`} className="w-px h-6 bg-gray-300 dark:bg-gray-500 mx-1" />
+            <div key={`divider-${index}`} className="w-px h-6 bg-line mx-1" />
           ) : (
             <button
               key={`btn-${index}`}
               type="button"
               onClick={() => executeCommand(btn.command, btn.value)}
-              className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+              className="p-2 text-muted  hover:text-fg hover:bg-surface-2 rounded transition-colors"
               title={btn.title}
             >
               {(() => {
@@ -312,11 +312,11 @@ export default function RichTextEditor({ value, onChange, placeholder = '开始�
         ))}
         
         {/* 链接按钮组 */}
-        <div className="w-px h-6 bg-gray-300 dark:bg-gray-500 mx-1" />
+        <div className="w-px h-6 bg-line mx-1" />
         <button
           type="button"
           onClick={() => executeCommand('createLink')}
-          className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+          className="p-2 text-muted  hover:text-accent hover:bg-surface-2 rounded transition-colors"
           title="插入链接 (Ctrl+K)"
         >
           <Link className="w-4 h-4" />
@@ -324,7 +324,7 @@ export default function RichTextEditor({ value, onChange, placeholder = '开始�
         <button
           type="button"
           onClick={() => executeCommand('removeLink')}
-          className="p-2 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+          className="p-2 text-muted  hover:text-danger hover:bg-surface-2 rounded transition-colors"
           title="移除链接"
         >
           <Link2Off className="w-4 h-4" />
@@ -332,18 +332,18 @@ export default function RichTextEditor({ value, onChange, placeholder = '开始�
         <button
           type="button"
           onClick={() => executeCommand('insertImage')}
-          className="p-2 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+          className="p-2 text-muted  hover:text-info hover:bg-surface-2 rounded transition-colors"
           title="插入图片"
         >
           <Image className="w-4 h-4" />
         </button>
         
         {/* 代码块按钮 */}
-        <div className="w-px h-6 bg-gray-300 dark:bg-gray-500 mx-1" />
+        <div className="w-px h-6 bg-line mx-1" />
         <button
           type="button"
           onClick={() => executeCommand('insertCodeBlock')}
-          className="p-2 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+          className="p-2 text-muted  hover:text-success hover:bg-surface-2 rounded transition-colors"
           title="插入代码块"
         >
           <Terminal className="w-4 h-4" />
@@ -359,56 +359,56 @@ export default function RichTextEditor({ value, onChange, placeholder = '开始�
         onKeyDown={handleKeyDown}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        className="min-h-[400px] p-4 focus:outline-none text-gray-900 dark:text-gray-100 dark:bg-gray-800"
+        className="min-h-[400px] p-4 focus:outline-none text-fg bg-surface"
         data-placeholder={placeholder}
       />
 
       {/* 链接弹窗 */}
       {showLinkModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-surface rounded-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">插入链接</h3>
+              <h3 className="text-lg font-semibold text-fg">插入链接</h3>
               <button
                 onClick={() => setShowLinkModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-muted hover:text-fg"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">链接文本</label>
+                <label className="block text-sm font-medium text-fg mb-1">链接文本</label>
                 <input
                   type="text"
                   value={linkText}
                   onChange={(e) => setLinkText(e.target.value)}
                   placeholder="输入链接显示文本"
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">链接地址</label>
+                <label className="block text-sm font-medium text-fg mb-1">链接地址</label>
                 <input
                   type="text"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   placeholder="https://example.com"
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                   autoFocus
                 />
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowLinkModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="flex-1 px-4 py-2 border border-line text-fg rounded-lg hover:bg-surface-2"
                 >
                   取消
                 </button>
                 <button
                   onClick={handleInsertLink}
                   disabled={!linkUrl}
-                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 bg-accent text-accent-fg rounded-lg hover:bg-accent-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   插入链接
                 </button>
@@ -421,49 +421,49 @@ export default function RichTextEditor({ value, onChange, placeholder = '开始�
       {/* 图片弹窗 */}
       {showImageModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+          <div className="bg-surface rounded-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">插入图片</h3>
+              <h3 className="text-lg font-semibold text-fg">插入图片</h3>
               <button
                 onClick={() => setShowImageModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-muted hover:text-fg"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">图片地址</label>
+                <label className="block text-sm font-medium text-fg mb-1">图片地址</label>
                 <input
                   type="text"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   placeholder="https://example.com/image.jpg"
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                   autoFocus
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">图片描述（可选）</label>
+                <label className="block text-sm font-medium text-fg mb-1">图片描述（可选）</label>
                 <input
                   type="text"
                   value={imageAlt}
                   onChange={(e) => setImageAlt(e.target.value)}
                   placeholder="图片描述文字"
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowImageModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="flex-1 px-4 py-2 border border-line text-fg rounded-lg hover:bg-surface-2"
                 >
                   取消
                 </button>
                 <button
                   onClick={handleInsertImage}
                   disabled={!imageUrl}
-                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 bg-accent text-accent-fg rounded-lg hover:bg-accent-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   插入图片
                 </button>
@@ -476,23 +476,23 @@ export default function RichTextEditor({ value, onChange, placeholder = '开始�
       {/* 代码块弹窗 */}
       {showCodeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl mx-4">
+          <div className="bg-surface rounded-lg p-6 w-full max-w-2xl mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">插入代码块</h3>
+              <h3 className="text-lg font-semibold text-fg">插入代码块</h3>
               <button
                 onClick={() => setShowCodeModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="text-muted hover:text-fg"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">编程语言（可选）</label>
+                <label className="block text-sm font-medium text-fg mb-1">编程语言（可选）</label>
                 <select
                   value={codeLanguage}
                   onChange={(e) => setCodeLanguage(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                 >
                   <option value="">自动检测</option>
                   <option value="javascript">JavaScript</option>
@@ -514,26 +514,26 @@ export default function RichTextEditor({ value, onChange, placeholder = '开始�
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">代码内容</label>
+                <label className="block text-sm font-medium text-fg mb-1">代码内容</label>
                 <textarea
                   value={codeContent}
                   onChange={(e) => setCodeContent(e.target.value)}
                   placeholder="在这里输入代码..."
                   rows={10}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-900 text-gray-100 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-line rounded-lg bg-bg text-line font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                   autoFocus
                 />
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowCodeModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                  className="flex-1 px-4 py-2 border border-line text-fg rounded-lg hover:bg-surface-2"
                 >
                   取消
                 </button>
                 <button
                   onClick={handleInsertCodeBlock}
-                  className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                  className="flex-1 px-4 py-2 bg-success text-success-fg rounded-lg hover:bg-success"
                 >
                   插入代码
                 </button>

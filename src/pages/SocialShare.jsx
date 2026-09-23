@@ -112,13 +112,13 @@ export default function SocialShareSettings() {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">社交分享设置</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">配置社交媒体分享功能</p>
+          <h1 className="text-2xl font-bold text-fg">社交分享设置</h1>
+          <p className="text-muted mt-1">配置社交媒体分享功能</p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={handleReset}
-            className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="px-4 py-2 text-muted  hover:bg-surface-2 rounded-lg font-medium transition-colors flex items-center gap-2"
           >
             <RotateCcw className="w-4 h-4" />
             重置
@@ -126,10 +126,10 @@ export default function SocialShareSettings() {
           <button
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2${
               hasChanges && !saving
-                ? 'bg-blue-500 text-white hover:bg-blue-600'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                ? 'bg-accent text-accent-fg hover:bg-accent-700'
+                : 'bg-surface-2 text-muted cursor-not-allowed'
             }`}
           >
             <Save className="w-4 h-4" />
@@ -142,8 +142,8 @@ export default function SocialShareSettings() {
         {/* Settings Panel */}
         <div className="lg:col-span-2 space-y-6">
           {/* General Settings */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
+            <h2 className="text-lg font-semibold text-fg mb-4 flex items-center gap-2">
               <Globe className="w-5 h-5" />
               常规设置
             </h2>
@@ -151,16 +151,16 @@ export default function SocialShareSettings() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="font-medium text-gray-900 dark:text-white">启用分享按钮</label>
-                  <p className="text-sm text-gray-500 mt-1">在文章底部显示分享按钮</p>
+                  <label className="font-medium text-fg">启用分享按钮</label>
+                  <p className="text-sm text-muted mt-1">在文章底部显示分享按钮</p>
                 </div>
                 <button
                   onClick={() => handleToggle('enabled')}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.enabled ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors${
+                    settings.enabled ? 'bg-accent' : 'bg-line'
                   }`}
                 >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-surface transition-transform${
                     settings.enabled ? 'translate-x-6' : 'translate-x-1'
                   }`} />
                 </button>
@@ -168,16 +168,16 @@ export default function SocialShareSettings() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="font-medium text-gray-900 dark:text-white">显示分享文字</label>
-                  <p className="text-sm text-gray-500 mt-1">在分享按钮旁显示文字</p>
+                  <label className="font-medium text-fg">显示分享文字</label>
+                  <p className="text-sm text-muted mt-1">在分享按钮旁显示文字</p>
                 </div>
                 <button
                   onClick={() => handleToggle('showLabel')}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.showLabel ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors${
+                    settings.showLabel ? 'bg-accent' : 'bg-line'
                   }`}
                 >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-surface transition-transform${
                     settings.showLabel ? 'translate-x-6' : 'translate-x-1'
                   }`} />
                 </button>
@@ -186,8 +186,8 @@ export default function SocialShareSettings() {
           </div>
 
           {/* Platform Selection */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
+            <h2 className="text-lg font-semibold text-fg mb-4">
               选择分享平台
             </h2>
 
@@ -199,10 +199,10 @@ export default function SocialShareSettings() {
                   <button
                     key={platform.id}
                     onClick={() => handleTogglePlatform(platform.id)}
-                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all${
                       isSelected
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300'
+                        ? 'border-accent bg-accent/12'
+                        : 'border-line hover:border-line'
                     }`}
                   >
                     <div
@@ -211,11 +211,11 @@ export default function SocialShareSettings() {
                     >
                       <Icon className="w-4 h-4" style={{ color: platform.color }} />
                     </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="text-sm font-medium text-fg">
                       {platform.name}
                     </span>
                     {isSelected && (
-                      <Check className="w-4 h-4 text-blue-500 ml-auto" />
+                      <Check className="w-4 h-4 text-accent ml-auto" />
                     )}
                   </button>
                 );
@@ -224,14 +224,14 @@ export default function SocialShareSettings() {
           </div>
 
           {/* Style Settings */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
+            <h2 className="text-lg font-semibold text-fg mb-4">
               样式设置
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-medium text-fg mb-3">
                   按钮样式
                 </label>
                 <div className="flex gap-2">
@@ -239,10 +239,10 @@ export default function SocialShareSettings() {
                     <button
                       key={option.value}
                       onClick={() => handleSelectChange('style', option.value)}
-                      className={`flex-1 px-3 py-2 rounded-lg border-2 transition-colors ${
+                      className={`flex-1 px-3 py-2 rounded-lg border-2 transition-colors${
                         settings.style === option.value
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600'
-                          : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'
+                          ? 'border-accent bg-accent/12  text-accent'
+                          : 'border-line text-muted'
                       }`}
                     >
                       {option.label}
@@ -252,7 +252,7 @@ export default function SocialShareSettings() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-medium text-fg mb-3">
                   按钮大小
                 </label>
                 <div className="flex gap-2">
@@ -260,10 +260,10 @@ export default function SocialShareSettings() {
                     <button
                       key={option.value}
                       onClick={() => handleSelectChange('size', option.value)}
-                      className={`flex-1 px-3 py-2 rounded-lg border-2 transition-colors ${
+                      className={`flex-1 px-3 py-2 rounded-lg border-2 transition-colors${
                         settings.size === option.value
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600'
-                          : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'
+                          ? 'border-accent bg-accent/12  text-accent'
+                          : 'border-line text-muted'
                       }`}
                     >
                       {option.label}
@@ -273,7 +273,7 @@ export default function SocialShareSettings() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <label className="block text-sm font-medium text-fg mb-3">
                   显示位置
                 </label>
                 <div className="flex gap-2">
@@ -283,10 +283,10 @@ export default function SocialShareSettings() {
                       <button
                         key={option.value}
                         onClick={() => handleSelectChange('position', option.value)}
-                        className={`flex-1 px-3 py-2 rounded-lg border-2 transition-colors flex items-center justify-center gap-2 ${
+                        className={`flex-1 px-3 py-2 rounded-lg border-2 transition-colors flex items-center justify-center gap-2${
                           settings.position === option.value
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600'
-                            : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300'
+                            ? 'border-accent bg-accent/12  text-accent'
+                            : 'border-line text-muted'
                         }`}
                       >
                         <Icon className="w-4 h-4" />
@@ -300,14 +300,14 @@ export default function SocialShareSettings() {
           </div>
 
           {/* Custom Text */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
+            <h2 className="text-lg font-semibold text-fg mb-4">
               自定义文案
             </h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-fg mb-2">
                   分享标题
                 </label>
                 <input
@@ -318,7 +318,7 @@ export default function SocialShareSettings() {
                     setHasChanges(true);
                   }}
                   placeholder="分享这篇文章"
-                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
             </div>
@@ -327,23 +327,23 @@ export default function SocialShareSettings() {
 
         {/* Preview Panel */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 sticky top-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6 sticky top-6">
+            <h2 className="text-lg font-semibold text-fg mb-4 flex items-center gap-2">
               <Eye className="w-5 h-5" />
               预览
             </h2>
 
-            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-              <div className="text-sm text-gray-500 mb-3">预览效果</div>
+            <div className="p-4 bg-bg  rounded-xl">
+              <div className="text-sm text-muted mb-3">预览效果</div>
               <div className="mb-3">
-                <h3 className="font-medium text-gray-900 dark:text-white">{previewTitle}</h3>
-                <p className="text-sm text-gray-500 mt-1">{previewExcerpt}</p>
+                <h3 className="font-medium text-fg">{previewTitle}</h3>
+                <p className="text-sm text-muted mt-1">{previewExcerpt}</p>
               </div>
 
-              <div className={`mt-4 ${settings.position === 'top' ? 'border-t pt-4' : ''}`}>
+              <div className={`mt-4${settings.position === 'top' ? 'border-t pt-4' : ''}`}>
                 <div className="flex items-center gap-3 flex-wrap">
                   {settings.showLabel && (
-                    <span className="text-sm text-gray-500 mr-2">分享到：</span>
+                    <span className="text-sm text-muted mr-2">分享到：</span>
                   )}
 
                   {settings.platforms.slice(0, 4).map(platformId => {
@@ -354,36 +354,36 @@ export default function SocialShareSettings() {
                     return (
                       <button
                         key={platform.id}
-                        className={`flex items-center justify-center ${
+                        className={`flex items-center justify-center${
                           settings.size === 'small' ? 'w-8 h-8' :
                           settings.size === 'large' ? 'w-12 h-12' : 'w-10 h-10'
-                        } rounded-${settings.style === 'circle' ? 'full' : 'lg'} bg-gray-200 dark:bg-gray-600`}
+                        } ${settings.style === 'circle' ? 'rounded-full' : 'rounded-lg'} bg-surface-2`}
                       >
                         <Icon className={`${
                           settings.size === 'small' ? 'w-4 h-4' :
                           settings.size === 'large' ? 'w-6 h-6' : 'w-5 h-5'
-                        } text-gray-600 dark:text-gray-300`} />
+                        } text-muted`} />
                       </button>
                     );
                   })}
 
                   <button
-                    className={`flex items-center justify-center ${
+                    className={`flex items-center justify-center${
                       settings.size === 'small' ? 'w-8 h-8' :
                       settings.size === 'large' ? 'w-12 h-12' : 'w-10 h-10'
-                    } rounded-${settings.style === 'circle' ? 'full' : 'lg'} bg-gray-200 dark:bg-gray-600`}
+                    } ${settings.style === 'circle' ? 'rounded-full' : 'rounded-lg'} bg-surface-2`}
                   >
                     <Link2 className={`${
                       settings.size === 'small' ? 'w-4 h-4' :
                       settings.size === 'large' ? 'w-6 h-6' : 'w-5 h-5'
-                    } text-gray-600 dark:text-gray-300`} />
+                    } text-muted`} />
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <p className="text-sm text-blue-600 dark:text-blue-400">
+            <div className="mt-4 p-3 bg-accent/12  rounded-lg">
+              <p className="text-sm text-accent">
                 提示：预览仅为示意，实际效果可能略有差异
               </p>
             </div>

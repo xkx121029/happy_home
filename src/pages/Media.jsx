@@ -157,30 +157,30 @@ export default function Media() {
       <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">媒体库</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <h1 className="text-2xl font-bold text-fg">媒体库</h1>
+          <p className="text-muted mt-1">
             管理您网站的所有媒体文件 · 共 {mediaItems.length} 个文件
           </p>
         </div>
         <button
           onClick={() => setShowUpload(true)}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
           上传媒体
         </button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+      <div className="bg-surface rounded-xl shadow-sm border border-line">
+        <div className="p-4 border-b border-line">
           <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
             <input
               type="text"
               placeholder="搜索媒体文件..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
         </div>
@@ -193,7 +193,7 @@ export default function Media() {
                   key={item.id}
                   className="relative group"
                 >
-                  <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+                  <div className="aspect-video rounded-lg overflow-hidden bg-surface-2">
                     {item.type.startsWith('image/') ? (
                       <img
                         src={item.url}
@@ -203,7 +203,7 @@ export default function Media() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <FileIcon className="w-12 h-12 text-gray-400" />
+                        <FileIcon className="w-12 h-12 text-muted" />
                       </div>
                     )}
                   </div>
@@ -212,7 +212,7 @@ export default function Media() {
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
                     <button
                       onClick={() => window.open(item.url, '_blank')}
-                      className="p-2 bg-white rounded-lg text-gray-800 hover:bg-gray-100 transition-colors"
+                      className="p-2 bg-surface rounded-lg text-fg hover:bg-surface-2 transition-colors"
                       title="查看大图"
                     >
                       <ImageIcon className="w-4 h-4" />
@@ -224,14 +224,14 @@ export default function Media() {
                         link.download = item.name;
                         link.click();
                       }}
-                      className="p-2 bg-white rounded-lg text-gray-800 hover:bg-gray-100 transition-colors"
+                      className="p-2 bg-surface rounded-lg text-fg hover:bg-surface-2 transition-colors"
                       title="下载"
                     >
                       <Download className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(item.id, item.name)}
-                      className="p-2 bg-white rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                      className="p-2 bg-surface rounded-lg text-danger hover:bg-danger/12 transition-colors"
                       title="删除"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -240,27 +240,27 @@ export default function Media() {
                   
                   {/* File Info */}
                   <div className="mt-2">
-                    <p className="text-sm text-gray-900 dark:text-white truncate" title={item.name}>
+                    <p className="text-sm text-fg truncate" title={item.name}>
                       {item.name}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{item.size}</p>
+                    <p className="text-xs text-muted">{item.size}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="py-20 text-center">
-              <ImageIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              <ImageIcon className="w-16 h-16 text-line mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-fg mb-2">
                 {searchQuery ? '没有找到匹配的文件' : '还没有上传任何文件'}
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-4">
+              <p className="text-muted mb-4">
                 {searchQuery ? '尝试使用不同的关键词搜索' : '点击上方按钮开始上传'}
               </p>
               {!searchQuery && (
                 <button
                   onClick={() => setShowUpload(true)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                  className="px-4 py-2 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors"
                 >
                   上传第一个文件
                 </button>
@@ -273,15 +273,15 @@ export default function Media() {
       {/* Upload Modal */}
       {showUpload && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
+          <div className="bg-surface rounded-xl p-6 w-full max-w-md mx-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">上传媒体</h2>
+              <h2 className="text-lg font-semibold text-fg">上传媒体</h2>
               <button
                 onClick={() => !isUploading && setShowUpload(false)}
                 disabled={isUploading}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                className="p-2 hover:bg-surface-2 rounded-lg transition-colors disabled:opacity-50"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-muted" />
               </button>
             </div>
 
@@ -289,17 +289,17 @@ export default function Media() {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors${
                 dragOver
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                  : 'border-gray-300 dark:border-gray-600'
+                  ? 'border-accent bg-accent/12'
+                  : 'border-line'
               }`}
             >
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-300 mb-2">
+              <Upload className="w-12 h-12 text-muted mx-auto mb-4" />
+              <p className="text-muted  mb-2">
                 拖拽文件到此处，或
               </p>
-              <label className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors cursor-pointer inline-block">
+              <label className="px-4 py-2 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors cursor-pointer inline-block">
                 选择文件
                 <input
                   ref={fileInputRef}
@@ -310,7 +310,7 @@ export default function Media() {
                   disabled={isUploading}
                 />
               </label>
-              <p className="text-sm text-gray-400 mt-4">
+              <p className="text-sm text-muted mt-4">
                 支持 JPG、PNG、GIF、WebP 格式，最大 2MB
               </p>
             </div>
@@ -318,12 +318,12 @@ export default function Media() {
             {isUploading && (
               <div className="mt-4">
                 <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="text-gray-600 dark:text-gray-300">上传中...</span>
-                  <span className="text-blue-600">{uploadProgress}%</span>
+                  <span className="text-muted">上传中...</span>
+                  <span className="text-accent">{uploadProgress}%</span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div className="w-full bg-surface-2 rounded-full h-2">
                   <div
-                    className="bg-blue-500 h-2 rounded-full transition-colors duration-100"
+                    className="bg-accent h-2 rounded-full transition-colors duration-100"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
@@ -334,7 +334,7 @@ export default function Media() {
               <button
                 onClick={() => !isUploading && setShowUpload(false)}
                 disabled={isUploading}
-                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-surface-2 text-fg rounded-lg font-medium hover:bg-line transition-colors disabled:opacity-50"
               >
                 取消
               </button>

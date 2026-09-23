@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Play
 } from 'lucide-react';
+import { toneChip } from '../lib/tones';
 
 export default function Help() {
   const [expandedCategory, setExpandedCategory] = useState(null);
@@ -20,7 +21,7 @@ export default function Help() {
       id: 'getting-started',
       icon: Play,
       title: '快速开始',
-      color: 'bg-green-500',
+      tone: 'accent',
       articles: [
         {
           title: '首次使用指南',
@@ -61,7 +62,7 @@ export default function Help() {
       id: 'posts',
       icon: FileText,
       title: '文章管理',
-      color: 'bg-blue-500',
+      tone: 'neutral',
       articles: [
         {
           title: '创建和管理文章',
@@ -99,7 +100,7 @@ export default function Help() {
       id: 'pages',
       icon: BookOpen,
       title: '页面管理',
-      color: 'bg-purple-500',
+      tone: 'neutral',
       articles: [
         {
           title: '创建静态页面',
@@ -127,7 +128,7 @@ export default function Help() {
       id: 'media',
       icon: Image,
       title: '媒体库',
-      color: 'bg-pink-500',
+      tone: 'neutral',
       articles: [
         {
           title: '上传和管理图片',
@@ -154,7 +155,7 @@ export default function Help() {
       id: 'themes',
       icon: Palette,
       title: '主题定制',
-      color: 'bg-orange-500',
+      tone: 'neutral',
       articles: [
         {
           title: '选择和自定义主题',
@@ -182,7 +183,7 @@ export default function Help() {
       id: 'users',
       icon: Users,
       title: '用户管理',
-      color: 'bg-indigo-500',
+      tone: 'neutral',
       articles: [
         {
           title: '管理团队成员',
@@ -208,7 +209,7 @@ export default function Help() {
       id: 'settings',
       icon: Settings,
       title: '系统设置',
-      color: 'bg-gray-500',
+      tone: 'neutral',
       articles: [
         {
           title: '常规设置',
@@ -247,15 +248,15 @@ export default function Help() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">帮助中心</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">查找使用指南和常见问题解答</p>
+        <h1 className="text-2xl font-bold text-fg">帮助中心</h1>
+        <p className="text-muted mt-1">查找使用指南和常见问题解答</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Sidebar Navigation */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 sticky top-6">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">目录</h3>
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-4 sticky top-6">
+            <h3 className="font-semibold text-fg mb-4">目录</h3>
             <nav className="space-y-2">
               {helpCategories.map((category) => {
                 const Icon = category.icon;
@@ -263,7 +264,7 @@ export default function Help() {
                   <a
                     key={category.id}
                     href={`#${category.id}`}
-                    className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    className="flex items-center gap-3 px-3 py-2 text-sm text-muted  hover:bg-surface-2 rounded-lg transition-colors"
                   >
                     <Icon className="w-4 h-4" />
                     <span>{category.title}</span>
@@ -281,49 +282,49 @@ export default function Help() {
             const isExpanded = expandedCategory === category.id;
 
             return (
-              <div key={category.id} id={category.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+              <div key={category.id} id={category.id} className="bg-surface rounded-xl shadow-sm border border-line overflow-hidden">
                 <button
                   onClick={() => toggleCategory(category.id)}
-                  className="w-full flex items-center justify-between p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full flex items-center justify-between p-6 hover:bg-surface-2 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 ${category.color} rounded-lg flex items-center justify-center`}>
-                      <Icon className="w-5 h-5 text-white" />
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center${toneChip(category.tone)}`}>
+                      <Icon className="w-5 h-5" />
                     </div>
                     <div className="text-left">
-                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{category.title}</h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{category.articles.length} 篇文章</p>
+                      <h2 className="text-lg font-semibold text-fg">{category.title}</h2>
+                      <p className="text-sm text-muted">{category.articles.length} 篇文章</p>
                     </div>
                   </div>
                   {isExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-gray-400" />
+                    <ChevronUp className="w-5 h-5 text-muted" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                    <ChevronDown className="w-5 h-5 text-muted" />
                   )}
                 </button>
 
                 {isExpanded && (
-                  <div className="border-t border-gray-100 dark:border-gray-700">
+                  <div className="border-t border-line">
                     {category.articles.map((article) => (
-                      <div key={article.title} className="p-6 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                      <div key={article.title} className="p-6 border-b border-line last:border-b-0">
+                        <h3 className="text-lg font-semibold text-fg mb-3">
                           {article.title}
                         </h3>
-                        <p className="text-gray-600 dark:text-gray-300 mb-4">
+                        <p className="text-muted  mb-4">
                           {article.content}
                         </p>
                         {article.steps && (
-                          <ol className="list-decimal list-inside space-y-2 text-gray-600 dark:text-gray-300">
+                          <ol className="list-decimal list-inside space-y-2 text-muted">
                             {article.steps.map((step, stepIndex) => (
                               <li key={stepIndex}>{step.length > 3 ? step.slice(3) : step}</li>
                             ))}
                           </ol>
                         )}
                         {article.items && (
-                          <ul className="space-y-2 text-gray-600 dark:text-gray-300">
+                          <ul className="space-y-2 text-muted">
                             {article.items.map((item, itemIndex) => (
                               <li key={itemIndex} className="flex items-start gap-2">
-                                <span className="text-blue-500 mt-1">•</span>
+                                <span className="text-accent mt-1">•</span>
                                 <span>{item}</span>
                               </li>
                             ))}
@@ -338,23 +339,23 @@ export default function Help() {
           })}
 
           {/* Contact Section */}
-          <div className="bg-accent-50 rounded-xl p-6 border border-blue-100 dark:border-blue-800">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          <div className="bg-accent-50 rounded-xl p-6 border border-accent/40">
+            <h3 className="text-lg font-semibold text-fg mb-2">
               需要更多帮助？
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
+            <p className="text-muted  mb-4">
               如果您有任何问题或建议，欢迎联系我们。
             </p>
             <div className="flex gap-3">
               <a
                 href="mailto:support@happyhome.com"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-accent-700 text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors"
               >
                 发送邮件
               </a>
               <a
                 href="#"
-                className="px-4 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-surface text-fg rounded-lg font-medium hover:bg-surface-2 transition-colors flex items-center gap-2"
               >
                 <ExternalLink className="w-4 h-4" />
                 查看文档

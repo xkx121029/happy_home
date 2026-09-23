@@ -23,19 +23,19 @@ export function LoadingState({
         <div className="w-full max-w-4xl px-4 space-y-4">
           {/* 头部骨架 */}
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-            <div className="w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+            <div className="w-32 h-8 bg-surface-2 rounded-lg animate-pulse" />
+            <div className="w-24 h-8 bg-surface-2 rounded-lg animate-pulse" />
           </div>
           
           {/* 内容骨架 */}
           {[...Array(skeletonRows)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
+            <div key={i} className="bg-surface rounded-xl p-4 shadow-sm">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+                <div className="w-12 h-12 bg-surface-2 rounded-lg animate-pulse" />
                 <div className="flex-1 space-y-3">
-                  <div className={`h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse ${i % 2 === 0 ? 'w-3/4' : 'w-1/2'}`} />
-                  <div className="h-3 bg-gray-100 dark:bg-gray-600 rounded animate-pulse w-full" />
-                  <div className="h-3 bg-gray-100 dark:bg-gray-600 rounded animate-pulse w-2/3" />
+                  <div className={`h-4 bg-surface-2 rounded animate-pulse${i % 2 === 0 ? 'w-3/4' : 'w-1/2'}`} />
+                  <div className="h-3 bg-surface-2  rounded animate-pulse w-full" />
+                  <div className="h-3 bg-surface-2  rounded animate-pulse w-2/3" />
                 </div>
               </div>
             </div>
@@ -58,7 +58,7 @@ export function LoadingState({
                 stroke="currentColor"
                 strokeWidth="4"
                 fill="none"
-                className="text-gray-200 dark:text-gray-700"
+                className="text-line"
               />
               <circle
                 cx="32"
@@ -70,15 +70,15 @@ export function LoadingState({
                 strokeDasharray={2 * Math.PI * 28}
                 strokeDashoffset={2 * Math.PI * 28 * (1 - (progress || 0) / 100)}
                 strokeLinecap="round"
-                className="text-blue-500 transition-colors duration-100"
+                className="text-accent transition-colors duration-100"
               />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="absolute inset-0 flex items-center justify-center text-sm font-medium text-fg">
               {progress || 0}%
             </span>
           </div>
           {message && (
-            <p className="text-gray-600 dark:text-gray-400">{message}</p>
+            <p className="text-muted">{message}</p>
           )}
         </div>
       </div>
@@ -89,9 +89,9 @@ export function LoadingState({
   return (
     <div className={containerClass}>
       <div className="text-center">
-        <Loader2 className="w-12 h-12 mx-auto text-blue-500 animate-spin mb-4" />
+        <Loader2 className="w-12 h-12 mx-auto text-accent animate-spin mb-4" />
         {message && (
-          <p className="text-gray-600 dark:text-gray-400">{message}</p>
+          <p className="text-muted">{message}</p>
         )}
       </div>
     </div>
@@ -119,22 +119,22 @@ export function ErrorState({
     <div className={containerClass}>
       <div className={`${fullPage ? '' : 'max-w-md mx-auto'} text-center`}>
         {/* 错误图标 */}
-        <div className="w-20 h-20 mx-auto mb-6 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-          <AlertCircle className="w-10 h-10 text-red-500" />
+        <div className="w-20 h-20 mx-auto mb-6 bg-danger/12  rounded-full flex items-center justify-center">
+          <AlertCircle className="w-10 h-10 text-danger" />
         </div>
         
         {/* 标题和消息 */}
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-xl font-bold text-fg mb-2">
           {title}
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-muted mb-6">
           {message}
         </p>
         
         {/* 技术详情（仅开发环境） */}
         {showDetails && import.meta.env.DEV && error && (
-          <div className="mb-6 text-left bg-gray-100 dark:bg-gray-800 rounded-lg p-4 max-h-40 overflow-auto">
-            <p className="text-xs font-mono text-red-600 dark:text-red-400 break-all">
+          <div className="mb-6 text-left bg-surface-2  rounded-lg p-4 max-h-40 overflow-auto">
+            <p className="text-xs font-mono text-danger break-all">
               {error.stack || error.message || String(error)}
             </p>
           </div>
@@ -145,7 +145,7 @@ export function ErrorState({
           {onRetry && (
             <button
               onClick={onRetry}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent hover:bg-accent-700 text-accent-fg rounded-xl font-medium transition-colors"
             >
               <RefreshCw className="w-4 h-4" />
               重试
@@ -155,7 +155,7 @@ export function ErrorState({
           {onGoHome && (
             <button
               onClick={onGoHome}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-medium transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-surface-2 hover:bg-line text-fg rounded-xl font-medium transition-colors"
             >
               <Home className="w-4 h-4" />
               返回首页
@@ -190,15 +190,15 @@ export function EmptyState({
     <div className={containerClass}>
       <div className="text-center max-w-md mx-auto px-4">
         {/* 空状态图标 */}
-        <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-          <Icon className="w-12 h-12 text-gray-400" />
+        <div className="w-24 h-24 mx-auto mb-6 bg-surface-2  rounded-full flex items-center justify-center">
+          <Icon className="w-12 h-12 text-muted" />
         </div>
         
         {/* 标题和消息 */}
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <h3 className="text-lg font-semibold text-fg mb-2">
           {title}
         </h3>
-        <p className="text-gray-500 dark:text-gray-400 mb-6">
+        <p className="text-muted mb-6">
           {message}
         </p>
         
@@ -206,7 +206,7 @@ export function EmptyState({
         {action && (
           <button
             onClick={action}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-700 text-accent-fg rounded-xl font-medium transition-colors"
           >
             {ActionIcon && <ActionIcon className="w-4 h-4" />}
             {actionLabel || '创建'}
@@ -234,23 +234,23 @@ export function NetworkErrorState({
     <div className={containerClass}>
       <div className="text-center max-w-md mx-auto">
         {/* 网络图标 */}
-        <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center ${
+        <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center${
           isOnline 
-            ? 'bg-green-100 dark:bg-green-900/30' 
-            : 'bg-orange-100 dark:bg-orange-900/30'
+            ? 'bg-success/12' 
+            : 'bg-warning/14'
         }`}>
           {isOnline ? (
-            <Wifi className="w-10 h-10 text-green-500" />
+            <Wifi className="w-10 h-10 text-success" />
           ) : (
-            <WifiOff className="w-10 h-10 text-orange-500" />
+            <WifiOff className="w-10 h-10 text-warning" />
           )}
         </div>
         
         {/* 标题和消息 */}
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-xl font-bold text-fg mb-2">
           {isOnline ? '网络已恢复' : '网络连接中断'}
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">
+        <p className="text-muted mb-4">
           {isOnline 
             ? '您可以继续之前的操作了' 
             : '请检查您的网络连接，某些功能可能不可用'
@@ -259,8 +259,8 @@ export function NetworkErrorState({
         
         {/* 待处理的离线操作 */}
         {pendingCount > 0 && (
-          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
-            <p className="text-sm text-blue-700 dark:text-blue-300">
+          <div className="mb-6 p-4 bg-accent/12  rounded-xl">
+            <p className="text-sm text-accent">
               有 <span className="font-bold">{pendingCount}</span> 个操作正在等待网络恢复后同步
             </p>
           </div>
@@ -270,7 +270,7 @@ export function NetworkErrorState({
         {onRetry && isOnline && (
           <button
             onClick={onRetry}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-700 text-accent-fg rounded-xl font-medium transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             重试
@@ -278,7 +278,7 @@ export function NetworkErrorState({
         )}
         
         {!isOnline && (
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-muted">
             网络恢复后将自动重试
           </p>
         )}
@@ -294,14 +294,14 @@ export function NoSearchResults({ query, onClear, totalResults = 0 }) {
   return (
     <div className="py-12 px-4">
       <div className="text-center max-w-md mx-auto">
-        <div className="w-20 h-20 mx-auto mb-6 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-          <Search className="w-10 h-10 text-gray-400" />
+        <div className="w-20 h-20 mx-auto mb-6 bg-surface-2  rounded-full flex items-center justify-center">
+          <Search className="w-10 h-10 text-muted" />
         </div>
         
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <h3 className="text-lg font-semibold text-fg mb-2">
           未找到"{query}"
         </h3>
-        <p className="text-gray-500 dark:text-gray-400 mb-6">
+        <p className="text-muted mb-6">
           {totalResults > 0 
             ? `找到了 ${totalResults} 个结果，但没有匹配的 "${query}"`
             : `没有找到与 "${query}" 相关的内容`
@@ -311,7 +311,7 @@ export function NoSearchResults({ query, onClear, totalResults = 0 }) {
         {onClear && (
           <button
             onClick={onClear}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-medium transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-surface-2 hover:bg-line text-fg rounded-xl font-medium transition-colors"
           >
             清除搜索
           </button>
@@ -331,28 +331,28 @@ export function PageUnavailable({
   contactEmail,
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-bg p-4">
       <div className="text-center max-w-md mx-auto">
-        <div className="w-24 h-24 mx-auto mb-6 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
-          <AlertCircle className="w-12 h-12 text-yellow-500" />
+        <div className="w-24 h-24 mx-auto mb-6 bg-warning/14  rounded-full flex items-center justify-center">
+          <AlertCircle className="w-12 h-12 text-warning" />
         </div>
         
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-2xl font-bold text-fg mb-2">
           {title}
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-muted mb-6">
           {message}
         </p>
         
         {estimatedTime && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+          <p className="text-sm text-muted mb-6">
             预计恢复时间：{estimatedTime}
           </p>
         )}
         
         {contactEmail && (
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            如有问题请联系：<a href={`mailto:${contactEmail}`} className="text-blue-500 hover:underline">{contactEmail}</a>
+          <p className="text-sm text-muted">
+            如有问题请联系：<a href={`mailto:${contactEmail}`} className="text-accent hover:underline">{contactEmail}</a>
           </p>
         )}
       </div>
@@ -371,7 +371,7 @@ export function FormError({ error, field }) {
     : error[field] || error.message || '请检查输入';
   
   return (
-    <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
+    <p className="mt-1 text-sm text-danger flex items-center gap-1">
       <AlertCircle className="w-3 h-3" />
       {message}
     </p>
@@ -389,14 +389,14 @@ export function PermissionDenied({
   return (
     <div className="py-12 px-4">
       <div className="text-center max-w-md mx-auto">
-        <div className="w-20 h-20 mx-auto mb-6 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-          <AlertCircle className="w-10 h-10 text-red-500" />
+        <div className="w-20 h-20 mx-auto mb-6 bg-danger/12  rounded-full flex items-center justify-center">
+          <AlertCircle className="w-10 h-10 text-danger" />
         </div>
         
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 className="text-xl font-bold text-fg mb-2">
           权限不足
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-muted mb-6">
           {requiredRole 
             ? `您需要 ${requiredRole} 权限才能访问此功能`
             : '您没有权限访问此页面'
@@ -407,7 +407,7 @@ export function PermissionDenied({
           {onGoBack && (
             <button
               onClick={onGoBack}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-surface-2 hover:bg-line text-fg rounded-xl font-medium transition-colors"
             >
               返回
             </button>
@@ -416,7 +416,7 @@ export function PermissionDenied({
           {onRequestAccess && (
             <button
               onClick={onRequestAccess}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-700 text-accent-fg rounded-xl font-medium transition-colors"
             >
               申请权限
             </button>

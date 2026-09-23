@@ -33,6 +33,18 @@
   --c-danger: 168 58 42;
   --c-info: 53 88 107;
 
+  /*
+   * 语义色上的前景色。
+   *
+   * 实心语义底（bg-success / bg-danger …）上必须用这个而不是 text-white：
+   * 语义色在暗色模式下会整体提亮，白字落在提亮后的绿/黄上只有 2:1 左右，
+   * 等于读不清。和 accent-fg 一样，明暗两侧各取一次相反极性。
+   */
+  --c-success-fg: 255 252 249;
+  --c-warning-fg: 255 252 249;
+  --c-danger-fg: 255 252 249;
+  --c-info-fg: 255 252 249;
+
   /* 动效曲线：入场统一用 entry，禁用 ease-in */
   --ease-entry: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-exit: cubic-bezier(0.77, 0, 0.175, 1);
@@ -81,4 +93,9 @@ html[data-theme='dark'] {
   --c-warning: 208 160 66;
   --c-danger: 214 106 88;
   --c-info: 118 166 194;
+
+  --c-success-fg: 26 23 18;
+  --c-warning-fg: 26 23 18;
+  --c-danger-fg: 26 23 18;
+  --c-info-fg: 26 23 18;
 }

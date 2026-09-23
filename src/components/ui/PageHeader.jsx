@@ -4,7 +4,7 @@ import { cn } from '../../lib/cn';
  * 页面标题区。
  *
  * 替换各页面顶部重复的
- * `<h1 className="text-2xl font-bold text-gray-900 dark:text-white">` 加一行描述。
+ * `<h1 className="text-2xl font-bold text-fg">` 加一行描述。
  * 标题用 22px / 600 字重：中文在 28px 以上加粗会显得笨重，
  * 而 600 比 700 更透气。
  */

@@ -45,6 +45,11 @@ export default {
         warning: 'rgb(var(--c-warning) / <alpha-value>)',
         danger: 'rgb(var(--c-danger) / <alpha-value>)',
         info: 'rgb(var(--c-info) / <alpha-value>)',
+        // 实心语义底上的前景色，用法同 accent-fg
+        'success-fg': 'rgb(var(--c-success-fg) / <alpha-value>)',
+        'warning-fg': 'rgb(var(--c-warning-fg) / <alpha-value>)',
+        'danger-fg': 'rgb(var(--c-danger-fg) / <alpha-value>)',
+        'info-fg': 'rgb(var(--c-info-fg) / <alpha-value>)',
 
         // ---- 覆盖内置 gray 为暖灰阶（全站现有写法立刻变暖）----
         gray: {
@@ -144,6 +149,16 @@ export default {
         tip: '140ms',
         dialog: '180ms',
         section: '220ms',
+        // base.css 里主题切换的过渡就是这个值，卡片阴影跟随它保持一致
+        160: '160ms',
+      },
+
+      // Tailwind 默认的透明度刻度只到 5 的倍数，/12 与 /14 不写在这里
+      // 就不会生成任何规则 —— 也就是「类名写着、样式根本没有」。
+      // StatusBadge / Modal / 各类淡色徽标都依赖这两个值。
+      opacity: {
+        12: '0.12',
+        14: '0.14',
       },
     },
   },

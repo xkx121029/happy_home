@@ -4,7 +4,7 @@ import { cn } from '../../lib/cn';
  * 表单原语：Input / Textarea / Select / Checkbox / Switch / Field。
  *
  * 全站有 100+ 处手写的
- * className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 ..."，
+ * className="w-full px-4 py-2 border border-line rounded-lg focus:ring-2 ..."，
  * 各页面的边框色、焦点环、禁用态都有细微差别。统一到这里。
  *
  * 颜色全部走语义 token（bg-surface / text-fg / border-line / ring-accent），
@@ -109,7 +109,7 @@ export function Switch({ checked, onChange, disabled = false, id, label }) {
       <span
         aria-hidden="true"
         className={cn(
-          'inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm',
+          'inline-block h-3.5 w-3.5 rounded-full bg-surface shadow-sm',
           'transition-transform duration-100 ease-entry',
           checked ? 'translate-x-[1.15rem]' : 'translate-x-[0.15rem]'
         )}

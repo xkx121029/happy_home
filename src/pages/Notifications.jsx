@@ -21,17 +21,18 @@ import {
 import { useModal, useToast } from '../hooks/useModal';
 import { useData } from '../contexts/DataContext';
 import { notificationsAPI } from '../services/api';
+import { toneChip } from '../lib/tones';
 
 const notificationTypeConfig = {
-  register_request: { icon: UserPlus, color: 'bg-blue-100 text-blue-700', label: '注册请求' },
-  post_created: { icon: FileText, color: 'bg-green-100 text-green-700', label: '新文章' },
-  comment: { icon: MessageSquare, color: 'bg-purple-100 text-purple-700', label: '新评论' },
-  system: { icon: Server, color: 'bg-gray-100 text-gray-700', label: '系统日志' },
-  error: { icon: AlertTriangle, color: 'bg-red-100 text-red-700', label: '错误' },
-  warning: { icon: AlertCircle, color: 'bg-yellow-100 text-yellow-700', label: '警告' },
-  info: { icon: Info, color: 'bg-blue-100 text-blue-700', label: '信息' },
-  mail: { icon: Mail, color: 'bg-cyan-100 text-cyan-700', label: '邮件' },
-  settings: { icon: Settings, color: 'bg-indigo-100 text-indigo-700', label: '设置' },
+  register_request: { icon: UserPlus, tone: 'accent', label: '注册请求' },
+  post_created: { icon: FileText, tone: 'success', label: '新文章' },
+  comment: { icon: MessageSquare, tone: 'info', label: '新评论' },
+  system: { icon: Server, tone: 'neutral', label: '系统日志' },
+  error: { icon: AlertTriangle, tone: 'danger', label: '错误' },
+  warning: { icon: AlertCircle, tone: 'warning', label: '警告' },
+  info: { icon: Info, tone: 'info', label: '信息' },
+  mail: { icon: Mail, tone: 'info', label: '邮件' },
+  settings: { icon: Settings, tone: 'neutral', label: '设置' },
 };
 
 export default function Notifications() {
@@ -139,28 +140,28 @@ export default function Notifications() {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">通知中心</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">查看系统通知、用户活动和日志信息</p>
+          <h1 className="text-2xl font-bold text-fg">通知中心</h1>
+          <p className="text-muted mt-1">查看系统通知、用户活动和日志信息</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={handleRefresh}
             disabled={isLoading}
-            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+            className="px-4 py-2 bg-surface-2 text-fg rounded-lg font-medium hover:bg-line transition-colors flex items-center gap-2 disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4${isLoading ? 'animate-spin' : ''}`} />
             刷新
           </button>
           <button
             onClick={handleMarkAllAsRead}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center gap-2"
           >
             <CheckCircle className="w-4 h-4" />
             全部已读
           </button>
           <button
             onClick={handleClearAll}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-danger text-danger-fg rounded-lg font-medium hover:bg-danger transition-colors flex items-center gap-2"
           >
             <Trash2 className="w-4 h-4" />
             清空
@@ -168,25 +169,25 @@ export default function Notifications() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+      <div className="bg-surface rounded-xl shadow-sm border border-line">
+        <div className="p-4 border-b border-line">
           <div className="flex flex-col md:flex-row md:items-center gap-4">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <input
                 type="text"
                 placeholder="搜索通知..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-400" />
+              <Filter className="w-4 h-4 text-muted" />
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
               >
                 <option value="all">全部类型</option>
                 {types.filter(t => t !== 'all').map(type => (
@@ -202,22 +203,22 @@ export default function Notifications() {
         <div className="p-4">
           {isLoading ? (
             <div className="py-12 text-center">
-              <RefreshCw className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-4" />
-              <p className="text-gray-500">加载中...</p>
+              <RefreshCw className="w-8 h-8 text-accent animate-spin mx-auto mb-4" />
+              <p className="text-muted">加载中...</p>
             </div>
           ) : filteredNotifications.length === 0 ? (
             <div className="py-12 text-center">
               {notifications.length === 0 ? (
                 <>
-                  <BellOff className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400">暂无通知</p>
-                  <p className="text-sm text-gray-400 mt-1">系统活动将在这里显示</p>
+                  <BellOff className="w-12 h-12 text-line mx-auto mb-4" />
+                  <p className="text-muted">暂无通知</p>
+                  <p className="text-sm text-muted mt-1">系统活动将在这里显示</p>
                 </>
               ) : (
                 <>
-                  <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400">没有找到匹配的通知</p>
-                  <p className="text-sm text-gray-400 mt-1">尝试使用不同的关键词搜索</p>
+                  <Search className="w-12 h-12 text-line mx-auto mb-4" />
+                  <p className="text-muted">没有找到匹配的通知</p>
+                  <p className="text-sm text-muted mt-1">尝试使用不同的关键词搜索</p>
                 </>
               )}
             </div>
@@ -230,35 +231,35 @@ export default function Notifications() {
                 return (
                   <div
                     key={notification.id}
-                    className={`p-4 rounded-xl border transition-all hover:shadow-sm ${
+                    className={`p-4 rounded-xl border transition-all hover:shadow-sm${
                       notification.is_read
-                        ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-100 dark:border-gray-600'
-                        : 'bg-white dark:bg-gray-800 border-blue-200 dark:border-blue-700'
+                        ? 'bg-bg  border-line'
+                        : 'bg-surface border-accent/40'
                     }`}
                   >
                     <div className="flex items-start gap-4">
-                      <div className={`w-10 h-10 rounded-lg ${config.color} flex items-center justify-center flex-shrink-0`}>
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0${toneChip(config.tone)}`}>
                         <Icon className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium text-gray-900 dark:text-white">
+                          <h3 className="font-medium text-fg">
                             {notification.title}
                           </h3>
                           {!notification.is_read && (
-                            <span className="w-2 h-2 bg-blue-500 rounded-full" />
+                            <span className="w-2 h-2 bg-accent rounded-full" />
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        <p className="text-sm text-muted mb-2">
                           {notification.message}
                         </p>
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 text-xs text-gray-400">
+                          <div className="flex items-center gap-4 text-xs text-muted">
                             <span className="flex items-center gap-1">
                               <Clock className="w-3 h-3" />
                               {formatDate(notification.created_at)}
                             </span>
-                            <span className={`px-2 py-0.5 rounded-full text-xs ${config.color}`}>
+                            <span className={`px-2 py-0.5 rounded-full text-xs${toneChip(config.tone)}`}>
                               {config.label}
                             </span>
                           </div>
@@ -266,14 +267,14 @@ export default function Notifications() {
                             {!notification.is_read && (
                               <button
                                 onClick={() => handleMarkAsRead(notification.id)}
-                                className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                className="px-3 py-1 text-sm text-accent hover:bg-accent/12 rounded-lg transition-colors"
                               >
                                 标记已读
                               </button>
                             )}
                             <button
                               onClick={() => handleDelete(notification.id, notification.title)}
-                              className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              className="px-3 py-1 text-sm text-danger hover:bg-danger/12 rounded-lg transition-colors"
                             >
                               删除
                             </button>
@@ -289,47 +290,47 @@ export default function Notifications() {
         </div>
       </div>
 
-      <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Server className="w-5 h-5 text-gray-500" />
+      <div className="mt-6 bg-surface rounded-xl shadow-sm border border-line">
+        <div className="p-4 border-b border-line">
+          <h2 className="text-lg font-semibold text-fg flex items-center gap-2">
+            <Server className="w-5 h-5 text-muted" />
             系统日志摘要
           </h2>
         </div>
         <div className="p-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="p-4 bg-accent/12  rounded-xl">
+              <div className="text-2xl font-bold text-accent">
                 {notifications.length}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">总通知数</div>
+              <div className="text-sm text-muted mt-1">总通知数</div>
             </div>
-            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            <div className="p-4 bg-success/12  rounded-xl">
+              <div className="text-2xl font-bold text-success">
                 {notifications.filter(n => n.is_read).length}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">已读</div>
+              <div className="text-sm text-muted mt-1">已读</div>
             </div>
-            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+            <div className="p-4 bg-warning/14  rounded-xl">
+              <div className="text-2xl font-bold text-warning">
                 {notifications.filter(n => !n.is_read).length}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">未读</div>
+              <div className="text-sm text-muted mt-1">未读</div>
             </div>
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl">
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+            <div className="p-4 bg-danger/12  rounded-xl">
+              <div className="text-2xl font-bold text-danger">
                 {notifications.filter(n => n.type === 'error').length}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">错误日志</div>
+              <div className="text-sm text-muted mt-1">错误日志</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Bell className="w-5 h-5 text-gray-500" />
+      <div className="mt-6 bg-surface rounded-xl shadow-sm border border-line">
+        <div className="p-4 border-b border-line">
+          <h2 className="text-lg font-semibold text-fg flex items-center gap-2">
+            <Bell className="w-5 h-5 text-muted" />
             通知类型统计
           </h2>
         </div>
@@ -342,7 +343,7 @@ export default function Notifications() {
               return (
                 <div
                   key={type}
-                  className={`px-4 py-2 rounded-lg ${config.color} flex items-center gap-2`}
+                  className={`px-4 py-2 rounded-lg flex items-center gap-2${toneChip(config.tone)}`}
                 >
                   {config.label}: {count}
                 </div>

@@ -154,13 +154,13 @@ export default function PublicPostDetail() {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-gray-50 py-20">
+      <div className="min-h-screen bg-bg py-20">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">文章不存在</h1>
-          <p className="text-gray-600 mb-6">您访问的文章可能已被删除或不存在</p>
+          <h1 className="text-3xl font-bold text-fg mb-4">文章不存在</h1>
+          <p className="text-muted mb-6">您访问的文章可能已被删除或不存在</p>
           <Link
             to="/posts"
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
+            className="px-6 py-3 bg-accent-700 text-accent-fg rounded-xl font-medium hover:bg-accent-700 transition-colors"
           >
             返回文章列表
           </Link>
@@ -238,21 +238,21 @@ export default function PublicPostDetail() {
     if (replies.length === 0) return null;
 
     return (
-      <div className={`mt-4 space-y-4 ${level > 1 ? 'ml-8 border-l-2 border-gray-200 pl-4' : ''}`}>
+      <div className={`mt-4 space-y-4${level > 1 ? 'ml-8 border-l-2 border-line pl-4' : ''}`}>
         {replies.map(reply => (
           <div key={reply.id} className="relative">
             <div className="flex gap-3">
               {getAvatar(reply.author)}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-gray-900">{reply.author}</span>
-                  <span className="text-sm text-gray-500">{reply.email}</span>
-                  <span className="text-xs text-gray-400">{reply.createdAt}</span>
+                  <span className="font-medium text-fg">{reply.author}</span>
+                  <span className="text-sm text-muted">{reply.email}</span>
+                  <span className="text-xs text-muted">{reply.createdAt}</span>
                 </div>
-                <p className="text-gray-600 mb-2">{reply.content}</p>
+                <p className="text-muted mb-2">{reply.content}</p>
                 <button
                   onClick={() => setReplyingTo(reply.id)}
-                  className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-600"
+                  className="flex items-center gap-1 text-sm text-accent hover:text-accent"
                 >
                   <Reply className="w-3 h-3" />
                   回复
@@ -260,41 +260,41 @@ export default function PublicPostDetail() {
               </div>
             </div>
             {replyingTo === reply.id && (
-              <form onSubmit={handleReplySubmit} className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <form onSubmit={handleReplySubmit} className="mt-4 p-4 bg-bg rounded-lg">
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <input
                     type="text"
                     placeholder="昵称"
                     value={replyForm.author}
                     onChange={e => setReplyForm({ ...replyForm, author: e.target.value })}
-                    className="px-3 py-2 border border-gray-200 rounded-lg bg-white text-gray-900"
+                    className="px-3 py-2 border border-line rounded-lg bg-surface text-fg"
                   />
                   <input
                     type="email"
                     placeholder="邮箱"
                     value={replyForm.email}
                     onChange={e => setReplyForm({ ...replyForm, email: e.target.value })}
-                    className="px-3 py-2 border border-gray-200 rounded-lg bg-white text-gray-900"
+                    className="px-3 py-2 border border-line rounded-lg bg-surface text-fg"
                   />
                 </div>
                 <textarea
                   placeholder="回复内容..."
                   value={replyForm.content}
                   onChange={e => setReplyForm({ ...replyForm, content: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-gray-900 mb-4"
+                  className="w-full px-3 py-2 border border-line rounded-lg bg-surface text-fg mb-4"
                   rows={3}
                 />
                 <div className="flex gap-2">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    className="px-4 py-2 bg-accent text-accent-fg rounded-lg hover:bg-accent-700"
                   >
                     提交回复
                   </button>
                   <button
                     type="button"
                     onClick={() => setReplyingTo(null)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                    className="px-4 py-2 bg-surface-2 text-fg rounded-lg hover:bg-line"
                   >
                     取消
                   </button>
@@ -309,39 +309,39 @@ export default function PublicPostDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg">
       <article>
         {/* Hero */}
         <div className="bg-surface-2 py-16">
           <div className="max-w-4xl mx-auto px-6">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-gray-600 hover:text-blue-600 mb-8"
+              className="flex items-center gap-2 text-muted hover:text-accent mb-8"
             >
               <ArrowLeft className="w-5 h-5" />
               返回
             </button>
             <div className="flex flex-wrap items-center gap-3 mb-4">
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+              <span className="px-3 py-1 bg-accent/12 text-accent rounded-full text-sm font-medium">
                 {post.category}
               </span>
               {post.tags && post.tags.map(tag => (
-                <span key={tag} className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                <span key={tag} className="flex items-center gap-1 px-2 py-1 bg-surface-2 text-muted rounded-full text-xs">
                   <Tag className="w-3 h-3" />
                   {tag}
                 </span>
               ))}
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-fg mb-6">
               {post.title}
             </h1>
-            <div className="flex items-center gap-6 text-gray-600">
+            <div className="flex items-center gap-6 text-muted">
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 bg-accent/12 rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{post.author}</p>
+                  <p className="font-medium text-fg">{post.author}</p>
                   <p className="text-sm">作者</p>
                 </div>
               </div>
@@ -358,14 +358,14 @@ export default function PublicPostDetail() {
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="flex-1">
               <div
-                className="prose prose-lg max-w-none prose-headings:font-bold prose-a:text-blue-600"
+                className="rich-text max-w-none"
                 dangerouslySetInnerHTML={{ __html: safeContent }}
               />
 
               {/* Social Share Bar */}
               {shareConfig.enabled && (
-                <div className="mt-8 pt-6 border-t border-gray-200">
-                  <div className="flex items-center gap-3 text-gray-500 mb-3">
+                <div className="mt-8 pt-6 border-t border-line">
+                  <div className="flex items-center gap-3 text-muted mb-3">
                     <Share2 className="w-5 h-5" />
                     <span className="font-medium">分享这篇文章</span>
                   </div>
@@ -383,8 +383,8 @@ export default function PublicPostDetail() {
               )}
 
               {/* Comments Section */}
-              <div className="mt-12 pt-8 border-t border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <div className="mt-12 pt-8 border-t border-line">
+                <h2 className="text-2xl font-bold text-fg mb-6 flex items-center gap-2">
                   <MessageSquare className="w-6 h-6" />
                   评论 ({postComments.length})
                 </h2>
@@ -393,15 +393,15 @@ export default function PublicPostDetail() {
                 {/* 「评论」页关掉「启用评论」后不再渲染表单；后端也会拒绝提交。
                     已通过的评论仍然照常显示，关评论不等于删评论。 */}
                 {commentsEnabled ? (
-                  <form onSubmit={handleCommentSubmit} className="mb-8 p-6 bg-white rounded-xl shadow-sm">
-                  <h3 className="font-semibold text-gray-900 mb-4">发表评论</h3>
+                  <form onSubmit={handleCommentSubmit} className="mb-8 p-6 bg-surface rounded-xl shadow-sm">
+                  <h3 className="font-semibold text-fg mb-4">发表评论</h3>
                   {commentSubmitted && (
-                    <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg">
+                    <div className="mb-4 p-3 bg-success/12 text-success rounded-lg">
                       评论已提交，等待审核后显示
                     </div>
                   )}
                   {submitError && (
-                    <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg">
+                    <div className="mb-4 p-3 bg-danger/12 text-danger rounded-lg">
                       {submitError}
                     </div>
                   )}
@@ -411,26 +411,26 @@ export default function PublicPostDetail() {
                       placeholder="昵称 *"
                       value={commentForm.author}
                       onChange={e => setCommentForm({ ...commentForm, author: e.target.value })}
-                      className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-4 py-2 border border-line rounded-lg bg-surface text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                     />
                     <input
                       type="email"
                       placeholder="邮箱 *"
                       value={commentForm.email}
                       onChange={e => setCommentForm({ ...commentForm, email: e.target.value })}
-                      className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="px-4 py-2 border border-line rounded-lg bg-surface text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                     />
                   </div>
                   <textarea
                     placeholder="评论内容 *"
                     value={commentForm.content}
                     onChange={e => setCommentForm({ ...commentForm, content: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+                    className="w-full px-4 py-2 border border-line rounded-lg bg-surface text-fg focus:outline-none focus:ring-2 focus:ring-accent mb-4"
                     rows={4}
                   />
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2"
+                    className="px-6 py-2 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center gap-2"
                   >
                     <Send className="w-4 h-4" />
                     提交评论
@@ -442,7 +442,7 @@ export default function PublicPostDetail() {
 
                 {/* Comments List */}
                 {topLevelComments.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted">
                     暂无评论，来说两句吧
                   </div>
                 ) : (
@@ -450,20 +450,20 @@ export default function PublicPostDetail() {
                     {topLevelComments.map(comment => {
                       const replyCount = getReplies(comment.id).length;
                       return (
-                        <div key={comment.id} className="p-6 bg-white rounded-xl shadow-sm">
+                        <div key={comment.id} className="p-6 bg-surface rounded-xl shadow-sm">
                           <div className="flex gap-3">
                             {getAvatar(comment.author)}
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium text-gray-900">{comment.author}</span>
-                                <span className="text-sm text-gray-500">{comment.email}</span>
+                                <span className="font-medium text-fg">{comment.author}</span>
+                                <span className="text-sm text-muted">{comment.email}</span>
                               </div>
-                              <p className="text-gray-600 mb-2">{comment.content}</p>
+                              <p className="text-muted mb-2">{comment.content}</p>
                               <div className="flex items-center gap-4 text-sm">
-                                <span className="text-gray-400">{comment.createdAt}</span>
+                                <span className="text-muted">{comment.createdAt}</span>
                                 <button
                                   onClick={() => setReplyingTo(comment.id)}
-                                  className="flex items-center gap-1 text-blue-500 hover:text-blue-600"
+                                  className="flex items-center gap-1 text-accent hover:text-accent"
                                 >
                                   <Reply className="w-3 h-3" />
                                   回复 {replyCount > 0 && `(${replyCount})`}
@@ -474,41 +474,41 @@ export default function PublicPostDetail() {
 
                           {/* Reply Form */}
                           {replyingTo === comment.id && (
-                            <form onSubmit={handleReplySubmit} className="mt-4 p-4 bg-gray-50 rounded-lg">
+                            <form onSubmit={handleReplySubmit} className="mt-4 p-4 bg-bg rounded-lg">
                               <div className="grid grid-cols-2 gap-4 mb-4">
                                 <input
                                   type="text"
                                   placeholder="昵称"
                                   value={replyForm.author}
                                   onChange={e => setReplyForm({ ...replyForm, author: e.target.value })}
-                                  className="px-3 py-2 border border-gray-200 rounded-lg bg-white text-gray-900"
+                                  className="px-3 py-2 border border-line rounded-lg bg-surface text-fg"
                                 />
                                 <input
                                   type="email"
                                   placeholder="邮箱"
                                   value={replyForm.email}
                                   onChange={e => setReplyForm({ ...replyForm, email: e.target.value })}
-                                  className="px-3 py-2 border border-gray-200 rounded-lg bg-white text-gray-900"
+                                  className="px-3 py-2 border border-line rounded-lg bg-surface text-fg"
                                 />
                               </div>
                               <textarea
                                 placeholder="回复内容..."
                                 value={replyForm.content}
                                 onChange={e => setReplyForm({ ...replyForm, content: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-white text-gray-900 mb-4"
+                                className="w-full px-3 py-2 border border-line rounded-lg bg-surface text-fg mb-4"
                                 rows={3}
                               />
                               <div className="flex gap-2">
                                 <button
                                   type="submit"
-                                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                                  className="px-4 py-2 bg-accent text-accent-fg rounded-lg hover:bg-accent-700"
                                 >
                                   提交回复
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setReplyingTo(null)}
-                                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                                  className="px-4 py-2 bg-surface-2 text-fg rounded-lg hover:bg-line"
                                 >
                                   取消
                                 </button>

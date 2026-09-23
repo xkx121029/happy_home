@@ -122,7 +122,7 @@ export default function TutorialSystem() {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-      <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden">
+      <div className="bg-surface rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="bg-accent p-6 text-accent-fg">
           <div className="flex items-center justify-between">
@@ -135,7 +135,7 @@ export default function TutorialSystem() {
             </div>
             <button
               onClick={() => setShowTutorial(false)}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="p-2 hover:bg-surface/20 rounded-lg transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -143,12 +143,12 @@ export default function TutorialSystem() {
         </div>
 
         {/* Progress */}
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+        <div className="px-6 py-4 bg-bg border-b border-line">
+          <div className="flex items-center justify-between text-sm text-muted mb-2">
             <span>教程进度</span>
             <span>{tutorialSteps.length - incompleteSteps.length} / {tutorialSteps.length}</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-surface-2 rounded-full h-2">
             <div
               className="bg-accent h-2 rounded-full transition-colors duration-100"
               style={{
@@ -169,19 +169,19 @@ export default function TutorialSystem() {
               return (
                 <div
                   key={step.id}
-                  className={`p-4 rounded-xl border-2 transition-all ${
+                  className={`p-4 rounded-xl border-2 transition-all${
                     isCompleted
-                      ? 'border-green-200 bg-green-50'
+                      ? 'border-success/40 bg-success/12'
                       : isCurrent
-                      ? 'border-blue-200 bg-blue-50'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
+                      ? 'border-accent/40 bg-accent/12'
+                      : 'border-line bg-surface hover:border-line'
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center${
                       isCompleted
-                        ? 'bg-green-500 text-white'
-                        : 'bg-blue-100 text-blue-600'
+                        ? 'bg-success text-success-fg'
+                        : 'bg-accent/12 text-accent'
                     }`}>
                       {isCompleted ? (
                         <CheckCircle className="w-6 h-6" />
@@ -191,14 +191,14 @@ export default function TutorialSystem() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-gray-900">{step.title}</h3>
+                        <h3 className="font-semibold text-fg">{step.title}</h3>
                         {isCompleted && (
-                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
+                          <span className="px-2 py-0.5 bg-success/12 text-success text-xs rounded-full">
                             已完成
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 mb-3">{step.description}</p>
+                      <p className="text-sm text-muted mb-3">{step.description}</p>
                       <div className="flex gap-2">
                         {!isCompleted && (
                           <>
@@ -207,13 +207,13 @@ export default function TutorialSystem() {
                                 step.action();
                                 handleCompleteStep(step.id);
                               }}
-                              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                              className="px-4 py-2 bg-accent-700 text-accent-fg rounded-lg text-sm font-medium hover:bg-accent-700 transition-colors"
                             >
                               {step.buttonText}
                             </button>
                             <button
                               onClick={() => handleCompleteStep(step.id)}
-                              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                              className="px-4 py-2 bg-surface-2 text-fg rounded-lg text-sm font-medium hover:bg-line transition-colors"
                             >
                               跳过
                             </button>
@@ -229,7 +229,7 @@ export default function TutorialSystem() {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+        <div className="px-6 py-4 bg-bg border-t border-line">
           <div className="flex items-center justify-between">
             <button
               onClick={() => {
@@ -238,7 +238,7 @@ export default function TutorialSystem() {
                 setTutorial(resetData);
                 setCurrentStep(0);
               }}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="text-sm text-muted hover:text-fg"
             >
               重新开始教程
             </button>
@@ -248,13 +248,13 @@ export default function TutorialSystem() {
                   localStorage.setItem('tutorial_never_show', 'true');
                   setShowTutorial(false);
                 }}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm text-muted hover:text-fg"
               >
                 不再显示
               </button>
               <button
                 onClick={() => setShowTutorial(false)}
-                className="px-6 py-2 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                className="px-6 py-2 bg-fg text-bg rounded-lg font-medium hover:bg-surface-2 transition-colors"
               >
                 稍后再说
               </button>
@@ -321,17 +321,17 @@ export function PageTutorial({ pageKey, children }) {
       return (
         <>
           {children}
-          <div className="fixed bottom-6 right-6 max-w-sm bg-white rounded-xl shadow-2xl border border-gray-200 p-4 z-40">
+          <div className="fixed bottom-6 right-6 max-w-sm bg-surface rounded-xl shadow-2xl border border-line p-4 z-40">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Lightbulb className="w-5 h-5 text-blue-600" />
+              <div className="w-10 h-10 bg-accent/12 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Lightbulb className="w-5 h-5 text-accent" />
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-gray-900 mb-1">{tip.title}</h4>
-                <p className="text-sm text-gray-600 mb-3">{tip.content}</p>
+                <h4 className="font-semibold text-fg mb-1">{tip.title}</h4>
+                <p className="text-sm text-muted mb-3">{tip.content}</p>
                 <button
                   onClick={() => setShowTip(true)}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-sm text-accent hover:text-accent font-medium"
                 >
                   知道了
                 </button>

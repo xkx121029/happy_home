@@ -94,28 +94,28 @@ export default function PageEditor() {
         <div className="flex items-center gap-4">
           <button
             onClick={handleCancel}
-            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 text-muted hover:text-fg hover:bg-surface-2 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-fg">
               {pageId ? '编辑页面' : '新建页面'}
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">创建和管理网站页面</p>
+            <p className="text-muted mt-1">创建和管理网站页面</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setShowPreview(true)}
-            className="px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+            className="px-4 py-2 border border-line text-fg rounded-lg font-medium hover:bg-surface-2 transition-colors flex items-center gap-2"
           >
             <Eye className="w-4 h-4" />
             预览
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
             {status === 'published' ? '更新发布' : '保存草稿'}
@@ -125,13 +125,13 @@ export default function PageEditor() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
             <input
               type="text"
               value={title}
               onChange={handleTitleChange}
               placeholder="输入页面标题..."
-              className="w-full text-2xl font-bold text-gray-900 dark:text-white border-none focus:outline-none focus:ring-0 mb-6 bg-transparent"
+              className="w-full text-2xl font-bold text-fg border-none focus:outline-none focus:ring-0 mb-6 bg-transparent"
             />
             
             <RichTextEditor value={content} onChange={setContent} />
@@ -139,22 +139,22 @@ export default function PageEditor() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">页面设置</h3>
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
+            <h3 className="font-semibold text-fg mb-4">页面设置</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">发布状态</label>
+                <label className="block text-sm font-medium text-fg mb-2">发布状态</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setStatus('draft')}
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${status === 'draft' ? 'bg-yellow-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors${status === 'draft' ? 'bg-warning text-warning-fg' : 'bg-surface-2 text-fg hover:bg-line'}`}
                   >
                     草稿
                   </button>
                   <button
                     onClick={() => setStatus('published')}
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${status === 'published' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors${status === 'published' ? 'bg-success text-success-fg' : 'bg-surface-2 text-fg hover:bg-line'}`}
                   >
                     发布
                   </button>
@@ -162,18 +162,18 @@ export default function PageEditor() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">URL Slug</label>
+                <label className="block text-sm font-medium text-fg mb-2">URL Slug</label>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">/</span>
+                  <span className="text-muted text-sm">/</span>
                   <input
                     type="text"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
                     placeholder="page-url"
-                    className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-3 py-2 border border-line rounded-lg bg-surface  text-fg text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                   />
                 </div>
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-xs text-muted mt-2">
                   页面访问地址: /{slug || 'page-url'}
                 </p>
               </div>

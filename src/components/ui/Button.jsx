@@ -4,7 +4,7 @@ import { cn } from '../../lib/cn';
  * 按钮。
  *
  * 替换全站手写的蓝色按钮 —— 原来每处都是
- * `className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 ..."`，
+ * `className="px-4 py-2 bg-accent text-accent-fg rounded-lg hover:bg-accent-700 ..."`，
  * 各页面的内边距、圆角、禁用态、加载态还都不一致。
  *
  * 交互细节：按下时 scale(0.97)。这是让界面「有回应」最便宜也最有效的一招 ——
@@ -14,10 +14,10 @@ import { cn } from '../../lib/cn';
 
 const VARIANTS = {
   primary: 'bg-accent text-accent-fg hover:bg-accent-700',
-  secondary: 'bg-surface-2 text-fg hover:bg-line/60',
+  secondary: 'bg-surface-2 text-fg hover:bg-line',
   outline: 'border border-line text-fg hover:bg-surface-2',
   ghost: 'text-muted hover:bg-surface-2 hover:text-fg',
-  danger: 'bg-danger text-white hover:opacity-90',
+  danger: 'bg-danger text-danger-fg hover:opacity-90',
   link: 'text-accent hover:opacity-80 underline-offset-4 hover:underline',
 };
 

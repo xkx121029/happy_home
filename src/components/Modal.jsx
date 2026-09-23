@@ -124,8 +124,10 @@ export default function Modal({
               onClose?.();
             }}
             className={cn(
-              'flex-1 h-9 rounded-lg text-sm font-medium text-white transition-colors duration-100 active:scale-[0.97]',
-              type === 'error' ? 'bg-danger hover:opacity-90' : 'bg-accent text-accent-fg hover:bg-accent-700'
+              'flex-1 h-9 rounded-lg text-sm font-medium transition-colors duration-100 active:scale-[0.97]',
+              type === 'error'
+                ? 'bg-danger text-danger-fg hover:opacity-90'
+                : 'bg-accent text-accent-fg hover:bg-accent-700'
             )}
           >
             {confirmText}

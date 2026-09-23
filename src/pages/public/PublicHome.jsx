@@ -104,14 +104,14 @@ export default function PublicHome() {
   }, [seo, siteName, siteDescription, siteUrl]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg">
       {/* Hero Section */}
       <section className="py-20 bg-surface-2">
         <div className="max-w-6xl mx-auto px-6 text-center">
-          <h1 className="text-5xl font-extrabold text-gray-900 mb-6">
+          <h1 className="text-5xl font-extrabold text-fg mb-6">
             欢迎来到 <span className="text-transparent bg-clip-text bg-accent">{siteName}</span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10">
+          <p className="text-xl text-muted max-w-3xl mx-auto mb-10">
             {siteDescription}。
             无需编程知识，即可拥有属于自己的网络空间。
           </p>
@@ -130,7 +130,7 @@ export default function PublicHome() {
       {/* Features */}
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+          <h2 className="text-3xl font-bold text-center text-fg mb-12">
             我们的特色
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -153,12 +153,12 @@ export default function PublicHome() {
             ].map((feature) => {
               const Icon = feature.icon;
               return (
-                <div key={feature.title} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                  <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
-                    <Icon className="w-7 h-7 text-blue-600" />
+                <div key={feature.title} className="bg-surface rounded-2xl p-8 shadow-sm border border-line hover:shadow-md transition-shadow">
+                  <div className="w-14 h-14 bg-accent/12 rounded-xl flex items-center justify-center mb-4">
+                    <Icon className="w-7 h-7 text-accent" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.desc}</p>
+                  <h3 className="text-xl font-bold text-fg mb-2">{feature.title}</h3>
+                  <p className="text-muted">{feature.desc}</p>
                 </div>
               );
             })}
@@ -168,13 +168,13 @@ export default function PublicHome() {
 
       {/* Recent Posts */}
       {recentPosts.length > 0 && (
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-surface">
           <div className="max-w-6xl mx-auto px-6">
             <div className="flex items-center justify-between mb-12">
-              <h2 className="text-3xl font-bold text-gray-900">最新文章</h2>
+              <h2 className="text-3xl font-bold text-fg">最新文章</h2>
               <Link
                 to="/posts"
-                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold"
+                className="flex items-center gap-2 text-accent hover:text-accent font-semibold"
               >
                 查看全部
                 <ExternalLink className="w-4 h-4" />
@@ -185,34 +185,34 @@ export default function PublicHome() {
                 <article key={post.id} className="group">
                   <Link to={`/posts/${post.id}`} className="block">
                     <div className="bg-surface-2 rounded-2xl aspect-video mb-4 overflow-hidden">
-                      <div className="w-full h-full flex items-center justify-center text-white text-4xl opacity-30">
+                      <div className="w-full h-full flex items-center justify-center text-line text-4xl">
                         <FileText className="w-16 h-16" />
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mb-2">
                       {post.sticky && (
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium flex items-center gap-1">
+                        <span className="px-2 py-0.5 bg-accent/12 text-accent rounded-full text-xs font-medium flex items-center gap-1">
                           <Pin className="w-3 h-3" />
                           置顶
                         </span>
                       )}
-                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                      <span className="px-3 py-1 bg-accent/12 text-accent rounded-full text-xs font-medium">
                         {post.category}
                       </span>
-                      <span className="text-sm text-gray-500 flex items-center gap-1">
+                      <span className="text-sm text-muted flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {post.createdAt}
                       </span>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                    <h3 className="text-xl font-bold text-fg mb-2 group-hover:text-accent transition-colors">
                       {post.title}
                     </h3>
-                    <p className="text-gray-600 line-clamp-2 mb-4">{post.excerpt}</p>
+                    <p className="text-muted line-clamp-2 mb-4">{post.excerpt}</p>
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                        <User className="w-4 h-4 text-gray-500" />
+                      <div className="w-8 h-8 bg-surface-2 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-muted" />
                       </div>
-                      <span className="text-sm text-gray-600">{post.author}</span>
+                      <span className="text-sm text-muted">{post.author}</span>
                     </div>
                   </Link>
                 </article>
@@ -224,22 +224,22 @@ export default function PublicHome() {
 
       {/* Pages */}
       {publishedPages.length > 0 && (
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-surface">
           <div className="max-w-6xl mx-auto px-6">
             <div className="flex items-center justify-between mb-12">
-              <h2 className="text-3xl font-bold text-gray-900">更多页面</h2>
+              <h2 className="text-3xl font-bold text-fg">更多页面</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {publishedPages.map((page) => (
                 <article key={page.id} className="group">
                   <Link to={`/page/${page.slug}`} className="block">
                     <div className="bg-surface-2 rounded-2xl aspect-video mb-4 overflow-hidden flex items-center justify-center">
-                      <FileText className="w-16 h-16 text-white opacity-30" />
+                      <FileText className="w-16 h-16 text-line" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                    <h3 className="text-xl font-bold text-fg mb-2 group-hover:text-accent transition-colors">
                       {page.title}
                     </h3>
-                    <p className="text-gray-600 line-clamp-2">
+                    <p className="text-muted line-clamp-2">
                       点击查看页面内容
                     </p>
                   </Link>

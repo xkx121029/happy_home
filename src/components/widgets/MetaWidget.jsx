@@ -5,8 +5,8 @@ export default function MetaWidget({ settings = {} }) {
   const siteName = settings.siteName || 'HappyHome';
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-      <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+    <div className="bg-surface rounded-xl shadow-sm border border-line p-4">
+      <h3 className="font-bold text-fg mb-4 flex items-center gap-2">
         <Globe className="w-4 h-4" />
         网站信息
       </h3>
@@ -14,7 +14,7 @@ export default function MetaWidget({ settings = {} }) {
         <li>
           <Link
             to="/"
-            className="text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+            className="text-fg hover:text-accent transition-colors"
           >
             {siteName}
           </Link>
@@ -22,7 +22,7 @@ export default function MetaWidget({ settings = {} }) {
         <li>
           <a
             href="/login"
-            className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+            className="flex items-center gap-2 text-fg hover:text-accent transition-colors"
           >
             <LogIn className="w-3 h-3" />
             登录

@@ -39,8 +39,8 @@ export default function NetworkStatusBanner() {
   return (
     <div
       role="status"
-      className={`fixed top-0 left-0 right-0 z-[9998] text-white ${
-        isOnline ? 'bg-emerald-600' : 'bg-amber-600'
+      className={`fixed top-0 left-0 right-0 z-[9998]${
+        isOnline ? 'bg-success text-success-fg' : 'bg-warning text-warning-fg'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
@@ -54,7 +54,7 @@ export default function NetworkStatusBanner() {
         <button
           type="button"
           onClick={() => setVisible(false)}
-          className="text-white/80 hover:text-white text-sm px-2 transition-colors duration-100"
+          className="text-sm px-2 transition-opacity duration-100 opacity-80 hover:opacity-100"
         >
           知道了
         </button>

@@ -55,51 +55,51 @@ export default function PasswordStrength({ password }) {
   return (
     <div className="mt-2">
       <div className="flex items-center gap-2 mb-2">
-        <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="flex-1 h-2 bg-surface-2 rounded-full overflow-hidden">
           <div
-            className={`h-full transition-colors duration-100 ${strength.color}`}
+            className={`h-full transition-colors duration-100${strength.color}`}
             style={{ width: `${(strength.level / 3) * 100}%` }}
           />
         </div>
-        <span className={`text-sm font-medium ${
-          strength.level === 1 ? 'text-red-500' :
-          strength.level === 2 ? 'text-yellow-500' :
-          'text-green-500'
+        <span className={`text-sm font-medium${
+          strength.level === 1 ? 'text-danger' :
+          strength.level === 2 ? 'text-warning' :
+          'text-success'
         }`}>
           {strength.label}
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 dark:text-gray-400">
+      <div className="grid grid-cols-2 gap-2 text-xs text-muted">
         <div className="flex items-center gap-1">
           {password.length >= 6 ? (
-            <CheckCircle className="w-3 h-3 text-green-500" />
+            <CheckCircle className="w-3 h-3 text-success" />
           ) : (
-            <XCircle className="w-3 h-3 text-gray-400" />
+            <XCircle className="w-3 h-3 text-muted" />
           )}
           <span>至少6位</span>
         </div>
         <div className="flex items-center gap-1">
           {/[a-z]/.test(password) && /[A-Z]/.test(password) ? (
-            <CheckCircle className="w-3 h-3 text-green-500" />
+            <CheckCircle className="w-3 h-3 text-success" />
           ) : (
-            <XCircle className="w-3 h-3 text-gray-400" />
+            <XCircle className="w-3 h-3 text-muted" />
           )}
           <span>大小写字母</span>
         </div>
         <div className="flex items-center gap-1">
           {/\d/.test(password) ? (
-            <CheckCircle className="w-3 h-3 text-green-500" />
+            <CheckCircle className="w-3 h-3 text-success" />
           ) : (
-            <XCircle className="w-3 h-3 text-gray-400" />
+            <XCircle className="w-3 h-3 text-muted" />
           )}
           <span>包含数字</span>
         </div>
         <div className="flex items-center gap-1">
           {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? (
-            <CheckCircle className="w-3 h-3 text-green-500" />
+            <CheckCircle className="w-3 h-3 text-success" />
           ) : (
-            <XCircle className="w-3 h-3 text-gray-400" />
+            <XCircle className="w-3 h-3 text-muted" />
           )}
           <span>特殊字符</span>
         </div>

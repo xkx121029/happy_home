@@ -8,15 +8,15 @@ export default function ContentPreview({ content, title, onClose, type = 'articl
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-      <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">内容预览</h2>
+      <div className="bg-surface rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b border-line">
+          <h2 className="text-lg font-semibold text-fg">内容预览</h2>
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-surface-2 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-muted" />
             </button>
           </div>
         </div>
@@ -24,9 +24,9 @@ export default function ContentPreview({ content, title, onClose, type = 'articl
         <div className="flex-1 overflow-auto">
           {type === 'article' && (
             <article className="p-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-6">{title || '无标题'}</h1>
+              <h1 className="text-3xl font-bold text-fg mb-6">{title || '无标题'}</h1>
               <div
-                className="prose max-w-none text-gray-700"
+                className="rich-text max-w-none"
                 dangerouslySetInnerHTML={{ __html: safeContent }}
               />
             </article>
@@ -34,17 +34,17 @@ export default function ContentPreview({ content, title, onClose, type = 'articl
 
           {type === 'page' && (
             <div className="p-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-6">{title || '无标题'}</h1>
+              <h1 className="text-3xl font-bold text-fg mb-6">{title || '无标题'}</h1>
               <div
-                className="prose max-w-none text-gray-700"
+                className="rich-text max-w-none"
                 dangerouslySetInnerHTML={{ __html: safeContent }}
               />
             </div>
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <p className="text-sm text-gray-500 text-center">
+        <div className="p-4 border-t border-line bg-bg">
+          <p className="text-sm text-muted text-center">
             这是内容预览，实际发布后可能会有所不同
           </p>
         </div>

@@ -236,13 +236,13 @@ export default function Backup() {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">数据备份与导出</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">管理网站数据备份、导出和导入</p>
+          <h1 className="text-2xl font-bold text-fg">数据备份与导出</h1>
+          <p className="text-muted mt-1">管理网站数据备份、导出和导入</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="mb-6 border-b border-line">
         <nav className="flex gap-6">
           {[
             { id: 'backups', label: '备份管理', icon: Archive },
@@ -254,10 +254,10 @@ export default function Backup() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 pb-3 px-1 border-b-2 font-medium transition-colors ${
+                className={`flex items-center gap-2 pb-3 px-1 border-b-2 font-medium transition-colors${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-accent text-accent'
+                    : 'border-transparent text-muted hover:text-fg hover:border-line'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -272,8 +272,8 @@ export default function Backup() {
       {activeTab === 'backups' && (
         <div className="space-y-6">
           {/* Quick Actions */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">快速备份</h2>
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
+            <h2 className="text-lg font-semibold text-fg mb-4">快速备份</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <button
                 onClick={handleCreateFullBackup}
@@ -288,7 +288,7 @@ export default function Backup() {
 
               <button
                 onClick={() => handleCreateCustomBackup('posts')}
-                className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                className="flex items-center gap-3 p-4 bg-accent/12  text-accent rounded-xl hover:bg-accent/12  transition-colors"
               >
                 <FileText className="w-6 h-6" />
                 <div className="text-left">
@@ -299,7 +299,7 @@ export default function Backup() {
 
               <button
                 onClick={() => handleCreateCustomBackup('pages')}
-                className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-xl hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
+                className="flex items-center gap-3 p-4 bg-success/12  text-success rounded-xl hover:bg-success/12  transition-colors"
               >
                 <FolderOpen className="w-6 h-6" />
                 <div className="text-left">
@@ -310,7 +310,7 @@ export default function Backup() {
 
               <button
                 onClick={() => handleCreateCustomBackup('comments')}
-                className="flex items-center gap-3 p-4 bg-pink-50 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 rounded-xl hover:bg-pink-100 dark:hover:bg-pink-900/50 transition-colors"
+                className="flex items-center gap-3 p-4 bg-info/12  text-info rounded-xl hover:bg-info/12  transition-colors"
               >
                 <FileJson className="w-6 h-6" />
                 <div className="text-left">
@@ -322,15 +322,15 @@ export default function Backup() {
           </div>
 
           {/* Backup List */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div className="bg-surface rounded-xl shadow-sm border border-line">
+            <div className="p-4 border-b border-line flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-fg">
                 备份列表 ({(backups || []).length})
               </h2>
               {selectedBackups.length > 0 && (
                 <button
                   onClick={() => setShowBulkDeleteConfirm(true)}
-                  className="px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-2"
+                  className="px-3 py-1.5 text-danger hover:bg-danger/12 rounded-lg flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
                   删除选中 ({selectedBackups.length})
@@ -340,36 +340,36 @@ export default function Backup() {
 
             {(backups || []).length === 0 ? (
               <div className="p-12 text-center">
-                <Archive className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">暂无备份记录</p>
-                <p className="text-sm text-gray-400 mt-1">点击上方按钮创建第一个备份</p>
+                <Archive className="w-12 h-12 text-line mx-auto mb-4" />
+                <p className="text-muted">暂无备份记录</p>
+                <p className="text-sm text-muted mt-1">点击上方按钮创建第一个备份</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100 dark:divide-gray-700">
+              <div className="divide-y divide-line">
                 {(backups || []).map(backup => (
                   <div
                     key={backup.id}
-                    className={`p-4 flex items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
-                      selectedBackups.includes(backup.id) ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                    className={`p-4 flex items-center gap-4 hover:bg-surface-2 transition-colors${
+                      selectedBackups.includes(backup.id) ? 'bg-accent/12' : ''
                     }`}
                   >
                     <input
                       type="checkbox"
                       checked={selectedBackups.includes(backup.id)}
                       onChange={() => toggleSelectBackup(backup.id)}
-                      className="w-4 h-4 rounded border-gray-300"
+                      className="w-4 h-4 rounded border-line"
                     />
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1">
-                        <span className="font-medium text-gray-900 dark:text-white truncate">
+                        <span className="font-medium text-fg truncate">
                           {backup.name}
                         </span>
-                        <span className={`px-2 py-0.5 text-xs rounded-full ${getBackupTypeColor(backup.type)}`}>
+                        <span className={`px-2 py-0.5 text-xs rounded-full${getBackupTypeColor(backup.type)}`}>
                           {getBackupTypeLabel(backup.type)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <div className="flex items-center gap-4 text-sm text-muted">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {formatDate(backup.createdAt)}
@@ -381,21 +381,21 @@ export default function Backup() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleDownload(backup.id)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-2 text-accent hover:bg-accent/12 rounded-lg transition-colors"
                         title="下载"
                       >
                         <Download className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setShowRestoreConfirm(backup.id)}
-                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        className="p-2 text-success hover:bg-success/12 rounded-lg transition-colors"
                         title="恢复"
                       >
                         <RotateCcw className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setShowDeleteConfirm(backup.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-danger hover:bg-danger/12 rounded-lg transition-colors"
                         title="删除"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -413,76 +413,76 @@ export default function Backup() {
       {activeTab === 'export' && (
         <div className="space-y-6">
           {/* Export Options */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">导出数据</h2>
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
+            <h2 className="text-lg font-semibold text-fg mb-4">导出数据</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <button
                 onClick={() => handleExport('full')}
-                className="flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-3 p-4 border border-line rounded-xl hover:bg-surface-2 transition-colors"
               >
-                <Archive className="w-6 h-6 text-purple-500" />
+                <Archive className="w-6 h-6 text-info" />
                 <div className="text-left">
-                  <div className="font-medium text-gray-900 dark:text-white">导出所有数据</div>
-                  <div className="text-xs text-gray-500">JSON 格式</div>
+                  <div className="font-medium text-fg">导出所有数据</div>
+                  <div className="text-xs text-muted">JSON 格式</div>
                 </div>
               </button>
 
               <button
                 onClick={() => handleExport('posts')}
-                className="flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-3 p-4 border border-line rounded-xl hover:bg-surface-2 transition-colors"
               >
-                <FileText className="w-6 h-6 text-blue-500" />
+                <FileText className="w-6 h-6 text-accent" />
                 <div className="text-left">
-                  <div className="font-medium text-gray-900 dark:text-white">导出文章</div>
-                  <div className="text-xs text-gray-500">JSON 格式</div>
+                  <div className="font-medium text-fg">导出文章</div>
+                  <div className="text-xs text-muted">JSON 格式</div>
                 </div>
               </button>
 
               <button
                 onClick={() => handleExport('pages')}
-                className="flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-3 p-4 border border-line rounded-xl hover:bg-surface-2 transition-colors"
               >
-                <FolderOpen className="w-6 h-6 text-green-500" />
+                <FolderOpen className="w-6 h-6 text-success" />
                 <div className="text-left">
-                  <div className="font-medium text-gray-900 dark:text-white">导出页面</div>
-                  <div className="text-xs text-gray-500">JSON 格式</div>
+                  <div className="font-medium text-fg">导出页面</div>
+                  <div className="text-xs text-muted">JSON 格式</div>
                 </div>
               </button>
 
               <button
                 onClick={() => handleExport('comments')}
-                className="flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center gap-3 p-4 border border-line rounded-xl hover:bg-surface-2 transition-colors"
               >
-                <FileJson className="w-6 h-6 text-pink-500" />
+                <FileJson className="w-6 h-6 text-info" />
                 <div className="text-left">
-                  <div className="font-medium text-gray-900 dark:text-white">导出评论</div>
-                  <div className="text-xs text-gray-500">JSON 格式</div>
+                  <div className="font-medium text-fg">导出评论</div>
+                  <div className="text-xs text-muted">JSON 格式</div>
                 </div>
               </button>
             </div>
           </div>
 
           {/* Export Posts as Markdown */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">导出文章为 Markdown</h2>
-              <p className="text-sm text-gray-500 mt-1">将文章内容导出为 Markdown 格式，方便在其他平台使用</p>
+          <div className="bg-surface rounded-xl shadow-sm border border-line">
+            <div className="p-4 border-b border-line">
+              <h2 className="text-lg font-semibold text-fg">导出文章为 Markdown</h2>
+              <p className="text-sm text-muted mt-1">将文章内容导出为 Markdown 格式，方便在其他平台使用</p>
             </div>
 
-            <div className="divide-y divide-gray-100 dark:divide-gray-700 max-h-96 overflow-y-auto">
+            <div className="divide-y divide-line max-h-96 overflow-y-auto">
               {(posts || []).map(post => (
                 <div key={post.id} className="p-4 flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 dark:text-white truncate">
+                    <div className="font-medium text-fg truncate">
                       {post.title}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-muted">
                       {post.createdAt} · {post.category}
                     </div>
                   </div>
                   <button
                     onClick={() => handleExportMarkdown(post.id)}
-                    className="ml-4 px-3 py-1.5 text-blue-600 hover:bg-blue-50 rounded-lg flex items-center gap-2"
+                    className="ml-4 px-3 py-1.5 text-accent hover:bg-accent/12 rounded-lg flex items-center gap-2"
                   >
                     <Copy className="w-4 h-4" />
                     导出
@@ -492,7 +492,7 @@ export default function Backup() {
             </div>
 
             {(posts || []).length === 0 && (
-              <div className="p-8 text-center text-gray-500">
+              <div className="p-8 text-center text-muted">
                 暂无文章可导出
               </div>
             )}
@@ -503,19 +503,19 @@ export default function Backup() {
       {/* Import Tab */}
       {activeTab === 'import' && (
         <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">导入数据</h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
+            <h2 className="text-lg font-semibold text-fg mb-4">导入数据</h2>
+            <p className="text-muted mb-6">
               导入功能尚未实现。后端目前没有对应的导入端点，强行导入需要先确定
               重复数据的合并策略与内容净化规则，因此暂不提供，避免把不合法的数据写进库。
             </p>
 
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center opacity-60">
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
+            <div className="border-2 border-dashed border-line rounded-xl p-8 text-center opacity-60">
+              <Upload className="w-12 h-12 text-muted mx-auto mb-4" />
+              <p className="text-muted  mb-4">
                 选择或拖拽 JSON 文件到此处
               </p>
-              <label className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 cursor-pointer transition-colors">
+              <label className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-accent-fg rounded-lg hover:bg-accent-700 cursor-pointer transition-colors">
                 <Upload className="w-4 h-4" />
                 选择文件
                 <input
@@ -527,12 +527,12 @@ export default function Backup() {
               </label>
             </div>
 
-            <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl">
+            <div className="mt-6 p-4 bg-warning/14  rounded-xl">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-warning mt-0.5" />
                 <div>
-                  <h3 className="font-medium text-yellow-800 dark:text-yellow-200">当前可用的替代方案</h3>
-                  <ul className="mt-2 text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                  <h3 className="font-medium text-warning">当前可用的替代方案</h3>
+                  <ul className="mt-2 text-sm text-warning space-y-1">
                     <li>• 「数据导出」页签可把文章、页面、评论导出为 JSON 或 Markdown</li>
                     <li>• 「备份管理」页签可创建整个数据库文件的完整备份并下载</li>
                     <li>• 恢复备份会先自动保存当前数据，误操作可以回到恢复前的状态</li>
@@ -547,26 +547,26 @@ export default function Backup() {
       {/* Restore Confirmation Modal */}
       {showRestoreConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4">
+          <div className="bg-surface rounded-xl p-6 max-w-md w-full mx-4">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-yellow-600" />
+              <div className="w-10 h-10 bg-warning/14 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-warning" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">确认恢复备份</h3>
+              <h3 className="text-lg font-semibold text-fg">确认恢复备份</h3>
             </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+            <p className="text-muted  mb-6">
               确定要恢复此备份吗？当前数据将被备份覆盖。此操作不可撤销。
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowRestoreConfirm(null)}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                className="px-4 py-2 text-muted hover:bg-surface-2 rounded-lg"
               >
                 取消
               </button>
               <button
                 onClick={() => handleRestore(showRestoreConfirm)}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                className="px-4 py-2 bg-success text-success-fg rounded-lg hover:bg-success"
               >
                 确认恢复
               </button>
@@ -578,26 +578,26 @@ export default function Backup() {
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4">
+          <div className="bg-surface rounded-xl p-6 max-w-md w-full mx-4">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <Trash2 className="w-5 h-5 text-red-600" />
+              <div className="w-10 h-10 bg-danger/12 rounded-full flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-danger" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">确认删除备份</h3>
+              <h3 className="text-lg font-semibold text-fg">确认删除备份</h3>
             </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+            <p className="text-muted  mb-6">
               确定要删除此备份吗？此操作不可撤销。
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(null)}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                className="px-4 py-2 text-muted hover:bg-surface-2 rounded-lg"
               >
                 取消
               </button>
               <button
                 onClick={() => handleDelete(showDeleteConfirm)}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                className="px-4 py-2 bg-danger text-danger-fg rounded-lg hover:bg-danger"
               >
                 确认删除
               </button>
@@ -609,26 +609,26 @@ export default function Backup() {
       {/* Bulk Delete Confirmation Modal */}
       {showBulkDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4">
+          <div className="bg-surface rounded-xl p-6 max-w-md w-full mx-4">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <Trash2 className="w-5 h-5 text-red-600" />
+              <div className="w-10 h-10 bg-danger/12 rounded-full flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-danger" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">确认批量删除</h3>
+              <h3 className="text-lg font-semibold text-fg">确认批量删除</h3>
             </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+            <p className="text-muted  mb-6">
               确定要删除选中的 {selectedBackups.length} 个备份吗？此操作不可撤销。
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowBulkDeleteConfirm(false)}
-                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                className="px-4 py-2 text-muted hover:bg-surface-2 rounded-lg"
               >
                 取消
               </button>
               <button
                 onClick={handleBulkDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                className="px-4 py-2 bg-danger text-danger-fg rounded-lg hover:bg-danger"
               >
                 确认删除
               </button>

@@ -122,43 +122,43 @@ export default function Widgets() {
         onDragStart={(e) => handleDragStart(e, widget)}
         onDragOver={handleDragOver}
         onDrop={(e) => handleDrop(e, widget, widget.location)}
-        className={`flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-100 dark:border-gray-700 ${
+        className={`flex items-center gap-3 p-4 bg-bg  rounded-lg border border-line${
           draggedWidget?.id === widget.id ? 'opacity-50' : ''
         } ${!widget.enabled ? 'opacity-50' : ''}`}
       >
-        <div className="cursor-move text-gray-400 hover:text-gray-600">
+        <div className="cursor-move text-muted hover:text-fg">
           <GripVertical className="w-5 h-5" />
         </div>
 
         <button
           onClick={() => handleMoveWidget(widget.id, 'up', widget.location)}
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded disabled:opacity-30"
+          className="p-1 hover:bg-surface-2 rounded disabled:opacity-30"
         >
-          <ArrowUp className="w-4 h-4 text-gray-500" />
+          <ArrowUp className="w-4 h-4 text-muted" />
         </button>
 
         <button
           onClick={() => handleMoveWidget(widget.id, 'down', widget.location)}
-          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded disabled:opacity-30"
+          className="p-1 hover:bg-surface-2 rounded disabled:opacity-30"
         >
-          <ArrowDown className="w-4 h-4 text-gray-500" />
+          <ArrowDown className="w-4 h-4 text-muted" />
         </button>
 
-        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-          <Icon className="w-4 h-4 text-blue-600" />
+        <div className="w-8 h-8 bg-accent/12  rounded-lg flex items-center justify-center">
+          <Icon className="w-4 h-4 text-accent" />
         </div>
 
         <div className="flex-1">
-          <div className="font-medium text-gray-900 dark:text-white">{widget.name}</div>
-          <div className="text-xs text-gray-500">{widgetInfo?.description}</div>
+          <div className="font-medium text-fg">{widget.name}</div>
+          <div className="text-xs text-muted">{widgetInfo?.description}</div>
         </div>
 
         <button
           onClick={() => handleToggleEnabled(widget.id)}
-          className={`p-1.5 rounded-lg ${
+          className={`p-1.5 rounded-lg${
             widget.enabled
-              ? 'bg-green-100 dark:bg-green-900/30 text-green-600 hover:bg-green-200'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-500 hover:bg-gray-300'
+              ? 'bg-success/12  text-success hover:bg-success/12'
+              : 'bg-surface-2 text-muted hover:bg-line'
           }`}
         >
           {widget.enabled ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -166,14 +166,14 @@ export default function Widgets() {
 
         <button
           onClick={() => handleEditWidget(widget)}
-          className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
+          className="p-1.5 hover:bg-surface-2 rounded-lg"
         >
-          <Settings className="w-4 h-4 text-gray-500" />
+          <Settings className="w-4 h-4 text-muted" />
         </button>
 
         <button
           onClick={() => handleDeleteWidget(widget.id)}
-          className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded-lg"
+          className="p-1.5 hover:bg-danger/12  text-danger rounded-lg"
         >
           <Trash2 className="w-4 h-4" />
         </button>
@@ -186,32 +186,32 @@ export default function Widgets() {
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md p-6">
+        <div className="bg-surface rounded-xl w-full max-w-md p-6">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">配置小工具</h3>
-            <button onClick={() => setShowConfigModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
-              <X className="w-5 h-5 text-gray-500" />
+            <h3 className="text-lg font-semibold text-fg">配置小工具</h3>
+            <button onClick={() => setShowConfigModal(false)} className="p-1 hover:bg-surface-2 rounded">
+              <X className="w-5 h-5 text-muted" />
             </button>
           </div>
 
           <div className="space-y-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">名称</label>
+              <label className="block text-sm font-medium text-fg mb-1">名称</label>
               <input
                 type="text"
                 value={selectedWidget.name}
                 onChange={(e) => setSelectedWidget({ ...selectedWidget, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-line rounded-lg bg-surface  text-fg"
               />
             </div>
 
             {selectedWidget.type === 'recent_posts' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">显示数量</label>
+                <label className="block text-sm font-medium text-fg mb-1">显示数量</label>
                 <select
                   value={configValues.count || 5}
                   onChange={(e) => setConfigValues({ ...configValues, count: Number(e.target.value) || 5 })}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-line rounded-lg bg-surface  text-fg"
                 >
                   <option value={3}>3 篇</option>
                   <option value={5}>5 篇</option>
@@ -222,11 +222,11 @@ export default function Widgets() {
 
             {selectedWidget.type === 'categories' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">显示数量</label>
+                <label className="block text-sm font-medium text-fg mb-1">显示数量</label>
                 <select
                   value={configValues.count || 10}
                   onChange={(e) => setConfigValues({ ...configValues, count: Number(e.target.value) || 10 })}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-line rounded-lg bg-surface  text-fg"
                 >
                   <option value={5}>5 个</option>
                   <option value={10}>10 个</option>
@@ -237,11 +237,11 @@ export default function Widgets() {
 
             {selectedWidget.type === 'tags' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">显示数量</label>
+                <label className="block text-sm font-medium text-fg mb-1">显示数量</label>
                 <select
                   value={configValues.count || 20}
                   onChange={(e) => setConfigValues({ ...configValues, count: Number(e.target.value) || 20 })}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-line rounded-lg bg-surface  text-fg"
                 >
                   <option value={10}>10 个</option>
                   <option value={20}>20 个</option>
@@ -252,11 +252,11 @@ export default function Widgets() {
 
             {selectedWidget.type === 'recent_comments' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">显示数量</label>
+                <label className="block text-sm font-medium text-fg mb-1">显示数量</label>
                 <select
                   value={configValues.count || 5}
                   onChange={(e) => setConfigValues({ ...configValues, count: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-line rounded-lg bg-surface  text-fg"
                 >
                   <option value={3}>3 条</option>
                   <option value={5}>5 条</option>
@@ -269,13 +269,13 @@ export default function Widgets() {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setShowConfigModal(false)}
-              className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              className="px-4 py-2 text-muted  hover:bg-surface-2 rounded-lg"
             >
               取消
             </button>
             <button
               onClick={handleSaveConfig}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              className="px-4 py-2 bg-accent text-accent-fg rounded-lg hover:bg-accent-700"
             >
               保存配置
             </button>
@@ -288,39 +288,39 @@ export default function Widgets() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">小工具管理</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">管理网站侧边栏和页脚的小工具</p>
+        <h1 className="text-2xl font-bold text-fg">小工具管理</h1>
+        <p className="text-muted mt-1">管理网站侧边栏和页脚的小工具</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* 左侧：小工具类型列表 */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-          <h2 className="font-semibold text-gray-900 dark:text-white mb-4">可用小工具</h2>
+        <div className="bg-surface rounded-xl shadow-sm border border-line p-4">
+          <h2 className="font-semibold text-fg mb-4">可用小工具</h2>
           <div className="space-y-3">
             {widgetTypes.map(widgetType => {
               const Icon = widgetType.icon;
               return (
                 <div
                   key={widgetType.type}
-                  className="p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+                  className="p-3 rounded-lg border border-line hover:border-accent transition-colors"
                 >
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-                      <Icon className="w-4 h-4 text-blue-600" />
+                    <div className="w-8 h-8 bg-accent/12  rounded-lg flex items-center justify-center">
+                      <Icon className="w-4 h-4 text-accent" />
                     </div>
-                    <span className="font-medium text-gray-900 dark:text-white">{widgetType.name}</span>
+                    <span className="font-medium text-fg">{widgetType.name}</span>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{widgetType.description}</p>
+                  <p className="text-xs text-muted mb-3">{widgetType.description}</p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleAddWidget(widgetType.type, 'sidebar')}
-                      className="flex-1 px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                      className="flex-1 px-2 py-1 text-xs bg-surface-2 text-fg rounded hover:bg-line"
                     >
                       添加到侧边栏
                     </button>
                     <button
                       onClick={() => handleAddWidget(widgetType.type, 'footer')}
-                      className="flex-1 px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                      className="flex-1 px-2 py-1 text-xs bg-surface-2 text-fg rounded hover:bg-line"
                     >
                       添加到页脚
                     </button>
@@ -334,22 +334,22 @@ export default function Widgets() {
         {/* 右侧：已启用的小工具 */}
         <div className="lg:col-span-3 space-y-6">
           {/* 侧边栏小工具 */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+          <div className="bg-surface rounded-xl shadow-sm border border-line">
+            <div className="p-4 border-b border-line">
               <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <h2 className="font-semibold text-fg flex items-center gap-2">
                   <Layout className="w-5 h-5" />
                   侧边栏小工具
                 </h2>
-                <span className="text-sm text-gray-500">{sidebarWidgets.length} 个小工具</span>
+                <span className="text-sm text-muted">{sidebarWidgets.length} 个小工具</span>
               </div>
             </div>
             <div className="p-4">
               {sidebarWidgets.length === 0 ? (
                 <div className="text-center py-8">
-                  <Layout className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400">暂无侧边栏小工具</p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">从左侧选择小工具类型添加</p>
+                  <Layout className="w-12 h-12 text-line mx-auto mb-3" />
+                  <p className="text-muted">暂无侧边栏小工具</p>
+                  <p className="text-sm text-muted mt-1">从左侧选择小工具类型添加</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -360,22 +360,22 @@ export default function Widgets() {
           </div>
 
           {/* 页脚小工具 */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+          <div className="bg-surface rounded-xl shadow-sm border border-line">
+            <div className="p-4 border-b border-line">
               <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <h2 className="font-semibold text-fg flex items-center gap-2">
                   <Layout className="w-5 h-5" />
                   页脚小工具
                 </h2>
-                <span className="text-sm text-gray-500">{footerWidgets.length} 个小工具</span>
+                <span className="text-sm text-muted">{footerWidgets.length} 个小工具</span>
               </div>
             </div>
             <div className="p-4">
               {footerWidgets.length === 0 ? (
                 <div className="text-center py-8">
-                  <Layout className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 dark:text-gray-400">暂无页脚小工具</p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">从左侧选择小工具类型添加</p>
+                  <Layout className="w-12 h-12 text-line mx-auto mb-3" />
+                  <p className="text-muted">暂无页脚小工具</p>
+                  <p className="text-sm text-muted mt-1">从左侧选择小工具类型添加</p>
                 </div>
               ) : (
                 <div className="space-y-2">

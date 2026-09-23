@@ -112,10 +112,10 @@ export default function SocialShare({
   const qrCodeUrl = url ? `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}` : '';
 
   return (
-    <div className={`social-share ${position === 'top' ? 'mb-6' : 'mt-8'}`}>
+    <div className={position === 'top' ? 'mb-6' : 'mt-8'}>
       <div className="flex items-center gap-3 flex-wrap">
         {showLabel && (
-          <span className="text-sm text-gray-500 mr-2">分享到：</span>
+          <span className="text-sm text-muted mr-2">分享到：</span>
         )}
 
         {enabledPlatforms.map(platform => {
@@ -130,29 +130,26 @@ export default function SocialShare({
                 onClick={() => handleShare(platform)}
                 onMouseEnter={() => platform === 'wechat' && setShowQR('wechat')}
                 onMouseLeave={() => setShowQR(null)}
-                className={`flex items-center justify-center ${sizeClasses[size]} rounded-${
-                  style === 'circle' ? 'full' : 'lg'
-                } bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors group`}
-                style={{
-                  '--hover-color': platformInfo.color,
-                }}
+                className={`flex items-center justify-center${sizeClasses[size]} ${
+                  style === 'circle' ? 'rounded-full' : 'rounded-lg'
+                } bg-surface-2 hover:bg-line transition-colors group`}
                 title={platformInfo.name}
               >
                 <Icon
-                  className={`${iconSizes[size]} text-gray-600 dark:text-gray-300 group-hover:text-white transition-colors`}
+                  className={`${iconSizes[size]} text-muted group-hover:text-fg transition-colors`}
                   style={isActive ? { color: platformInfo.color } : {}}
                 />
               </button>
 
               {/* QR Code Tooltip for WeChat */}
               {platform === 'wechat' && showQR === 'wechat' && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10 border border-gray-200 dark:border-gray-700">
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-surface rounded-lg shadow-lg z-10 border border-line">
                   <img
                     src={qrCodeUrl}
                     alt="QR Code"
                     className="w-32 h-32"
                   />
-                  <p className="text-xs text-center text-gray-500 mt-1">扫码分享到微信</p>
+                  <p className="text-xs text-center text-muted mt-1">扫码分享到微信</p>
                 </div>
               )}
             </div>
@@ -162,15 +159,15 @@ export default function SocialShare({
         {/* Copy Link Button */}
         <button
           onClick={handleCopyLink}
-          className={`flex items-center justify-center ${sizeClasses[size]} rounded-${
-            style === 'circle' ? 'full' : 'lg'
-          } bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors group`}
+          className={`flex items-center justify-center${sizeClasses[size]} ${
+            style === 'circle' ? 'rounded-full' : 'rounded-lg'
+          } bg-surface-2 hover:bg-line transition-colors group`}
           title="复制链接"
         >
           {copied ? (
-            <Check className={`${iconSizes[size]} text-green-500`} />
+            <Check className={`${iconSizes[size]} text-success`} />
           ) : (
-            <Link2 className={`${iconSizes[size]} text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors`} />
+            <Link2 className={`${iconSizes[size]} text-muted group-hover:text-fg transition-colors`} />
           )}
         </button>
       </div>
@@ -182,10 +179,10 @@ export default function SocialShare({
           onClick={() => setShowQR(null)}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-sm w-full mx-4"
+            className="bg-surface rounded-xl p-6 max-w-sm w-full mx-4"
             onClick={e => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
+            <h3 className="text-lg font-semibold text-fg mb-4 text-center">
               微信分享
             </h3>
             <div className="flex justify-center mb-4">
@@ -195,12 +192,12 @@ export default function SocialShare({
                 className="w-48 h-48"
               />
             </div>
-            <p className="text-sm text-gray-500 text-center">
+            <p className="text-sm text-muted text-center">
               使用微信扫描二维码分享
             </p>
             <button
               onClick={() => setShowQR(null)}
-              className="mt-4 w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="mt-4 w-full px-4 py-2 bg-surface-2 text-fg rounded-lg hover:bg-line transition-colors"
             >
               关闭
             </button>

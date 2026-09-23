@@ -175,8 +175,7 @@ function NotificationItem({ notification, onClose, onAction }) {
   return (
     <div
       className={`
-        relative w-80 overflow-hidden rounded-lg shadow-lg border
-        ${colors.bg} ${colors.border}
+        relative w-80 overflow-hidden rounded-lg shadow-lg border${colors.bg} ${colors.border}
         ${isExiting ? 'opacity-0' : 'opacity-100'}
       `}
       style={{ transition: 'opacity 180ms var(--ease-entry)' }}
@@ -185,7 +184,7 @@ function NotificationItem({ notification, onClose, onAction }) {
       <div className="p-4">
         <div className="flex items-start gap-3">
           {/* 图标 */}
-          <div className={`flex-shrink-0 ${colors.icon}`}>
+          <div className={`flex-shrink-0${colors.icon}`}>
             {type === NotificationType.LOADING ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
@@ -196,11 +195,11 @@ function NotificationItem({ notification, onClose, onAction }) {
           {/* 内容 */}
           <div className="flex-1 min-w-0">
             {title && (
-              <p className={`font-semibold text-sm ${colors.text}`}>
+              <p className={`font-semibold text-sm${colors.text}`}>
                 {title}
               </p>
             )}
-            <p className={`text-sm ${colors.text} ${title ? 'mt-1' : ''}`}>
+            <p className={`text-sm${colors.text} ${title ? 'mt-1' : ''}`}>
               {message}
             </p>
             
@@ -212,10 +211,9 @@ function NotificationItem({ notification, onClose, onAction }) {
                     key={action.label}
                     onClick={() => handleAction(action)}
                     className={`
-                      text-sm font-medium px-3 py-1 rounded-lg transition-colors
-                      ${action.dangerous 
-                        ? 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900'
-                        : 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900'
+                      text-sm font-medium px-3 py-1 rounded-lg transition-colors${action.dangerous 
+                        ? 'bg-danger/12  text-danger hover:bg-danger/12'
+                        : 'bg-accent/12  text-accent hover:bg-accent/12'
                       }
                     `}
                   >
@@ -231,7 +229,7 @@ function NotificationItem({ notification, onClose, onAction }) {
           {dismissible && (
             <button
               onClick={handleClose}
-              className={`flex-shrink-0 p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors ${colors.icon}`}
+              className={`flex-shrink-0 p-1 rounded-lg hover:bg-fg/5  transition-colors${colors.icon}`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -241,9 +239,9 @@ function NotificationItem({ notification, onClose, onAction }) {
       
       {/* 进度条 */}
       {type !== NotificationType.LOADING && duration !== 0 && (
-        <div className="h-1 w-full bg-black/5 dark:bg-white/10">
+        <div className="h-1 w-full bg-fg/5">
           <div
-            className={`h-full ${colors.progress} transition-all duration-100`}
+            className={`h-full${colors.progress} transition-all duration-100`}
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -267,7 +265,7 @@ export function NotificationContainer({ notifications, onClose, onAction }) {
   
   return (
     <div
-      className={`fixed z-[9999] ${positionStyles[notificationConfig.position]} space-y-3`}
+      className={`fixed z-[9999]${positionStyles[notificationConfig.position]} space-y-3`}
       aria-live="polite"
     >
       {notifications.slice(0, notificationConfig.maxNotifications).map((notification) => (
@@ -496,16 +494,16 @@ export function GlobalErrorModal({ isOpen, error, onClose, onRetry }) {
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
-        <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-          <AlertCircle className="w-8 h-8 text-red-500" />
+      <div className="relative bg-surface rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+        <div className="w-16 h-16 bg-danger/12  rounded-full flex items-center justify-center mx-auto mb-4">
+          <AlertCircle className="w-8 h-8 text-danger" />
         </div>
         
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">
+        <h3 className="text-xl font-bold text-fg text-center mb-2">
           {error.title || '发生错误'}
         </h3>
         
-        <p className="text-gray-600 dark:text-gray-300 text-center mb-6">
+        <p className="text-muted  text-center mb-6">
           {error.message || '一个意外的错误发生了'}
         </p>
         
@@ -513,7 +511,7 @@ export function GlobalErrorModal({ isOpen, error, onClose, onRetry }) {
           {onRetry && (
             <button
               onClick={onRetry}
-              className="flex-1 px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 bg-accent hover:bg-accent-700 text-accent-fg rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               重试
@@ -521,7 +519,7 @@ export function GlobalErrorModal({ isOpen, error, onClose, onRetry }) {
           )}
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-medium transition-colors"
+            className="flex-1 px-4 py-3 bg-surface-2 hover:bg-line text-fg rounded-xl font-medium transition-colors"
           >
             关闭
           </button>

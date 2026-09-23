@@ -172,22 +172,22 @@ export default function PostEditor() {
         <div className="flex items-center gap-4">
           <button
             onClick={handleCancelClick}
-            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="p-2 text-muted hover:text-fg hover:bg-surface-2 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-fg">
               {postId ? '编辑文章' : '新建文章'}
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">创建精彩内容，分享您的故事</p>
+            <p className="text-muted mt-1">创建精彩内容，分享您的故事</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {postId && (
             <button
               onClick={() => setShowRevisions(true)}
-              className="px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2 border border-line text-fg rounded-lg font-medium hover:bg-surface-2 transition-colors flex items-center gap-2"
             >
               <History className="w-4 h-4" />
               修订
@@ -195,21 +195,21 @@ export default function PostEditor() {
           )}
           <button
             onClick={() => setShowPreview(true)}
-            className="px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+            className="px-4 py-2 border border-line text-fg rounded-lg font-medium hover:bg-surface-2 transition-colors flex items-center gap-2"
           >
             <Eye className="w-4 h-4" />
             预览
           </button>
           <button
             onClick={handleSaveDraft}
-            className="px-4 py-2 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+            className="px-4 py-2 border border-line text-fg rounded-lg font-medium hover:bg-surface-2 transition-colors flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
             保存草稿
           </button>
           <button
             onClick={handlePublish}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
             {isPublished ? '更新发布' : '发布'}
@@ -219,13 +219,13 @@ export default function PostEditor() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="输入文章标题..."
-              className="w-full text-2xl font-bold text-gray-900 dark:text-white border-none focus:outline-none focus:ring-0 mb-6 bg-transparent"
+              className="w-full text-2xl font-bold text-fg border-none focus:outline-none focus:ring-0 mb-6 bg-transparent"
             />
             
             <RichTextEditor value={content} onChange={setContent} />
@@ -233,16 +233,16 @@ export default function PostEditor() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">文章设置</h3>
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
+            <h3 className="font-semibold text-fg mb-4">文章设置</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">分类</label>
+                <label className="block text-sm font-medium text-fg mb-2">分类</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                 >
                   <option value="">选择分类</option>
                   {(categories || []).map((cat) => (
@@ -252,79 +252,79 @@ export default function PostEditor() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">标签</label>
+                <label className="block text-sm font-medium text-fg mb-2">标签</label>
                 <div className="flex gap-2 flex-wrap mb-2">
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm"
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-accent/12  text-accent rounded-full text-sm"
                     >
                       {tag}
-                      <button onClick={() => handleRemoveTag(tag)} className="hover:text-blue-900 dark:hover:text-blue-100">
+                      <button onClick={() => handleRemoveTag(tag)} className="hover:text-accent">
                         x
                       </button>
                     </span>
                   ))}
                 </div>
                 <div className="relative">
-                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                   <input
                     type="text"
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
                     onKeyDown={handleAddTag}
                     placeholder="输入标签后按回车添加"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="w-full pl-10 pr-4 py-2 border border-line rounded-lg text-sm bg-surface  text-fg"
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">摘要</h3>
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
+            <h3 className="font-semibold text-fg mb-4">摘要</h3>
             <textarea
               value={excerpt}
               onChange={(e) => setExcerpt(e.target.value)}
               placeholder="文章摘要，将显示在文章列表中..."
               rows={4}
-              className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-line rounded-lg bg-surface  text-fg resize-none focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">发布信息</h3>
-            <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
+            <h3 className="font-semibold text-fg mb-4">发布信息</h3>
+            <div className="space-y-3 text-sm text-muted">
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-400" />
+                <Calendar className="w-4 h-4 text-muted" />
                 <span>创建日期: {new Date().toISOString().split('T')[0]}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-400" />
+                <Calendar className="w-4 h-4 text-muted" />
                 <span>更新日期: {new Date().toISOString().split('T')[0]}</span>
               </div>
               <div>
                 <span>作者: admin</span>
               </div>
-              <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex items-center justify-between pt-2 border-t border-line">
                 <span>置顶文章</span>
                 <button
                   onClick={() => setIsSticky(!isSticky)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    isSticky ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors${
+                    isSticky ? 'bg-accent' : 'bg-surface-2'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    className={`inline-block h-4 w-4 transform rounded-full bg-surface transition-transform${
                       isSticky ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
               </div>
-              <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
-                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                  publishType === 'scheduled' ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300' :
-                  isPublished ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300' : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300'
+              <div className="pt-2 border-t border-line">
+                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium${
+                  publishType === 'scheduled' ? 'bg-info/12  text-info' :
+                  isPublished ? 'bg-success/12  text-success' : 'bg-warning/14  text-warning'
                 }`}>
                   {publishType === 'scheduled' ? '定时发布' : isPublished ? '已发布' : '草稿'}
                 </span>
@@ -332,8 +332,8 @@ export default function PostEditor() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">发布选项</h3>
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
+            <h3 className="font-semibold text-fg mb-4">发布选项</h3>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <input
@@ -342,9 +342,9 @@ export default function PostEditor() {
                   name="publishType"
                   checked={publishType === 'now'}
                   onChange={() => setPublishType('now')}
-                  className="w-4 h-4 text-blue-500"
+                  className="w-4 h-4 text-accent"
                 />
-                <label htmlFor="publishNow" className="text-sm text-gray-700 dark:text-gray-300">
+                <label htmlFor="publishNow" className="text-sm text-fg">
                   立即发布
                 </label>
               </div>
@@ -355,9 +355,9 @@ export default function PostEditor() {
                   name="publishType"
                   checked={publishType === 'scheduled'}
                   onChange={() => setPublishType('scheduled')}
-                  className="w-4 h-4 text-blue-500"
+                  className="w-4 h-4 text-accent"
                 />
-                <label htmlFor="publishScheduled" className="text-sm text-gray-700 dark:text-gray-300">
+                <label htmlFor="publishScheduled" className="text-sm text-fg">
                   定时发布
                 </label>
               </div>
@@ -367,7 +367,7 @@ export default function PostEditor() {
                     type="datetime-local"
                     value={publishDate}
                     onChange={(e) => setPublishDate(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-line rounded-lg bg-surface  text-fg text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                   />
                 </div>
               )}
@@ -387,35 +387,35 @@ export default function PostEditor() {
 
       {showRevisions && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">修订历史</h2>
+          <div className="bg-surface rounded-xl shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-line">
+              <h2 className="text-xl font-bold text-fg">修订历史</h2>
               <button
                 onClick={() => {
                   setShowRevisions(false);
                   setSelectedRevision(null);
                 }}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                className="p-2 text-muted hover:text-fg  hover:bg-surface-2 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="flex h-[calc(80vh-140px)]">
-              <div className="w-1/3 border-r border-gray-100 dark:border-gray-700 overflow-y-auto">
+              <div className="w-1/3 border-r border-line overflow-y-auto">
                 {revisions.length > 0 ? (
-                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                  <div className="divide-y divide-line">
                     {revisions.map((revision) => (
                       <button
                         key={revision.id}
                         onClick={() => setSelectedRevision(revision)}
-                        className={`w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                          selectedRevision?.id === revision.id ? 'bg-blue-50 dark:bg-blue-900' : ''
+                        className={`w-full p-4 text-left hover:bg-surface-2 transition-colors${
+                          selectedRevision?.id === revision.id ? 'bg-accent/12' : ''
                         }`}
                       >
-                        <div className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        <div className="text-sm font-medium text-fg truncate">
                           {revision.title.substring(0, 30)}{revision.title.length > 30 ? '...' : ''}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                        <div className="text-xs text-muted mt-1 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {new Date(revision.createdAt).toLocaleString()}
                         </div>
@@ -423,7 +423,7 @@ export default function PostEditor() {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+                  <div className="p-6 text-center text-muted">
                     暂无修订记录
                   </div>
                 )}
@@ -431,21 +431,21 @@ export default function PostEditor() {
               <div className="w-2/3 p-6 overflow-y-auto">
                 {selectedRevision ? (
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                    <h3 className="text-lg font-bold text-fg mb-4">
                       {selectedRevision.title}
                     </h3>
-                    <div className="text-sm text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-2">
+                    <div className="text-sm text-muted mb-4 flex items-center gap-2">
                       <span>修订时间: {new Date(selectedRevision.createdAt).toLocaleString()}</span>
                       <span>|</span>
                       <span>作者: {selectedRevision.author}</span>
                     </div>
-                    <div className="prose dark:prose-invert max-w-none">
+                    <div className="rich-text max-w-none">
                       <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedRevision.content) }} />
                     </div>
-                    <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <div className="mt-6 pt-4 border-t border-line">
                       <button
                         onClick={() => handleRestoreRevision(selectedRevision)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2"
+                        className="px-4 py-2 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center gap-2"
                       >
                         <RotateCcw className="w-4 h-4" />
                         恢复到该版本
@@ -453,7 +453,7 @@ export default function PostEditor() {
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+                  <div className="h-full flex items-center justify-center text-muted">
                     选择一个修订版本查看详情
                   </div>
                 )}

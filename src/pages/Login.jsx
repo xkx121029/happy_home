@@ -181,28 +181,28 @@ export default function Login() {
 
   return (
     <div className="w-full">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+      <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md p-8">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-accent rounded-xl flex items-center justify-center mx-auto mb-4">
             <span className="text-accent-fg text-2xl font-bold">H</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">HappyHome</h1>
-          <p className="text-gray-500 mt-1">欢迎回来</p>
+          <h1 className="text-2xl font-bold text-fg">HappyHome</h1>
+          <p className="text-muted mt-1">欢迎回来</p>
         </div>
 
-        <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
+        <div className="flex bg-surface-2 rounded-lg p-1 mb-6">
           <button
             onClick={() => setIsLogin(true)}
-            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-              isLogin ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors${
+              isLogin ? 'bg-surface text-accent shadow-sm' : 'text-muted hover:text-fg'
             }`}
           >
             登录
           </button>
           <button
             onClick={() => setIsLogin(false)}
-            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-              !isLogin ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors${
+              !isLogin ? 'bg-surface text-accent shadow-sm' : 'text-muted hover:text-fg'
             }`}
           >
             注册
@@ -210,7 +210,7 @@ export default function Login() {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+          <div className="mb-4 p-3 bg-danger/12 text-danger rounded-lg text-sm">
             {error}
           </div>
         )}
@@ -218,34 +218,34 @@ export default function Login() {
         {isLogin ? (
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">用户名</label>
+              <label className="block text-sm font-medium text-fg mb-2">用户名</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="请输入用户名"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">密码</label>
+              <label className="block text-sm font-medium text-fg mb-2">密码</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="请输入密码"
-                  className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-12 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-fg"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -254,7 +254,7 @@ export default function Login() {
 
             <button
               type="submit"
-              className="w-full py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center justify-center gap-2"
             >
               <LogIn className="w-5 h-5" />
               登录
@@ -267,48 +267,48 @@ export default function Login() {
         ) : (
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">用户名</label>
+              <label className="block text-sm font-medium text-fg mb-2">用户名</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="请输入用户名"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">邮箱</label>
+              <label className="block text-sm font-medium text-fg mb-2">邮箱</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="请输入邮箱"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">密码</label>
+              <label className="block text-sm font-medium text-fg mb-2">密码</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="请输入密码（至少6位）"
-                  className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-12 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-fg"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -316,35 +316,35 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">确认密码</label>
+              <label className="block text-sm font-medium text-fg mb-2">确认密码</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="请再次输入密码"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">验证码</label>
+              <label className="block text-sm font-medium text-fg mb-2">验证码</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <input
                   type="text"
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value)}
                   placeholder="请输入邮箱验证码"
-                  className="w-full pl-10 pr-32 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-32 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
                 />
                 <button
                   type="button"
                   onClick={handleGetRegisterCode}
                   disabled={codeButtonDisabled || resendLoading}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-surface-2 text-muted rounded-lg hover:bg-line transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {resendLoading ? '发送中...' : codeButtonText}
                 </button>
@@ -353,7 +353,7 @@ export default function Login() {
 
             <button
               type="submit"
-              className="w-full py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center justify-center gap-2"
             >
               <UserPlus className="w-5 h-5" />
               注册
@@ -363,33 +363,33 @@ export default function Login() {
 
         {showVerification && (
           <form onSubmit={handleVerify} className="space-y-4">
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="p-4 bg-success/12 border border-success/40 rounded-lg">
               <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm text-green-800 font-medium">注册成功！</p>
-                  <p className="text-xs text-green-600 mt-1">{verificationMessage}</p>
+                  <p className="text-sm text-success font-medium">注册成功！</p>
+                  <p className="text-xs text-success mt-1">{verificationMessage}</p>
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">验证码</label>
+              <label className="block text-sm font-medium text-fg mb-2">验证码</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
                 <input
                   type="text"
                   value={verificationCode}
                   onChange={(e) => setVerificationCode(e.target.value)}
                   placeholder="请输入邮箱中的验证码"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                  className="w-full pl-10 pr-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-accent uppercase"
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-success text-success-fg rounded-lg font-medium hover:bg-success transition-colors flex items-center justify-center gap-2"
             >
               <CheckCircle className="w-5 h-5" />
               完成验证
@@ -399,7 +399,7 @@ export default function Login() {
               type="button"
               onClick={handleResendVerification}
               disabled={resendLoading}
-              className="w-full py-3 bg-gray-100 text-gray-600 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3 bg-surface-2 text-muted rounded-lg font-medium hover:bg-line transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {resendLoading ? (
                 <>
@@ -419,31 +419,31 @@ export default function Login() {
         <div className="mt-6 text-center space-y-2">
           {isLogin ? (
             <>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted">
                 还没有账户？{' '}
                 <button
                   onClick={() => setIsLogin(false)}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-accent hover:text-accent font-medium"
                 >
                   立即注册
                 </button>
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted">
                 忘记密码？{' '}
                 <Link
                   to="/forgot-password"
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-accent hover:text-accent font-medium"
                 >
                   找回密码
                 </Link>
               </p>
             </>
           ) : (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted">
               已有账户？{' '}
               <button
                 onClick={() => setIsLogin(true)}
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="text-accent hover:text-accent font-medium"
               >
                 立即登录
               </button>

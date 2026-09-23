@@ -197,7 +197,7 @@ export default function Settings() {
             value={value || ''}
             onChange={(e) => handleChange(setting.key, e.target.value)}
             placeholder={setting.placeholder}
-            className="w-full max-w-md px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full max-w-md px-4 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
           />
         );
 
@@ -208,7 +208,7 @@ export default function Settings() {
             onChange={(e) => handleChange(setting.key, e.target.value)}
             placeholder={setting.placeholder}
             rows={3}
-            className="w-full max-w-md px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full max-w-md px-4 py-2 border border-line rounded-lg bg-surface  text-fg resize-none focus:outline-none focus:ring-2 focus:ring-accent"
           />
         );
 
@@ -220,7 +220,7 @@ export default function Settings() {
             onChange={(e) => handleChange(setting.key, parseInt(e.target.value, 10))}
             min={setting.min}
             max={setting.max}
-            className="w-full max-w-md px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full max-w-md px-4 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
           />
         );
 
@@ -231,7 +231,7 @@ export default function Settings() {
             value={value || ''}
             onChange={(e) => handleChange(setting.key, e.target.value)}
             placeholder={setting.placeholder}
-            className="w-full max-w-md px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full max-w-md px-4 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
           />
         );
 
@@ -240,7 +240,7 @@ export default function Settings() {
           <select
             value={value || setting.defaultValue || ''}
             onChange={(e) => handleChange(setting.key, e.target.value)}
-            className="w-full max-w-md px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full max-w-md px-4 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
           >
             {setting.options.map(option => (
               <option key={option.value} value={option.value}>{option.label}</option>
@@ -255,13 +255,13 @@ export default function Settings() {
               type="color"
               value={value || setting.defaultValue || '#3b82f6'}
               onChange={(e) => handleChange(setting.key, e.target.value)}
-              className="w-12 h-10 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer"
+              className="w-12 h-10 border border-line rounded-lg cursor-pointer"
             />
             <input
               type="text"
               value={value || setting.defaultValue || '#3b82f6'}
               onChange={(e) => handleChange(setting.key, e.target.value)}
-              className="w-32 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-32 px-3 py-2 border border-line rounded-lg bg-surface  text-fg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
         );
@@ -279,7 +279,7 @@ export default function Settings() {
                 step={setting.step || 1}
                 className="flex-1"
               />
-              <span className="w-16 text-right font-medium text-gray-700 dark:text-gray-300">
+              <span className="w-16 text-right font-medium text-fg">
                 {value || setting.defaultValue || 0}
               </span>
             </div>
@@ -291,12 +291,12 @@ export default function Settings() {
         return (
           <button
             onClick={() => handleChange(setting.key, !toggleValue)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              toggleValue ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors${
+              toggleValue ? 'bg-accent' : 'bg-line'
             }`}
           >
             <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              className={`inline-block h-4 w-4 transform rounded-full bg-surface transition-transform${
                 toggleValue ? 'translate-x-6' : 'translate-x-1'
               }`}
             />
@@ -339,13 +339,13 @@ export default function Settings() {
       <div className="p-6">
       <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">设置中心</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">管理您网站的所有设置选项</p>
+          <h1 className="text-2xl font-bold text-fg">设置中心</h1>
+          <p className="text-muted mt-1">管理您网站的所有设置选项</p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={handleReset}
-            className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="px-4 py-2 text-muted  hover:bg-surface-2 rounded-lg font-medium transition-colors flex items-center gap-2"
           >
             <RotateCcw className="w-4 h-4" />
             重置
@@ -353,10 +353,10 @@ export default function Settings() {
           <button
             onClick={handleSave}
             disabled={!hasChanges}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2${
               hasChanges
-                ? 'bg-blue-500 text-white hover:bg-blue-600'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                ? 'bg-accent text-accent-fg hover:bg-accent-700'
+                : 'bg-surface-2 text-muted cursor-not-allowed'
             }`}
           >
             <Save className="w-4 h-4" />
@@ -367,7 +367,7 @@ export default function Settings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="lg:col-span-1">
-          <nav className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-2">
+          <nav className="bg-surface rounded-xl shadow-sm border border-line p-2">
             {tabs.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -375,10 +375,10 @@ export default function Settings() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-colors mb-1 last:mb-0 ${
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-colors mb-1 last:mb-0${
                     isActive
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      ? 'bg-accent/12  text-accent'
+                      : 'text-muted  hover:bg-surface-2'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -390,13 +390,13 @@ export default function Settings() {
         </div>
 
         <div className="lg:col-span-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+          <div className="bg-surface rounded-xl shadow-sm border border-line p-6">
             {activeTab !== 'backup' && activeTab !== 'logs' && (
               <div className="space-y-6">
                 {findTab(activeTab)?.fields.map(setting => (
-                  <div key={setting.key} className="flex items-start justify-between gap-6 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                  <div key={setting.key} className="flex items-start justify-between gap-6 py-2 border-b border-line last:border-0">
                     <div className="flex-1 min-w-0">
-                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label className="text-sm font-medium text-fg">
                         {setting.label}
                       </label>
                       {setting.hint && (
@@ -412,20 +412,20 @@ export default function Settings() {
             )}
 
             {activeTab === 'email' && (
-              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  <h3 className="font-medium text-blue-800 dark:text-blue-200 mb-3 flex items-center gap-2">
+              <div className="mt-6 pt-6 border-t border-line">
+                <div className="p-4 bg-accent/12  border border-accent/40  rounded-lg">
+                  <h3 className="font-medium text-accent mb-3 flex items-center gap-2">
                     <TestTube className="w-5 h-5" />
                     测试SMTP配置
                   </h3>
-                  <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
+                  <p className="text-sm text-accent mb-4">
                     点击下方按钮测试当前表单中的SMTP配置（无需先保存）。
                   </p>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={handleTestSmtp}
                       disabled={isTestingSmtp}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                      className="px-4 py-2 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center gap-2 disabled:opacity-50"
                     >
                       {isTestingSmtp ? (
                         <>
@@ -440,10 +440,10 @@ export default function Settings() {
                       )}
                     </button>
                     {smtpTestResult && (
-                      <div className={`px-3 py-2 rounded-lg text-sm ${
+                      <div className={`px-3 py-2 rounded-lg text-sm${
                         smtpTestResult.success 
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                          ? 'bg-success/12 text-success' 
+                          : 'bg-danger/12 text-danger'
                       }`}>
                         {smtpTestResult.success ? (
                           <span className="flex items-center gap-1">
@@ -463,51 +463,51 @@ export default function Settings() {
             {activeTab === 'backup' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{(posts || []).length}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">文章</div>
+                  <div className="p-4 bg-accent/12  rounded-lg">
+                    <div className="text-2xl font-bold text-accent">{(posts || []).length}</div>
+                    <div className="text-sm text-muted">文章</div>
                   </div>
-                  <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">{(comments || []).length}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">评论</div>
+                  <div className="p-4 bg-success/12  rounded-lg">
+                    <div className="text-2xl font-bold text-success">{(comments || []).length}</div>
+                    <div className="text-sm text-muted">评论</div>
                   </div>
-                  <div className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{(notifications || []).length}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">通知</div>
+                  <div className="p-4 bg-info/12  rounded-lg">
+                    <div className="text-2xl font-bold text-info">{(notifications || []).length}</div>
+                    <div className="text-sm text-muted">通知</div>
                   </div>
-                  <div className="p-4 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
-                    <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">1</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">数据库</div>
+                  <div className="p-4 bg-warning/14  rounded-lg">
+                    <div className="text-2xl font-bold text-warning">1</div>
+                    <div className="text-sm text-muted">数据库</div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-xl">
+                  <div className="p-6 border border-line rounded-xl">
                     <div className="flex items-center gap-3 mb-4">
-                      <Download className="w-6 h-6 text-blue-500" />
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">导出数据</h3>
+                      <Download className="w-6 h-6 text-accent" />
+                      <h3 className="text-lg font-semibold text-fg">导出数据</h3>
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    <p className="text-sm text-muted mb-4">
                       将所有网站数据导出为JSON文件，可用于备份或迁移。
                     </p>
                     <button
                       onClick={handleExportData}
-                      className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                      className="w-full px-4 py-2 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center justify-center gap-2"
                     >
                       <Download className="w-4 h-4" />
                       导出数据
                     </button>
                   </div>
 
-                  <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-xl">
+                  <div className="p-6 border border-line rounded-xl">
                     <div className="flex items-center gap-3 mb-4">
-                      <Upload className="w-6 h-6 text-green-500" />
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">导入数据</h3>
+                      <Upload className="w-6 h-6 text-success" />
+                      <h3 className="text-lg font-semibold text-fg">导入数据</h3>
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    <p className="text-sm text-muted mb-4">
                       从JSON文件导入数据，将覆盖当前设置。
                     </p>
-                    <label className="w-full px-4 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                    <label className="w-full px-4 py-2 bg-success text-success-fg rounded-lg font-medium hover:bg-success transition-colors flex items-center justify-center gap-2 cursor-pointer">
                       <Upload className="w-4 h-4" />
                       选择文件
                       <input
@@ -520,17 +520,17 @@ export default function Settings() {
                   </div>
                 </div>
 
-                <div className="p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                <div className="p-6 bg-danger/12  border border-danger/40  rounded-xl">
                   <div className="flex items-center gap-3 mb-4">
-                    <AlertTriangle className="w-6 h-6 text-red-500" />
-                    <h3 className="text-lg font-semibold text-red-700 dark:text-red-400">危险区域</h3>
+                    <AlertTriangle className="w-6 h-6 text-danger" />
+                    <h3 className="text-lg font-semibold text-danger">危险区域</h3>
                   </div>
-                  <p className="text-sm text-red-600 dark:text-red-400 mb-4">
+                  <p className="text-sm text-danger mb-4">
                     以下操作将永久删除数据，请谨慎操作。
                   </p>
                   <button
                     onClick={handleClearAllData}
-                    className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center gap-2"
+                    className="px-4 py-2 bg-danger text-danger-fg rounded-lg font-medium hover:bg-danger transition-colors flex items-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
                     清除所有数据
@@ -543,19 +543,19 @@ export default function Settings() {
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                     <input
                       type="text"
                       placeholder="搜索日志..."
                       value={logSearch}
                       onChange={(e) => setLogSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-10 pr-4 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                     />
                   </div>
                   <select
                     value={logFilter}
                     onChange={(e) => setLogFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 border border-line rounded-lg bg-surface  text-fg focus:outline-none focus:ring-2 focus:ring-accent"
                   >
                     <option value="all">全部类型</option>
                     <option value="error">错误</option>
@@ -566,7 +566,7 @@ export default function Settings() {
                   </select>
                   <button
                     onClick={loadNotifications}
-                    className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+                    className="px-4 py-2 bg-surface-2 text-fg rounded-lg hover:bg-line transition-colors flex items-center gap-2"
                   >
                     <RefreshCw className="w-4 h-4" />
                     刷新
@@ -576,32 +576,32 @@ export default function Settings() {
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {filteredLogs.length === 0 ? (
                     <div className="py-12 text-center">
-                      <Server className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-500 dark:text-gray-400">暂无日志记录</p>
+                      <Server className="w-12 h-12 text-line mx-auto mb-4" />
+                      <p className="text-muted">暂无日志记录</p>
                     </div>
                   ) : (
                     filteredLogs.map(log => (
                       <div
                         key={log.id}
-                        className={`p-4 rounded-lg border ${
+                        className={`p-4 rounded-lg border${
                           log.is_read
-                            ? 'bg-gray-50 dark:bg-gray-700/50 border-gray-100 dark:border-gray-600'
-                            : 'bg-white dark:bg-gray-800 border-blue-200 dark:border-blue-700'
+                            ? 'bg-bg  border-line'
+                            : 'bg-surface border-accent/40'
                         }`}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-gray-900 dark:text-white">{log.title}</span>
-                              <span className={`px-2 py-0.5 rounded-full text-xs ${getLogTypeColor(log.type)}`}>
+                              <span className="font-medium text-fg">{log.title}</span>
+                              <span className={`px-2 py-0.5 rounded-full text-xs${getLogTypeColor(log.type)}`}>
                                 {log.type}
                               </span>
                               {!log.is_read && (
-                                <span className="w-2 h-2 bg-blue-500 rounded-full" />
+                                <span className="w-2 h-2 bg-accent rounded-full" />
                               )}
                             </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{log.message}</p>
-                            <div className="flex items-center gap-4 text-xs text-gray-400">
+                            <p className="text-sm text-muted mb-2">{log.message}</p>
+                            <div className="flex items-center gap-4 text-xs text-muted">
                               <span className="flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
                                 {formatDate(log.created_at)}
@@ -610,7 +610,7 @@ export default function Settings() {
                           </div>
                           <button
                             onClick={() => deleteNotification(log.id)}
-                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                            className="p-1 text-muted hover:text-danger transition-colors"
                           >
                             <X className="w-4 h-4" />
                           </button>

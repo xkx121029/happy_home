@@ -7,19 +7,19 @@ export default function CategoriesWidget({ categories, config = {} }) {
 
   if (displayCategories.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-        <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+      <div className="bg-surface rounded-xl shadow-sm border border-line p-4">
+        <h3 className="font-bold text-fg mb-4 flex items-center gap-2">
           <Folder className="w-4 h-4" />
           分类目录
         </h3>
-        <p className="text-gray-500 dark:text-gray-400 text-sm">暂无分类</p>
+        <p className="text-muted text-sm">暂无分类</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
-      <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+    <div className="bg-surface rounded-xl shadow-sm border border-line p-4">
+      <h3 className="font-bold text-fg mb-4 flex items-center gap-2">
         <Folder className="w-4 h-4" />
         分类目录
       </h3>
@@ -28,10 +28,10 @@ export default function CategoriesWidget({ categories, config = {} }) {
           <li key={category.id}>
             <Link
               to={`/posts?category=${category.slug}`}
-              className="flex items-center justify-between text-gray-700 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 text-sm transition-colors"
+              className="flex items-center justify-between text-fg hover:text-accent text-sm transition-colors"
             >
               <span>{category.name}</span>
-              <span className="text-xs text-gray-400 dark:text-gray-500">({category.count})</span>
+              <span className="text-xs text-muted">({category.count})</span>
             </Link>
           </li>
         ))}

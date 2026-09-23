@@ -282,20 +282,20 @@ export default function CustomCSS() {
       <div className="p-6">
       <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">自定义样式</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">添加自定义 CSS、JavaScript 和 Head 代码</p>
+          <h1 className="text-2xl font-bold text-fg">自定义样式</h1>
+          <p className="text-muted mt-1">添加自定义 CSS、JavaScript 和 Head 代码</p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={() => setShowPreview(!showPreview)}
-            className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="px-4 py-2 text-muted  hover:bg-surface-2 rounded-lg font-medium transition-colors flex items-center gap-2"
           >
             {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             {showPreview ? '隐藏预览' : '显示预览'}
           </button>
           <button
             onClick={handleReset}
-            className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="px-4 py-2 text-muted  hover:bg-surface-2 rounded-lg font-medium transition-colors flex items-center gap-2"
           >
             <RotateCcw className="w-4 h-4" />
             重置
@@ -303,10 +303,10 @@ export default function CustomCSS() {
           <button
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2${
               hasChanges && !saving
-                ? 'bg-blue-500 text-white hover:bg-blue-600'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                ? 'bg-accent text-accent-fg hover:bg-accent-700'
+                : 'bg-surface-2 text-muted cursor-not-allowed'
             }`}
           >
             <Save className="w-4 h-4" />
@@ -316,7 +316,7 @@ export default function CustomCSS() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="mb-6 border-b border-line">
         <nav className="flex gap-4">
           {tabs.map(tab => {
             const Icon = tab.icon;
@@ -324,10 +324,10 @@ export default function CustomCSS() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 pb-3 px-1 border-b-2 font-medium transition-colors ${
+                className={`flex items-center gap-2 pb-3 px-1 border-b-2 font-medium transition-colors${
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-accent text-accent'
+                    : 'border-transparent text-muted hover:text-fg hover:border-line'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -338,15 +338,15 @@ export default function CustomCSS() {
         </nav>
       </div>
 
-      <div className={`grid gap-6 ${showPreview ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+      <div className={`grid gap-6${showPreview ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
         {/* Editor */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div className="bg-surface rounded-xl shadow-sm border border-line overflow-hidden">
           {/* Snippets Panel */}
           {currentSnippets.length > 0 && (
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+            <div className="p-4 border-b border-line">
               <div className="flex items-center gap-2 mb-3">
-                <FileText className="w-4 h-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FileText className="w-4 h-4 text-muted" />
+                <span className="text-sm font-medium text-fg">
                   常用代码片段
                 </span>
               </div>
@@ -355,7 +355,7 @@ export default function CustomCSS() {
                   <button
                     key={snippet.label}
                     onClick={() => handleInsertSnippet(snippet)}
-                    className="px-3 py-1.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
+                    className="px-3 py-1.5 text-xs bg-surface-2 text-muted  rounded-lg hover:bg-line transition-colors flex items-center gap-1"
                   >
                     <Code className="w-3 h-3" />
                     {snippet.label}
@@ -371,7 +371,7 @@ export default function CustomCSS() {
               value={editorValue}
               onChange={(e) => handleEditorChange(e.target.value)}
               placeholder={editorPlaceholder}
-              className={`w-full h-96 p-4 font-mono text-sm bg-gray-900 text-gray-100 resize-none focus:outline-none ${
+              className={`w-full h-96 p-4 font-mono text-sm bg-surface-2 text-fg border border-line rounded-lg resize-none focus:outline-none${
                 activeTab === 'css' ? 'font-mono' : ''
               }`}
               spellCheck={false}
@@ -379,7 +379,7 @@ export default function CustomCSS() {
 
             {/* CSS Error */}
             {activeTab === 'css' && cssError && (
-              <div className="absolute bottom-4 left-4 right-4 p-3 bg-red-500/90 text-white rounded-lg flex items-center gap-2">
+              <div className="absolute bottom-4 left-4 right-4 p-3 bg-danger/90 text-danger-fg rounded-lg flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />
                 {cssError}
               </div>
@@ -387,16 +387,16 @@ export default function CustomCSS() {
           </div>
 
           {/* Status Bar */}
-          <div className="px-4 py-2 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-            <div className="flex items-center gap-4 text-xs text-gray-500">
+          <div className="px-4 py-2 bg-bg  border-t border-line flex items-center justify-between">
+            <div className="flex items-center gap-4 text-xs text-muted">
               <span>编码: UTF-8</span>
               {activeTab === 'css' && (
-                <span className={cssError ? 'text-red-500' : 'text-green-500'}>
+                <span className={cssError ? 'text-danger' : 'text-success'}>
                   {cssError || '语法正确'}
                 </span>
               )}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted">
               {(activeTab === 'css' ? customCSS : activeTab === 'js' ? customJS : customHead).length} 字符
             </div>
           </div>
@@ -404,28 +404,28 @@ export default function CustomCSS() {
 
         {/* Preview */}
         {showPreview && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
-              <Eye className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">预览</span>
+          <div className="bg-surface rounded-xl shadow-sm border border-line overflow-hidden">
+            <div className="p-4 border-b border-line flex items-center gap-2">
+              <Eye className="w-4 h-4 text-muted" />
+              <span className="text-sm font-medium text-fg">预览</span>
             </div>
-            <div className="p-4 bg-gray-50 dark:bg-gray-700/50">
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            <div className="p-4 bg-bg">
+              <div className="bg-surface p-6 rounded-xl">
+                <h3 className="text-lg font-semibold text-fg mb-2">
                   样式预览
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                <p className="text-muted  mb-4">
                   这里的文本将应用您的自定义 CSS 样式。
                 </p>
                 <div className="flex gap-3 flex-wrap">
-                  <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                  <button className="px-4 py-2 bg-accent text-accent-fg rounded-lg hover:bg-accent-700">
                     按钮
                   </button>
-                  <a href="#" className="px-4 py-2 text-blue-500 hover:text-blue-600">
+                  <a href="#" className="px-4 py-2 text-accent hover:text-accent">
                     链接
                   </a>
                 </div>
-                <pre className="mt-4 p-3 bg-gray-900 text-gray-100 rounded-lg text-sm overflow-x-auto">
+                <pre className="mt-4 p-3 bg-surface-2 border border-line text-fg rounded-lg text-sm overflow-x-auto">
                   <code>{"code { color: #333; }"}</code>
                 </pre>
               </div>
@@ -435,14 +435,14 @@ export default function CustomCSS() {
       </div>
 
       {/* Help */}
-      <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
+      <div className="mt-6 bg-warning/14  border border-warning/40  rounded-xl p-4">
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-warning mt-0.5" />
           <div>
-            <h3 className="font-medium text-yellow-800 dark:text-yellow-200 mb-1">
+            <h3 className="font-medium text-warning mb-1">
               使用提示
             </h3>
-            <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+            <ul className="text-sm text-warning space-y-1">
               <li>• 自定义 CSS 会应用于前台页面的所有页面</li>
               <li>• 自定义 JS 会添加到页面底部 </li>
               <li>• Head 代码会添加到 &lt;head&gt; 标签内，可用于引入外部样式或脚本</li>

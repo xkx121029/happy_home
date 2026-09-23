@@ -36,7 +36,7 @@ export default function Sidebar() {
         <NavLink
           to={item.path}
           aria-current={active ? 'page' : undefined}
-          className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-100 ${
+          className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-100${
             active
               ? 'bg-accent-50 text-accent'
               : 'text-muted hover:bg-surface-2 hover:text-fg'
@@ -73,7 +73,7 @@ export default function Sidebar() {
               <li key={item.id}>
                 <NavLink
                   to={item.path}
-                  className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-100 ${
+                  className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-100${
                     active ? 'bg-accent-50 text-accent' : 'text-muted hover:bg-surface-2 hover:text-fg'
                   }`}
                 >
