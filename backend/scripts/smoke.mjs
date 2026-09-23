@@ -607,7 +607,84 @@ async function main() {
     expect: 404,
   }));
 
-  // 9. 校验失败路径
+  // 9. API 密钥：这是对外开放 API 的长期凭据，权限边界必须由冒烟守住。
+  //    重点不在 CRUD 本身，而在三件事：只读密钥越权要 403、
+  //    密钥不能管理密钥、轮换后旧明文立即失效。
+  const createdKey = await record('POST /api-keys', async () => ({
+    res: await call('POST', '/api-keys', {
+      token,
+      body: { name: `${MARK} 冒烟密钥`, scopes: ['posts:read', 'categories:read'] },
+    }),
+    expect: 201,
+  }));
+  const keyId = createdKey.body?.data?.id;
+  const keyPlain = createdKey.body?.data?.key;
+
+  await record('GET  /api-keys', async () => ({
+    res: await call('GET', '/api-keys', { token }),
+    expect: 200,
+  }));
+  await record('POST /api-keys 无 scopes', async () => ({
+    res: await call('POST', '/api-keys', { token, body: { name: `${MARK} 空权限`, scopes: [] } }),
+    expect: 400,
+  }));
+  await record('POST /api-keys 有效期已过', async () => ({
+    res: await call('POST', '/api-keys', {
+      token,
+      body: { name: `${MARK} 过期`, scopes: ['posts:read'], expiresAt: '2000-01-01T00:00:00.000Z' },
+    }),
+    expect: 400,
+  }));
+
+  if (keyId && keyPlain) {
+    cleanup.push(['delete', `/api-keys/${keyId}`, token]);
+
+    await record('GET  /posts (密钥有 posts:read)', async () => ({
+      res: await call('GET', '/posts', { headers: { 'X-API-Key': keyPlain } }),
+      expect: 200,
+    }));
+    await record('GET  /users (密钥无 users:read 应 403)', async () => ({
+      res: await call('GET', '/users', { headers: { 'X-API-Key': keyPlain } }),
+      expect: 403,
+    }));
+    // 密钥的 req.user.role 固定为 'api'，命中不了任何按角色授权的路由 ——
+    // 这条是「密钥不能管理密钥」的守门用例。
+    await record('GET  /api-keys (密钥应 403)', async () => ({
+      res: await call('GET', '/api-keys', { headers: { 'X-API-Key': keyPlain } }),
+      expect: 403,
+    }));
+
+    const rotated = await record('POST /api-keys/:id/rotate', async () => ({
+      res: await call('POST', `/api-keys/${keyId}/rotate`, { token }),
+      expect: 200,
+    }));
+    const newPlain = rotated.body?.data?.key;
+    assertLast(Boolean(newPlain) && newPlain !== keyPlain, '轮换后没有返回新的明文');
+
+    await record('GET  /posts (轮换后的旧密钥应 403)', async () => ({
+      res: await call('GET', '/posts', { headers: { 'X-API-Key': keyPlain } }),
+      expect: 403,
+    }));
+    await record('GET  /posts (轮换后的新密钥应 200)', async () => ({
+      res: await call('GET', '/posts', { headers: { 'X-API-Key': newPlain } }),
+      expect: 200,
+    }));
+
+    await record('POST /api-keys/:id/revoke', async () => ({
+      res: await call('POST', `/api-keys/${keyId}/revoke`, { token }),
+      expect: 200,
+    }));
+    await record('GET  /posts (撤销后应 403)', async () => ({
+      res: await call('GET', '/posts', { headers: { 'X-API-Key': newPlain } }),
+      expect: 403,
+    }));
+    await record('DELETE /api-keys/:id', async () => ({
+      res: await call('DELETE', `/api-keys/${keyId}`, { token }),
+      expect: 200,
+    }));
+  }
+
+  // 10. 校验失败路径
   await record('POST /posts 缺字段', async () => ({
     res: await call('POST', '/posts', { token, body: { title: '' } }),
     expect: 400,
@@ -617,7 +694,7 @@ async function main() {
     expect: 401,
   }));
 
-  // 10. 清理，放在最后（评论等资源要在用户之前删掉）
+  // 11. 清理，放在最后（评论等资源要在用户之前删掉）
   for (const [method, path, tk] of cleanup) {
     await call(method === 'delete' ? 'DELETE' : 'GET', path, { token: tk });
   }
