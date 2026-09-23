@@ -17,7 +17,7 @@ import { useAuth } from './AuthContext';
 const SiteSettingsContext = createContext(null);
 
 export function SiteSettingsProvider({ children }) {
-  const { isAuthenticated, initializing } = useAuth();
+  const { initializing } = useAuth();
 
   const {
     data: settings,
