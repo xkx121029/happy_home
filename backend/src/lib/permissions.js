@@ -63,10 +63,11 @@ const SCOPE_GROUPS = [
       { id: 'comments:read', label: '读取评论' },
       { id: 'comments:write', label: '发表评论' },
       { id: 'comments:moderate', label: '审核/删除评论' },
-      { id: 'notifications:read', label: '读取通知' },
-      { id: 'notifications:write', label: '标记/删除通知' },
       { id: 'analytics:read', label: '读取统计数据' },
       { id: 'analytics:write', label: '上报访问量' },
+      // 这里刻意没有 notifications:*：通知是按用户隔离的，密钥没有对应的用户
+      // 身份，notifications 路由一律 allowKey: false。把一个勾了也不生效的
+      // 权限摆在密钥目录里，只会让人以为「配好了却一直 403」。
     ],
   },
   {
