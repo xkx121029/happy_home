@@ -34,7 +34,7 @@ export default function Revisions() {
   const { posts } = useData();
   const { settings } = useSiteSettings();
   const timeZone = settings?.timezone;
-  const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
+  const { confirm, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
 
   const [selectedPostId, setSelectedPostId] = useState(null);

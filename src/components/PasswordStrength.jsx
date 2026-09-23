@@ -27,7 +27,7 @@ export default function PasswordStrength({ password }) {
     if (/[A-Z]/.test(password)) score++;
 
     // 包含特殊字符
-    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score++;
+    if (/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) score++;
 
     let level, label, color;
 
@@ -96,7 +96,7 @@ export default function PasswordStrength({ password }) {
           <span>包含数字</span>
         </div>
         <div className="flex items-center gap-1">
-          {/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) ? (
+          {/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password) ? (
             <CheckCircle className="w-3 h-3 text-success" />
           ) : (
             <XCircle className="w-3 h-3 text-muted" />

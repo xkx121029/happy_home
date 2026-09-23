@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Lock, Mail, Eye, EyeOff, LogIn, UserPlus, Zap, RefreshCw, CheckCircle } from 'lucide-react';
+import { User, Lock, Mail, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../state/AuthContext';
 import { authAPI } from '../services/api';
 
@@ -214,7 +214,8 @@ export default function Login() {
 
             <button
               type="submit"
-              className="w-full py-3 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center justify-center gap-2"
+              disabled={loading}
+              className="w-full py-3 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <LogIn className="w-5 h-5" />
               登录
@@ -313,7 +314,8 @@ export default function Login() {
 
             <button
               type="submit"
-              className="w-full py-3 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center justify-center gap-2"
+              disabled={loading}
+              className="w-full py-3 bg-accent text-accent-fg rounded-lg font-medium hover:bg-accent-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <UserPlus className="w-5 h-5" />
               注册

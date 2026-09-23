@@ -385,7 +385,6 @@ export function NotificationProvider({ children }) {
   const {
     notifications,
     removeNotification,
-    clearAll,
     addNotification,
   } = useNotification();
   

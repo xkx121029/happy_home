@@ -8,7 +8,7 @@ import { useData } from '../contexts/DataContext';
 import { formatDateTime } from '../lib/format';
 
 export default function Posts() {
-  const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
+  const { confirm, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
   // 原来靠 props 拿 posts / onDelete，现在页面自取 Context
   const { posts, updatePost, deletePost, categories } = useData();
