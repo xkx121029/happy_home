@@ -241,6 +241,8 @@ async function main() {
   // 3. 只读列表
   const reads = [
     ['GET  /posts', '/posts'],
+    // 后台列表页走的是全量模式，形状与分页模式不同，单独锁一条
+    ['GET  /posts?all=1', '/posts?all=1'],
     ['GET  /pages', '/pages'],
     ['GET  /categories', '/categories'],
     ['GET  /tags', '/tags'],
@@ -258,18 +260,26 @@ async function main() {
     await record(name, async () => ({ res: await call('GET', path, { token }), expect: 200 }));
   }
 
-  // 4. 公开端点（无需 token）
+  // 4. 匿名只读（无需 token）。
+  //    批次 3 之后不再有 /public/* 这一族路径：同一个端点按身份裁剪内容 ——
+  //    匿名只看到已发布数据，分页、搜索、分类筛选照常生效。
   const publics = [
-    ['GET  /public/posts', '/public/posts'],
-    ['GET  /public/pages', '/public/pages'],
-    ['GET  /public/settings', '/public/settings'],
-    ['GET  /public/categories', '/public/categories'],
-    ['GET  /public/posts?page=1', '/public/posts?page=1'],
-    ['GET  /public/posts?search=的', '/public/posts?search=%E7%9A%84'],
+    ['GET  /posts?page=1 (匿名)', '/posts?page=1'],
+    ['GET  /posts?search=的 (匿名)', '/posts?search=%E7%9A%84'],
+    ['GET  /pages (匿名)', '/pages'],
+    ['GET  /categories?usedOnly=1 (匿名)', '/categories?usedOnly=1'],
+    ['GET  /settings (匿名)', '/settings'],
   ];
   for (const [name, path] of publics) {
     await record(name, async () => ({ res: await call('GET', path), expect: 200 }));
   }
+
+  // 4a. 合并后的越权边界：全量模式是后台列表页专用的，匿名调用必须被拒，
+  //     否则等于把草稿一次性全暴露出去。
+  await record('GET  /posts?all=1 (匿名应 403)', async () => ({
+    res: await call('GET', '/posts?all=1'),
+    expect: 403,
+  }));
 
   // 4b. 站点根路径下的订阅与索引（不挂在 /api 下，必须走绝对地址）。
   //     返回的是 XML，会被 call 归成 __nonJson；这里额外断言内容里
@@ -505,8 +515,8 @@ async function main() {
   if (targetPostId) {
     cleanup.push(['delete', `/posts/${targetPostId}`, token]);
 
-    const guestComment = await record('POST /public/comments (匿名)', async () => ({
-      res: await call('POST', '/public/comments', {
+    const guestComment = await record('POST /comments (匿名)', async () => ({
+      res: await call('POST', '/comments', {
         body: { postId: targetPostId, author: '访客', email: `${MARK}@example.com`, content: '这是一条冒烟评论' },
       }),
       expect: 201,
@@ -515,20 +525,20 @@ async function main() {
       cleanup.push(['delete', `/comments/${guestComment.body.data.id}`, token]);
     }
 
-    await record('POST /public/comments 邮箱非法', async () => ({
-      res: await call('POST', '/public/comments', {
+    await record('POST /comments 邮箱非法', async () => ({
+      res: await call('POST', '/comments', {
         body: { postId: targetPostId, author: '访客', email: 'not-an-email', content: 'x' },
       }),
       expect: 400,
     }));
 
-    await record('GET  /public/posts/:id/comments', async () => ({
-      res: await call('GET', `/public/posts/${targetPostId}/comments`),
+    await record('GET  /posts/:id/comments', async () => ({
+      res: await call('GET', `/posts/${targetPostId}/comments`),
       expect: 200,
     }));
 
-    await record('GET  /public/comments/recent', async () => ({
-      res: await call('GET', '/public/comments/recent?limit=5'),
+    await record('GET  /comments/recent', async () => ({
+      res: await call('GET', '/comments/recent?limit=5'),
       expect: 200,
     }));
 
