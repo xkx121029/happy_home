@@ -71,7 +71,7 @@ function checks(rgb, mode, fgForSolid, alphas) {
 }
 
 const SPECS = [
-  { name: 'accent', light: [180, 85, 44], dark: [212, 118, 63], alphas: [0.12, 0.4], solidFg: 'fgText' },
+  { name: 'accent', light: [180, 85, 44], dark: [212, 118, 63], alphas: [0.12], solidFg: 'fgText', tints: { light: [[253, 244, 239], [250, 230, 218]], dark: [[42, 31, 22], [56, 40, 26]] } },
   { name: 'success', light: [47, 107, 79], dark: [92, 168, 128], alphas: [0.12], solidFg: 'fgText' },
   { name: 'warning', light: [169, 118, 27], dark: [208, 160, 66], alphas: [0.14], solidFg: 'fgText' },
   { name: 'danger', light: [168, 58, 42], dark: [214, 106, 88], alphas: [0.12], solidFg: 'fgText' },
@@ -82,21 +82,25 @@ const SPECS = [
 for (const spec of SPECS) {
   for (const mode of ['light', 'dark']) {
     const base = spec[mode];
-    const [h0, s0] = rgbToHsl(base);
+    const [h0, s0, l0] = rgbToHsl(base);
+    const tintList = (spec.tints && spec.tints[mode]) || [];
     let best = null;
     for (let ds = -0.16; ds <= 0.16; ds += 0.01) {
       for (let dl = mode === 'light' ? -0.20 : 0.20; mode === 'light' ? dl <= 0.02 : dl >= -0.02; dl += mode === 'light' ? 0.005 : -0.005) {
         const s = Math.min(1, Math.max(0.05, s0 + ds));
-        const l = Math.min(0.95, Math.max(0.05, rgbToHsl(base)[2] + dl));
+        const l = Math.min(0.95, Math.max(0.05, l0 + dl));
         const cand = hslToRgb([h0, s, l]);
-        const score = checks(cand, mode, FIXED[mode][spec.solidFg || 'fgText'], spec.alphas);
+        const scores = [checks(cand, mode, FIXED[mode][spec.solidFg || 'fgText'], spec.alphas)];
+        for (const t of tintList) scores.push(ratio(cand, t));
+        const score = Math.min(...scores);
         if (score < 4.55) continue;
-        // 目标：在达标的前提下尽量贴近原色
         const drift = Math.abs(ds) + Math.abs(dl) * 2;
         if (!best || drift < best.drift) best = { cand, drift, score };
       }
     }
-    const cur = checks(base, mode, FIXED[mode][spec.solidFg || 'fgText'], spec.alphas);
+    const curScores = [checks(base, mode, FIXED[mode][spec.solidFg || 'fgText'], spec.alphas)];
+    for (const t of tintList) curScores.push(ratio(base, t));
+    const cur = Math.min(...curScores);
     console.log(
       `${spec.name.padEnd(8)} ${mode.padEnd(5)} 现状 ${cur.toFixed(2)} → ${
         best ? `${best.cand.join(' ')} (${best.score.toFixed(2)})` : '未找到可行解'
