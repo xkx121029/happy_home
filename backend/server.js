@@ -11,7 +11,12 @@ const jwt = require('./src/lib/jwt');
 const password = require('./src/lib/password');
 const { ok, fail } = require('./src/lib/response');
 const asyncHandler = require('./src/middleware/asyncHandler');
-const createAuth = require('./src/middleware/auth');
+const createAuthenticate = require('./src/middleware/authenticate');
+const {
+  ROLE_ADMIN_ONLY,
+  ROLE_CONTENT,
+  ROLE_ANY,
+} = require('./src/lib/permissions');
 const {
   checkCommentRate,
   checkLoginRate,
@@ -42,8 +47,15 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // 参数化查询助手统一由 src/db/repo.js 提供（execQuery / getSingle / bindable）
 const { execQuery, getSingle, bindable } = require('./src/db/repo');
 
-// 鉴权中间件由工厂创建，db 助手通过参数注入（见 src/middleware/auth.js）
-const { authenticateToken, optionalAuth, requireRole } = createAuth({ getDb, getSingle });
+// 身份识别（匿名 / 登录用户 / API Key）与访问控制。db 助手通过参数注入，
+// 本模块不反向依赖 db 层，避免循环引用。
+const { authenticate, requireAccess } = createAuthenticate({
+  getDb,
+  getSingle,
+  execQuery,
+  saveDatabase,
+  password,
+});
 
 // ------------------------------------------------------------ 定时发布调度
 //
@@ -99,9 +111,12 @@ const deps = {
   getSingle,
   bindable,
   uuidv4,
-  authenticateToken,
-  optionalAuth,
-  requireRole,
+  authenticate,
+  requireAccess,
+  // 角色集合集中定义在 lib/permissions，路由里不再写字符串字面量
+  ROLE_ADMIN_ONLY,
+  ROLE_CONTENT,
+  ROLE_ANY,
   jwt,
   password,
   ok,
@@ -124,6 +139,10 @@ const deps = {
  *   /feed.xml /sitemap.xml 挂在站点根路径，是给爬虫与订阅器用的公开约定地址
  */
 const API_PREFIX = '/api/v1';
+
+// 身份识别只挂这一次：各模块路由不必再逐个声明 authenticateToken，
+// 需要授权的端点用 requireAccess(scope, { roles, anonymous }) 表达。
+app.use(API_PREFIX, authenticate);
 
 app.use(API_PREFIX, require('./src/modules/auth/routes')(deps));
 app.use(API_PREFIX, require('./src/modules/posts/routes')(deps));
