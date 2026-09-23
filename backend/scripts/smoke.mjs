@@ -624,6 +624,11 @@ async function main() {
     res: await call('GET', '/api-keys', { token }),
     expect: 200,
   }));
+  // 后台新建密钥页的复选框按这个目录渲染，形状漂移会直接让界面勾不到权限
+  await record('GET  /api-keys/scopes', async () => ({
+    res: await call('GET', '/api-keys/scopes', { token }),
+    expect: 200,
+  }));
   await record('POST /api-keys 无 scopes', async () => ({
     res: await call('POST', '/api-keys', { token, body: { name: `${MARK} 空权限`, scopes: [] } }),
     expect: 400,

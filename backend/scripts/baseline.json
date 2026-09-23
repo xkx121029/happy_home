@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-09-23T15:22:07.626Z",
+  "savedAt": "2026-09-23T15:28:26.857Z",
   "apiBase": "http://localhost:3002/api/v1",
   "note": "shape 字段是契约形状（叶子值只留类型）；message 仅供参考不参与 diff",
   "results": [
@@ -1051,6 +1051,20 @@
       "shape": {
         "count": "number",
         "data": "array",
+        "success": "bool:true"
+      }
+    },
+    {
+      "name": "GET  /api-keys/scopes",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "data": {
+          "defaults": "array",
+          "groups": "array",
+          "highRisk": "array",
+          "wildcard": "string"
+        },
         "success": "bool:true"
       }
     },
