@@ -22,10 +22,15 @@
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BASELINE_PATH = join(__dirname, 'baseline.json');
 const ENV_PATH = join(__dirname, '..', '.env');
+
+// 设置下发的白名单直接引用后端那份，避免冒烟脚本里再抄一遍造成两边漂移。
+const require_ = createRequire(import.meta.url);
+const { PUBLIC_SETTING_KEYS } = require_('../src/lib/settingKeys.js');
 
 // 从 backend/.env 取冒烟用的口令，避免把口令硬编码进版本库
 function readEnvFile() {
@@ -268,7 +273,6 @@ async function main() {
     ['GET  /posts?search=的 (匿名)', '/posts?search=%E7%9A%84'],
     ['GET  /pages (匿名)', '/pages'],
     ['GET  /categories?usedOnly=1 (匿名)', '/categories?usedOnly=1'],
-    ['GET  /settings (匿名)', '/settings'],
   ];
   for (const [name, path] of publics) {
     await record(name, async () => ({ res: await call('GET', path), expect: 200 }));
@@ -280,6 +284,19 @@ async function main() {
     res: await call('GET', '/posts?all=1'),
     expect: 403,
   }));
+
+  // 4a2. 匿名读设置只能拿到前台白名单。这条断言非空 —— 库里确实存在
+  //      customCSS / postsPerPage 等键，任何越出白名单的键都会被抓住。
+  const guestSettings = await record('GET  /settings (匿名只给白名单)', async () => ({
+    res: await call('GET', '/settings'),
+    expect: 200,
+  }));
+  assertLast(
+    Object.keys(guestSettings.body?.data || {}).every((k) => PUBLIC_SETTING_KEYS.includes(k)),
+    `匿名设置越出白名单：${Object.keys(guestSettings.body?.data || {})
+      .filter((k) => !PUBLIC_SETTING_KEYS.includes(k))
+      .join(', ')}`
+  );
 
   // 4b. 站点根路径下的订阅与索引（不挂在 /api 下，必须走绝对地址）。
   //     返回的是 XML，会被 call 归成 __nonJson；这里额外断言内容里
@@ -504,6 +521,16 @@ async function main() {
       res: await call('GET', '/posts', { token: editorToken }),
       expect: 200,
     }));
+    // 但设置里的 SMTP 凭据不能下发。改造前这个端点只要求「已登录」，
+    // author 角色就能读到 smtpPass。库里确实有这三个键，所以断言非空。
+    const editorSettings = await record('GET  /settings (editor 不得含 SMTP 凭据)', async () => ({
+      res: await call('GET', '/settings', { token: editorToken }),
+      expect: 200,
+    }));
+    assertLast(
+      !Object.keys(editorSettings.body?.data || {}).some((k) => k.startsWith('smtp')),
+      '登录用户的设置里出现了 smtp 凭据'
+    );
   }
 
   // 7. 公开评论：访客没有 token 也必须能提交
