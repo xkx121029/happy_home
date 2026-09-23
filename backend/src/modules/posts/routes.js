@@ -8,6 +8,11 @@ module.exports = function createPostsRoutes(deps) {
   const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, dbHelpers, ok, fail, requireAccess, ROLE_CONTENT } = deps;
   const router = express.Router();
 
+  /** 每页条数上限。 */
+  const MAX_PER_PAGE = 100;
+  /** 全量模式的条数上限：再大就不该用这个模式，而该翻页。 */
+  const ALL_POSTS_LIMIT = 1000;
+
   /**
    * 把 publishDate 规整成 UTC ISO。
    *
@@ -26,7 +31,6 @@ module.exports = function createPostsRoutes(deps) {
   router.get('/posts', requireAccess('posts:read', { roles: ROLE_CONTENT, anonymous: true }), (req, res) => {
     try {
       const db = getDb();
-      let sql = 'SELECT * FROM posts';
       const params = [];
       const conditions = [];
 
@@ -50,14 +54,50 @@ module.exports = function createPostsRoutes(deps) {
         params.push(`%${req.query.search}%`, `%${req.query.search}%`);
       }
 
-      if (conditions.length > 0) {
-        sql += ' WHERE ' + conditions.join(' AND ');
+      const where = conditions.length > 0 ? ' WHERE ' + conditions.join(' AND ') : '';
+
+      // ---------------------------------------------------------- 全量模式
+      //
+      // 后台列表页用 ?all=1：不带分页字段，形状与改造前的 /api/posts 完全一致。
+      // 为什么用显式参数而不是「没传 page 就不分页」—— 同一个 URL 出现两种响应
+      // 形状对外部客户端是契约毒药，而且 page=1 这种无意义参数会改变语义。
+      if (req.query.all === '1') {
+        if (req.auth.level === 'public') {
+          return fail(res, 403, '匿名调用不能使用全量模式');
+        }
+        const posts = execQuery(
+          db,
+          `SELECT * FROM posts${where} ORDER BY created_at DESC LIMIT ?`,
+          [...params, ALL_POSTS_LIMIT]
+        );
+        return ok(res, { data: posts, count: posts.length });
       }
 
-      sql += ' ORDER BY created_at DESC';
+      // ---------------------------------------------------------- 分页模式
+      const settings = dbHelpers.getSettings();
+      const page = Math.max(Number(req.query.page) || 1, 1);
+      const perPage = Math.min(
+        Math.max(Number(req.query.perPage) || Number(settings.postsPerPage) || 10, 1),
+        MAX_PER_PAGE
+      );
 
-      const posts = execQuery(db, sql, params);
-      ok(res, { data: posts, count: posts.length });
+      const totalRow = getSingle(db, `SELECT COUNT(*) AS total FROM posts${where}`, params);
+      const total = totalRow?.total || 0;
+
+      const posts = execQuery(
+        db,
+        `SELECT * FROM posts${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+        [...params, perPage, (page - 1) * perPage]
+      );
+
+      ok(res, {
+        data: posts,
+        count: posts.length,
+        total,
+        page,
+        perPage,
+        totalPages: Math.max(Math.ceil(total / perPage), 1),
+      });
     } catch (error) {
       console.error(error);
       fail(res, 500, '服务器错误');
