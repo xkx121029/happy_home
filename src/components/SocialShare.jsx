@@ -7,14 +7,14 @@ const sharePlatforms = {
     name: '微信',
     icon: Share2,
     color: '#07c160',
-    getUrl: (url, title, excerpt) => `weixin://dlchat/?https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`,
+    getUrl: (url, _title, _excerpt) => `weixin://dlchat/?https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`,
     isQR: true,
   },
   weibo: {
     name: '微博',
     icon: Share2,
     color: '#e6162d',
-    getUrl: (url, title, excerpt) => `http://service.weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`,
+    getUrl: (url, title, _excerpt) => `http://service.weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`,
     isQR: false,
   },
   qq: {
@@ -56,6 +56,8 @@ const sharePlatforms = {
 
 export default function SocialShare({
   url,
+  title,
+  excerpt,
   enabledPlatforms = ['wechat', 'weibo', 'qq', 'qzone', 'facebook', 'twitter', 'linkedin'],
   style = 'circle',
   showLabel = false,

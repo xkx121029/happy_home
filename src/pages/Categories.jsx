@@ -25,10 +25,6 @@ export default function Categories() {
            (cat.description && cat.description.toLowerCase().includes(searchQuery.toLowerCase()));
   });
 
-  const getChildren = (parentId) => {
-    return filteredCategories.filter(cat => cat.parent === parentId);
-  };
-
   const getParentName = (parentId) => {
     const parent = categories.find(cat => cat.id === parentId);
     return parent ? parent.name : '-';
