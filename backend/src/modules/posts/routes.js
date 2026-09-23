@@ -30,7 +30,12 @@ module.exports = function createPostsRoutes(deps) {
       const params = [];
       const conditions = [];
 
-      if (req.query.status) {
+      // 匿名访客（以及角色不够的登录用户）只能看到已发布内容。
+      // 这里刻意**忽略** status 参数而不是去校验它 —— 允许传就等于给了一条
+      // 「?status=draft 直接读草稿」的绕过路径。
+      if (req.auth.level === 'public') {
+        conditions.push("status = 'published'");
+      } else if (req.query.status) {
         conditions.push('status = ?');
         params.push(req.query.status);
       }
@@ -62,7 +67,12 @@ module.exports = function createPostsRoutes(deps) {
   router.get('/posts/:id', requireAccess('posts:read', { roles: ROLE_CONTENT, anonymous: true }), (req, res) => {
     try {
       const db = getDb();
-      const post = getSingle(db, 'SELECT * FROM posts WHERE id = ?', [req.params.id]);
+      // 公开层级只能读已发布的：草稿直接当作「不存在」，而不是 403 ——
+      // 403 会暴露「这个 id 确实有一篇草稿」这一事实。
+      const post =
+        req.auth.level === 'public'
+          ? getSingle(db, "SELECT * FROM posts WHERE id = ? AND status = 'published'", [req.params.id])
+          : getSingle(db, 'SELECT * FROM posts WHERE id = ?', [req.params.id]);
       if (!post) {
         return fail(res, 404, '文章不存在');
       }
