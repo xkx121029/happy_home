@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Eye, Calendar, Tag, Pin, Clock, History, RotateCcw, Trash2, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
@@ -18,7 +18,7 @@ export default function PostEditor() {
   const timeZone = settings?.timezone;
   const { id } = useParams();
   // 原来保存走 props.onSave 回调，现在页面自取 Context 的语义化方法
-  const { posts, getPost, categories, createPost, updatePost } = useData();
+  const { posts, categories, createPost, updatePost } = useData();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [excerpt, setExcerpt] = useState('');

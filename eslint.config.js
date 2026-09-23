@@ -30,7 +30,11 @@ export default [
       ...reactHooks.configs.recommended.rules,
       'no-unused-vars': ['error', {
         varsIgnorePattern: '^[A-Z_]',
-        argsIgnorePattern: '^_',
+        // 参数与变量用同一套约定。原因：项目没装 eslint-plugin-react，
+        // 于是「只在 JSX 里出现的标识符」（如 `{ as: Tag }` 后用 `<Tag />`）
+        // 不被算作引用，PascalCase 的组件型参数会被误报成未使用。
+        // 变量侧早就有 ^[A-Z_] 这个豁免，参数侧保持一致即可。
+        argsIgnorePattern: '^[A-Z_]',
         // catch 里不用的 error 很常见，不值得为此写一堆 void error
         caughtErrors: 'none',
       }],

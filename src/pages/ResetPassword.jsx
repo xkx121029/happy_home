@@ -6,7 +6,6 @@ import PasswordStrength from '../components/PasswordStrength';
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [token, setToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -18,8 +17,9 @@ export default function ResetPassword() {
   useEffect(() => {
     const tokenParam = searchParams.get('token');
     if (tokenParam) {
-      setToken(tokenParam);
-      // 模拟验证 token
+      // 只判断「链接里有没有带 token」，并没有真的校验它 ——
+      // 后端目前没有重置密码的端点（auth 模块只有登录/注册/验证码四条），
+      // 所以这一页整条链路都还是占位实现。
       setTimeout(() => {
         setIsValidating(false);
         setIsValidToken(true);

@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   MessageSquare
 } from 'lucide-react';
+import Modal, { Toast } from '../components/Modal';
 import { useModal, useToast } from '../hooks/useModal';
 import { useData } from '../contexts/DataContext';
 import { notificationsAPI } from '../services/api';
@@ -36,8 +37,8 @@ const notificationTypeConfig = {
 };
 
 export default function Notifications() {
-  const { confirm } = useModal();
-  const { showToast } = useToast();
+  const { confirm, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
+  const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
   const { notifications, getNotifications, markNotificationAsRead, deleteNotification } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -352,6 +353,18 @@ export default function Notifications() {
           </div>
         </div>
       </div>
+
+      {/* 这一页调了 confirm() 与 showToast()，但此前从未渲染对应的浮层组件 ——
+          也就是「删除确认框」和「操作成功提示」在这里一直是静默失效的：
+          hook 里的 isOpen 变了，但没有任何组件去读它。 */}
+      <Modal isOpen={isModalOpen} {...modalConfig} onClose={closeModal} />
+      <Toast
+        isOpen={isToastOpen}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        duration={toastConfig.duration}
+        onClose={closeToast}
+      />
     </div>
   );
 }

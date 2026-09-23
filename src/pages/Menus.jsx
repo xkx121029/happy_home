@@ -10,7 +10,7 @@ import { useModal, useToast } from '../hooks/useModal';
 import { useData } from '../contexts/DataContext';
 
 export default function Menus() {
-  const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
+  const { confirm, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
   const { menus, posts, pages, categories, tags, createMenu, updateMenu, deleteMenu } = useData();
   const [selectedMenu, setSelectedMenu] = useState(null);
@@ -81,7 +81,9 @@ export default function Menus() {
     }
   };
 
-  const handleAddItem = (type, data) => {
+  // 下面几个 handler 都是「菜单项增删改拖拽」的占位：后端还没有菜单项级别的
+  // 写接口，所以先只提示。参数用 _ 前缀标明是刻意不用的。
+  const handleAddItem = (_type, _data) => {
     if (!selectedMenu) return;
     showToast('添加菜单项功能暂未实现', 'warning');
     setShowAddModal(false);
@@ -97,7 +99,7 @@ export default function Menus() {
     setEditingItem(null);
   };
 
-  const handleDeleteItem = async (itemId) => {
+  const handleDeleteItem = async (_itemId) => {
     if (!selectedMenu) return;
     const confirmed = await confirm({
       title: '确认删除',
@@ -108,7 +110,7 @@ export default function Menus() {
     }
   };
 
-  const handleToggleItem = (itemId) => {
+  const handleToggleItem = (_itemId) => {
     showToast('切换菜单项功能暂未实现', 'warning');
   };
 
@@ -122,13 +124,13 @@ export default function Menus() {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e, targetItem) => {
+  const handleDrop = (e, _targetItem) => {
     e.preventDefault();
     showToast('拖拽排序功能暂未实现', 'warning');
     setDraggedItem(null);
   };
 
-  const handleMoveItem = (itemId, direction) => {
+  const handleMoveItem = (_itemId, _direction) => {
     showToast('移动菜单项功能暂未实现', 'warning');
   };
 
