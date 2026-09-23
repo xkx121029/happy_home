@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import {
   Code, Save, RotateCcw, Eye, EyeOff, AlertCircle, Check,
-  Copy, Trash2, FileText, Terminal, Settings
+  Copy, Trash2, FileText, Terminal, Settings, PanelBottom
 } from 'lucide-react';
 import { useNotification } from '../components/Notification';
+import { useSiteSettings } from '../state/SiteSettingsContext';
 import Modal from '../components/Modal';
 
 const cssSnippets = [
@@ -119,26 +120,29 @@ console.log('%c HappyHome ', 'background: #3b82f6; color: white; font-size: 20px
 ];
 
 export default function CustomCSS() {
-  const { success } = useNotification();
+  const { success, error } = useNotification();
+  const { settings, updateSettings } = useSiteSettings();
   const [activeTab, setActiveTab] = useState('css');
   const [customCSS, setCustomCSS] = useState('');
   const [customJS, setCustomJS] = useState('');
   const [customHead, setCustomHead] = useState('');
+  const [customFooter, setCustomFooter] = useState('');
+  const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [cssError, setCssError] = useState('');
-  const [copiedSnippet, setCopiedSnippet] = useState('');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
+  // 原来这里读写的是 localStorage（happyhome_custom_css / _js / _head），
+  // 而设置页的「自定义代码」写的是数据库 —— 两套互不通气，改哪边都只生效一半，
+  // 换台电脑还会丢。现在统一以数据库里的 settings 为唯一真源。
   useEffect(() => {
-    const savedCSS = localStorage.getItem('happyhome_custom_css') || '';
-    const savedJS = localStorage.getItem('happyhome_custom_js') || '';
-    const savedHead = localStorage.getItem('happyhome_custom_head') || '';
-    setCustomCSS(savedCSS);
-    setCustomJS(savedJS);
-    setCustomHead(savedHead);
-  }, []);
+    setCustomCSS(settings?.customCSS || '');
+    setCustomJS(settings?.customJS || '');
+    setCustomHead(settings?.headCode || '');
+    setCustomFooter(settings?.footerCode || '');
+  }, [settings?.customCSS, settings?.customJS, settings?.headCode, settings?.footerCode]);
 
   const handleCSSChange = (value) => {
     setCustomCSS(value);
@@ -153,6 +157,11 @@ export default function CustomCSS() {
 
   const handleHeadChange = (value) => {
     setCustomHead(value);
+    setHasChanges(true);
+  };
+
+  const handleFooterChange = (value) => {
+    setCustomFooter(value);
     setHasChanges(true);
   };
 
@@ -182,29 +191,49 @@ export default function CustomCSS() {
     return true;
   };
 
-  const handleSave = () => {
-    localStorage.setItem('happyhome_custom_css', customCSS);
-    localStorage.setItem('happyhome_custom_js', customJS);
-    localStorage.setItem('happyhome_custom_head', customHead);
-    setHasChanges(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    // 原来保存前完全不校验，写坏一个括号也不提示，前台整段样式静默失效
+    if (!validateCSS(customCSS)) {
+      error('自定义 CSS 有大括号或括号不匹配，请先修正');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await updateSettings({
+        customCSS,
+        customJS,
+        headCode: customHead,
+        footerCode: customFooter,
+      });
+      setHasChanges(false);
+      setSaved(true);
+      success('自定义代码已保存，前台立即生效');
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      error(err.message || '保存失败');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleReset = () => {
     setConfirmModal({
       isOpen: true,
-      title: '确认重置',
-      message: '确定要重置所有自定义代码吗？',
-      onConfirm: () => {
-        setCustomCSS('');
-        setCustomJS('');
-        setCustomHead('');
-        localStorage.removeItem('happyhome_custom_css');
-        localStorage.removeItem('happyhome_custom_js');
-        localStorage.removeItem('happyhome_custom_head');
-        setHasChanges(false);
-        success('已重置所有自定义代码');
+      title: '确认清空',
+      message: '确定要清空所有自定义代码吗？',
+      onConfirm: async () => {
+        try {
+          await updateSettings({ customCSS: '', customJS: '', headCode: '', footerCode: '' });
+          setCustomCSS('');
+          setCustomJS('');
+          setCustomHead('');
+          setCustomFooter('');
+          setHasChanges(false);
+          success('已清空所有自定义代码');
+        } catch (err) {
+          error(err.message || '清空失败');
+        }
       }
     });
   };
@@ -218,23 +247,35 @@ export default function CustomCSS() {
     setHasChanges(true);
   };
 
-  const handleCopySnippet = async (code, label) => {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopiedSnippet(label);
-      setTimeout(() => setCopiedSnippet(''), 2000);
-    } catch (err) {
-      console.error('Failed to copy');
-    }
-  };
-
   const tabs = [
     { id: 'css', label: '自定义 CSS', icon: Code },
     { id: 'js', label: '自定义 JS', icon: Terminal },
     { id: 'head', label: 'Head 代码', icon: Settings },
+    { id: 'footer', label: '页脚代码', icon: PanelBottom },
   ];
 
   const currentSnippets = activeTab === 'css' ? cssSnippets : activeTab === 'js' ? jsSnippets : [];
+
+  const editorValue = {
+    css: customCSS,
+    js: customJS,
+    head: customHead,
+    footer: customFooter,
+  }[activeTab] ?? '';
+
+  const editorPlaceholder = {
+    css: '/* 在这里输入自定义 CSS 代码 */\n\n例如：\nbody {\n  font-family: "Microsoft YaHei", sans-serif;\n}',
+    js: '// 在这里输入自定义 JavaScript 代码\n\n例如：\ndocument.addEventListener("DOMContentLoaded", function() {\n  console.log("页面加载完成");\n});',
+    head: '<!-- 在这里输入要添加到 <head> 的代码 -->\n\n例如：\n<link rel="stylesheet" href="external.css">\n<script src="external.js"></script>',
+    footer: '<!-- 在这里输入要添加到 </body> 之前的代码 -->\n\n例如：\n<script src="statistics.js"></script>',
+  }[activeTab] || '';
+
+  const handleEditorChange = (value) => {
+    if (activeTab === 'css') handleCSSChange(value);
+    else if (activeTab === 'js') handleJSChange(value);
+    else if (activeTab === 'head') handleHeadChange(value);
+    else handleFooterChange(value);
+  };
 
   return (
     <>
@@ -261,15 +302,15 @@ export default function CustomCSS() {
           </button>
           <button
             onClick={handleSave}
-            disabled={!hasChanges}
+            disabled={!hasChanges || saving}
             className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-              hasChanges
+              hasChanges && !saving
                 ? 'bg-blue-500 text-white hover:bg-blue-600'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
             }`}
           >
             <Save className="w-4 h-4" />
-            {saved ? '已保存' : '保存'}
+            {saving ? '保存中…' : saved ? '已保存' : '保存'}
           </button>
         </div>
       </div>
@@ -327,19 +368,9 @@ export default function CustomCSS() {
           {/* Code Editor */}
           <div className="relative">
             <textarea
-              value={activeTab === 'css' ? customCSS : activeTab === 'js' ? customJS : customHead}
-              onChange={(e) => {
-                if (activeTab === 'css') handleCSSChange(e.target.value);
-                else if (activeTab === 'js') handleJSChange(e.target.value);
-                else handleHeadChange(e.target.value);
-              }}
-              placeholder={
-                activeTab === 'css'
-                  ? '/* 在这里输入自定义 CSS 代码 */\n\n例如：\nbody {\n  font-family: "Microsoft YaHei", sans-serif;\n}'
-                  : activeTab === 'js'
-                  ? '// 在这里输入自定义 JavaScript 代码\n\n例如：\ndocument.addEventListener("DOMContentLoaded", function() {\n  console.log("页面加载完成");\n});'
-                  : '<!-- 在这里输入要添加到 <head> 的代码 -->\n\n例如：\n<link rel="stylesheet" href="external.css">\n<script src="external.js"></script>'
-              }
+              value={editorValue}
+              onChange={(e) => handleEditorChange(e.target.value)}
+              placeholder={editorPlaceholder}
               className={`w-full h-96 p-4 font-mono text-sm bg-gray-900 text-gray-100 resize-none focus:outline-none ${
                 activeTab === 'css' ? 'font-mono' : ''
               }`}

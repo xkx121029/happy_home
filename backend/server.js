@@ -12,7 +12,12 @@ const password = require('./src/lib/password');
 const { ok, fail } = require('./src/lib/response');
 const asyncHandler = require('./src/middleware/asyncHandler');
 const createAuth = require('./src/middleware/auth');
-const { checkCommentRate } = require('./src/middleware/rateLimit');
+const {
+  checkCommentRate,
+  checkLoginRate,
+  recordLoginFailure,
+  clearLoginFailures,
+} = require('./src/middleware/rateLimit');
 const { notFound, errorHandler } = require('./src/middleware/errors');
 
 const { initDatabase, getDb, dbHelpers, saveDatabase } = require('./db');
@@ -99,6 +104,9 @@ const deps = {
   fail,
   asyncHandler,
   checkCommentRate,
+  checkLoginRate,
+  recordLoginFailure,
+  clearLoginFailures,
 };
 
 app.use(require('./src/modules/health/routes')(deps));

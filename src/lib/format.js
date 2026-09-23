@@ -4,6 +4,20 @@
  * 原来 Backup.jsx、Media.jsx 等各自写了一份 formatSize / formatDate，
  * 实现细节还不一致（有的返回 '0 B'，有的返回 '0 Bytes'）。
  */
+import { htmlToPlainText } from './sanitize';
+
+/**
+ * 取文章摘要。
+ *
+ * 作者手写过摘要就用它；没写就从正文截取，长度来自「内容」页的 excerptLength。
+ * 原来列表页直接渲染 `post.excerpt`，而摘要字段只有在编辑器里手填过才有值 ——
+ * 没填的文章在列表里就是一片空白。
+ */
+export function excerptFrom(post, maxLength = 150) {
+  const explicit = (post?.excerpt || '').trim();
+  if (explicit) return explicit;
+  return htmlToPlainText(post?.content || '', maxLength);
+}
 
 /**
  * 字节数转可读字符串。

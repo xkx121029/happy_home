@@ -14,6 +14,9 @@ export default function SEO() {
     siteKeywords: '',
     ogImage: '',
     googleAnalytics: '',
+    googleTagManager: '',
+    hotjar: '',
+    matomo: '',
     bingVerification: '',
     baiduVerification: '',
     robots: 'index, follow',
@@ -249,6 +252,50 @@ export default function SEO() {
           className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
         />
         <p className="mt-1 text-xs text-gray-500">在 Google Analytics 中获取您的追踪码</p>
+      </div>
+
+      {/* GTM / Hotjar / Matomo 原来在设置页的「集成」标签页里，但那份数据
+          没有任何代码读取；真正被注入前台的只有 seo.googleAnalytics 一项。
+          统一收到这一页之后，四个统计脚本才都有唯一且生效的入口。 */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Google Tag Manager ID
+        </label>
+        <input
+          type="text"
+          value={seo.googleTagManager || ''}
+          onChange={(e) => handleChange('googleTagManager', e.target.value)}
+          placeholder="GTM-XXXXXXX"
+          className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+        />
+        <p className="mt-1 text-xs text-gray-500">留空则不注入。与 Google Analytics 同时填写会重复统计，建议只用一个</p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Hotjar Site ID
+        </label>
+        <input
+          type="text"
+          value={seo.hotjar || ''}
+          onChange={(e) => handleChange('hotjar', e.target.value)}
+          placeholder="1234567"
+          className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Matomo 地址
+        </label>
+        <input
+          type="text"
+          value={seo.matomo || ''}
+          onChange={(e) => handleChange('matomo', e.target.value)}
+          placeholder="https://analytics.example.com/"
+          className="w-full px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+        />
+        <p className="mt-1 text-xs text-gray-500">自建 Matomo 的根地址，需以 / 结尾</p>
       </div>
 
       <div>

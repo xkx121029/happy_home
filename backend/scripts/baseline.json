@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-09-22T13:29:43.967Z",
+  "savedAt": "2026-09-23T13:02:52.958Z",
   "apiBase": "http://localhost:3002/api",
   "note": "shape 字段是契约形状（叶子值只留类型）；message 仅供参考不参与 diff",
   "results": [
@@ -175,6 +175,13 @@
           "siteName": "string",
           "siteUrl": "string",
           "textColor": "string",
+          "theme": {
+            "accent": "string",
+            "font": "string",
+            "neutral": "string",
+            "presetId": "string",
+            "radius": "string"
+          },
           "timezone": "string"
         },
         "success": "bool:true"
@@ -222,7 +229,11 @@
       "shape": {
         "count": "number",
         "data": "array",
-        "success": "bool:true"
+        "page": "number",
+        "perPage": "number",
+        "success": "bool:true",
+        "total": "number",
+        "totalPages": "number"
       }
     },
     {
@@ -241,10 +252,22 @@
       "expect": 200,
       "shape": {
         "data": {
-          "enableDarkMode": "bool:false",
+          "customCSS": "string",
+          "customJS": "string",
+          "footerCode": "string",
+          "headCode": "string",
+          "postsPerPage": "number",
           "siteDescription": "string",
           "siteName": "string",
-          "siteUrl": "string"
+          "siteUrl": "string",
+          "theme": {
+            "accent": "string",
+            "font": "string",
+            "neutral": "string",
+            "presetId": "string",
+            "radius": "string"
+          },
+          "timezone": "string"
         },
         "success": "bool:true"
       }

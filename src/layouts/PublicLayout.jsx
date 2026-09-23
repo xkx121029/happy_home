@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
 import PublicHeader from '../components/PublicHeader';
 import PublicFooter from '../components/PublicFooter';
 import { useSiteSettings } from '../state/SiteSettingsContext';
 import { sanitizeCss } from '../lib/sanitize';
-import { STORAGE_KEYS, readRaw } from '../lib/storage';
+import { injectAnalytics, injectHtml, injectScript, injectStyle } from '../lib/injectCode';
 
 /**
  * 前台外壳。
@@ -13,35 +13,39 @@ import { STORAGE_KEYS, readRaw } from '../lib/storage';
  * 现场定义一个 sanitizeCSS 函数、再把一个 <style> 元素渲染进 body。
  * 这些都不该发生在渲染过程中 —— 读存储应该是副作用，净化应该是纯函数，
  * <style> 应该注入 head 而不是挂在 body 上。
+ *
+ * 自定义代码的来源也换掉了：原来读 localStorage（happyhome_custom_css），
+ * 而设置页写的是数据库 —— 两条链路互不通气，改哪边都只生效一半。
+ * 现在统一从 settings 注入，与主题走同一条路。
  */
 export default function PublicLayout() {
   const { settings } = useSiteSettings();
-  const [customCss, setCustomCss] = useState('');
+
+  const safeCss = useMemo(() => sanitizeCss(settings?.customCSS || ''), [settings?.customCSS]);
 
   useEffect(() => {
-    setCustomCss(readRaw(STORAGE_KEYS.customCss, '') || '');
-  }, []);
-
-  const safeCss = useMemo(() => sanitizeCss(customCss), [customCss]);
-
-  // 站点级自定义 CSS 注入 <head>，只做一次
-  useEffect(() => {
-    const STYLE_ID = 'happyhome-custom-css';
-    let element = document.getElementById(STYLE_ID);
-
-    if (!safeCss) {
-      element?.remove();
-      return;
-    }
-    if (!element) {
-      element = document.createElement('style');
-      element.id = STYLE_ID;
-      document.head.appendChild(element);
-    }
-    element.textContent = safeCss;
+    injectStyle(document.head, 'custom-css', safeCss);
   }, [safeCss]);
 
-  // 站点名称与描述驱动页面标题
+  useEffect(() => {
+    injectHtml(document.head, 'head-code', settings?.headCode);
+  }, [settings?.headCode]);
+
+  useEffect(() => {
+    injectScript(document.body, 'custom-js', settings?.customJS);
+  }, [settings?.customJS]);
+
+  useEffect(() => {
+    injectHtml(document.body, 'footer-code', settings?.footerCode);
+  }, [settings?.footerCode]);
+
+  // 统计脚本只在前台注入 —— 后台不需要统计自己
+  const analytics = settings?.seo;
+  useEffect(() => {
+    injectAnalytics(analytics);
+  }, [analytics]);
+
+  // 站点名称驱动页面标题
   useEffect(() => {
     if (settings?.siteName) {
       document.title = settings.siteName;

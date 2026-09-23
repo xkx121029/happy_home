@@ -27,4 +27,55 @@ setInterval(() => {
   }
 }, COMMENT_RATE_LIMIT.windowMs).unref();
 
-module.exports = { checkCommentRate };
+// ------------------------------------------------------------ 登录失败限流
+//
+// 与评论限流刻意分开计数，因为两者语义不同：
+//   - 评论限流统计的是「成功提交」，防止刷库；
+//   - 登录限流只统计「失败」，防止撞库 —— 输对密码必须立刻清零，
+//     否则用户自己手滑几次之后再输对也会被锁在门外。
+// 阈值来自 settings.loginLimit（0 或未配置表示不限制），所以由调用方传入。
+const LOGIN_WINDOW_MS = 10 * 60 * 1000;
+const loginRateBuckets = new Map();
+
+function checkLoginRate(key, max) {
+  const limit = Number(max) || 0;
+  if (limit <= 0) return { allowed: true, remaining: Infinity };
+
+  const now = Date.now();
+  const bucket = loginRateBuckets.get(key);
+  if (!bucket || now - bucket.start > LOGIN_WINDOW_MS) {
+    return { allowed: true, remaining: limit };
+  }
+  if (bucket.count >= limit) {
+    return { allowed: false, remaining: 0 };
+  }
+  return { allowed: true, remaining: limit - bucket.count };
+}
+
+function recordLoginFailure(key) {
+  const now = Date.now();
+  const bucket = loginRateBuckets.get(key);
+  if (!bucket || now - bucket.start > LOGIN_WINDOW_MS) {
+    loginRateBuckets.set(key, { start: now, count: 1 });
+    return;
+  }
+  bucket.count += 1;
+}
+
+function clearLoginFailures(key) {
+  loginRateBuckets.delete(key);
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, bucket] of loginRateBuckets) {
+    if (now - bucket.start > LOGIN_WINDOW_MS) loginRateBuckets.delete(key);
+  }
+}, LOGIN_WINDOW_MS).unref();
+
+module.exports = {
+  checkCommentRate,
+  checkLoginRate,
+  recordLoginFailure,
+  clearLoginFailures,
+};

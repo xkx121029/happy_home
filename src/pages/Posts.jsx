@@ -20,10 +20,11 @@ export default function Posts() {
   // 根据设置获取文章链接
   // 原来生成的是 /post/xxx，而前台路由注册的是 /posts/:id，
   // 路径对不上，管理员点"查看文章"必然落到 404。
-  const getPostUrl = (post) => {
-    const urlType = settings?.postUrlType || 'slug';
-    return urlType === 'id' ? `/posts/${post.id}` : `/posts/${post.slug || post.id}`;
-  };
+  //
+  // 这里原本还会读 settings.postUrlType 来切换「用 ID 还是用标题别名」，
+  // 但 posts 表没有 slug 列，两个分支算出来是同一个地址 —— 那个设置从来
+  // 没有产生过任何差别，已从设置里移除。
+  const getPostUrl = (post) => `/posts/${post.id}`;
 
   const sortedPosts = [...posts].sort((a, b) => {
     if (a.sticky && !b.sticky) return -1;

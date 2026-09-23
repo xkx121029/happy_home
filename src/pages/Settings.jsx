@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Settings as SettingsIcon, Globe, Palette, Shield, Bell, Mail, Database,
@@ -11,183 +11,33 @@ import {
 import { useSiteSettings } from '../state/SiteSettingsContext';
 import { useData } from '../contexts/DataContext';
 import { smtpAPI, notificationsAPI } from '../services/api';
-import { filterSettings } from '../utils/allowedSettings';
+import { CUSTOM_TABS, SETTINGS_DEFAULTS, SETTINGS_TABS, filterSettings } from '../config/settings';
 import { ADMIN_PATHS } from '../routes/paths';
 import Modal, { Toast } from '../components/Modal';
 import { useModal, useToast } from '../hooks/useModal';
 
-const tabs = [
-  { id: 'general', label: '常规设置', icon: SettingsIcon },
-  { id: 'appearance', label: '外观', icon: Palette },
-  { id: 'content', label: '内容', icon: FileText },
-  { id: 'users', label: '用户', icon: User },
-  { id: 'security', label: '安全', icon: Shield },
-  { id: 'notifications', label: '通知', icon: Bell },
-  { id: 'media', label: '媒体', icon: ImageIcon },
-  { id: 'email', label: '邮件', icon: Mail },
-  { id: 'performance', label: '性能', icon: Zap },
-  { id: 'seo', label: 'SEO', icon: Search },
-  { id: 'integrations', label: '集成', icon: Share2 },
-  { id: 'customCode', label: '自定义代码', icon: Code },
-  { id: 'backup', label: '备份恢复', icon: Database },
-  { id: 'logs', label: '日志中心', icon: Server },
-];
+// 标签页与字段定义都来自 config/settings.js（唯一真源）。
+// 原来表单和白名单各写一份，必然漂移 —— postUrlType 有表单但不在白名单里，
+// 保存时被静默丢弃。现在两者由同一份定义派生。
+const tabs = [...SETTINGS_TABS, ...CUSTOM_TABS];
 
-const settingCategories = {
-  general: [
-    { key: 'siteName', label: '网站名称', type: 'text', placeholder: '我的网站' },
-    { key: 'siteDescription', label: '网站描述', type: 'textarea', placeholder: '这是一个很棒的网站' },
-    { key: 'siteUrl', label: '网站URL', type: 'url', placeholder: 'https://example.com' },
-    { key: 'tagline', label: '网站标语', type: 'text', placeholder: '简单而强大' },
-    { key: 'adminEmail', label: '管理员邮箱', type: 'email', placeholder: 'admin@example.com' },
-    { key: 'timezone', label: '时区', type: 'select', options: [
-      { value: 'Asia/Shanghai', label: 'Asia/Shanghai (UTC+8)' },
-      { value: 'Asia/Tokyo', label: 'Asia/Tokyo (UTC+9)' },
-      { value: 'America/New_York', label: 'America/New_York (UTC-5)' },
-      { value: 'Europe/London', label: 'Europe/London (UTC+0)' },
-    ]},
-    { key: 'language', label: '语言', type: 'select', options: [
-      { value: 'zh-CN', label: '简体中文' },
-      { value: 'zh-TW', label: '繁体中文' },
-      { value: 'en-US', label: 'English (US)' },
-      { value: 'ja-JP', label: '日本語' },
-    ]},
-  ],
-  // 外观分类整体移到了独立的「主题定制」页。
-  //
-  // 这里原来有 8 个字段：主题 / 主色调 / 次要色 / 强调色 / 字体 / 字体大小 /
-  // 布局 / 侧边栏位置。其中 7 个没有任何代码读取过 —— 改完点保存不会发生任何事；
-  // 唯一生效的 primaryColor 又与主题页的强调色重复，两处都能改必然互相打架。
-  // 现在统一由主题页负责，这里只留一个跳转入口。
-  content: [
-    { key: 'postsPerPage', label: '每页文章数', type: 'number', min: 5, max: 100, defaultValue: 10 },
-    { key: 'excerptLength', label: '摘要长度', type: 'number', min: 50, max: 500, defaultValue: 150 },
-    { key: 'postUrlType', label: '文章链接格式', type: 'select', options: [
-      { value: 'slug', label: '标题别名（如 /post/my-first-post）' },
-      { value: 'id', label: '文章ID（如 /post/123456）' },
-    ]},
-    { key: 'enableComments', label: '启用评论', type: 'toggle', defaultValue: true },
-    { key: 'commentsModeration', label: '评论审核', type: 'toggle', defaultValue: true },
-    { key: 'enableRevisions', label: '启用文章修订', type: 'toggle', defaultValue: true },
-    { key: 'revisionLimit', label: '保留修订数量', type: 'number', min: 0, max: 100, defaultValue: 25 },
-  ],
-  users: [
-    { key: 'registrationEnabled', label: '开放注册', type: 'toggle', defaultValue: false },
-    { key: 'defaultRole', label: '新用户默认角色', type: 'select', options: [
-      { value: 'subscriber', label: '订阅者' },
-      { value: 'author', label: '作者' },
-      { value: 'editor', label: '编辑' },
-    ]},
-    { key: 'emailVerification', label: '邮箱验证', type: 'toggle', defaultValue: true },
-    { key: 'enableAvatars', label: '启用头像', type: 'toggle', defaultValue: true },
-  ],
-  security: [
-    { key: 'twoFactorAuth', label: '两步验证', type: 'toggle', defaultValue: false },
-    { key: 'loginLimit', label: '登录限制', type: 'select', options: [
-      { value: 'none', label: '无限制' },
-      { value: '5', label: '5次/分钟' },
-      { value: '10', label: '10次/分钟' },
-    ]},
-    { key: 'sessionTimeout', label: '会话超时', type: 'select', options: [
-      { value: '1', label: '1小时' },
-      { value: '6', label: '6小时' },
-      { value: '24', label: '24小时' },
-      { value: '168', label: '7天' },
-    ]},
-    { key: 'enableSSL', label: '强制HTTPS', type: 'toggle', defaultValue: false },
-  ],
-  notifications: [
-    { key: 'notifyNewComment', label: '新评论通知', type: 'toggle', defaultValue: true },
-    { key: 'notifyNewUser', label: '新用户注册通知', type: 'toggle', defaultValue: true },
-    { key: 'notifyPostApproval', label: '文章待审核通知', type: 'toggle', defaultValue: true },
-    { key: 'notifyUpdates', label: '系统更新通知', type: 'toggle', defaultValue: true },
-    { key: 'emailFromName', label: '发件人名称', type: 'text', placeholder: '网站名称' },
-    { key: 'emailFromAddress', label: '发件人邮箱', type: 'email', placeholder: 'no-reply@example.com' },
-  ],
-  media: [
-    { key: 'maxUploadSize', label: '最大上传大小', type: 'select', options: [
-      { value: '2', label: '2 MB' },
-      { value: '5', label: '5 MB' },
-      { value: '10', label: '10 MB' },
-      { value: '50', label: '50 MB' },
-    ]},
-    { key: 'autoResizeImages', label: '自动调整图片大小', type: 'toggle', defaultValue: true },
-    { key: 'maxImageWidth', label: '图片最大宽度', type: 'number', min: 800, max: 4000, defaultValue: 1920 },
-    { key: 'imageQuality', label: '图片质量', type: 'range', min: 50, max: 100, defaultValue: 85 },
-    { key: 'generateThumbnails', label: '自动生成缩略图', type: 'toggle', defaultValue: true },
-  ],
-  email: [
-    { key: 'smtpHost', label: 'SMTP 主机', type: 'text', placeholder: 'smtp.example.com' },
-    { key: 'smtpPort', label: 'SMTP 端口', type: 'select', options: [
-      { value: '25', label: '25' },
-      { value: '587', label: '587 (推荐)' },
-      { value: '465', label: '465 (SSL)' },
-    ]},
-    { key: 'smtpUser', label: 'SMTP 用户名', type: 'text', placeholder: 'user@example.com' },
-    { key: 'smtpPass', label: 'SMTP 密码', type: 'password', placeholder: '输入密码' },
-    { key: 'smtpSecure', label: '启用SSL/TLS', type: 'toggle', defaultValue: false },
-    { key: 'smtpFrom', label: '发件人地址', type: 'email', placeholder: 'no-reply@yourdomain.com' },
-  ],
-  performance: [
-    { key: 'enableCaching', label: '启用缓存', type: 'toggle', defaultValue: true },
-    { key: 'cacheDuration', label: '缓存时长', type: 'select', options: [
-      { value: '3600', label: '1小时' },
-      { value: '21600', label: '6小时' },
-      { value: '86400', label: '24小时' },
-    ]},
-    { key: 'minifyHTML', label: '压缩HTML', type: 'toggle', defaultValue: true },
-    { key: 'minifyCSS', label: '压缩CSS', type: 'toggle', defaultValue: true },
-    { key: 'minifyJS', label: '压缩JS', type: 'toggle', defaultValue: true },
-    { key: 'lazyLoadImages', label: '图片懒加载', type: 'toggle', defaultValue: true },
-  ],
-  seo: [
-    { key: 'metaTitle', label: 'Meta 标题', type: 'text', placeholder: '网站标题' },
-    { key: 'metaDescription', label: 'Meta 描述', type: 'textarea', placeholder: '网站描述' },
-    { key: 'metaKeywords', label: 'Meta 关键词', type: 'text', placeholder: '关键词1, 关键词2' },
-    { key: 'canonicalUrl', label: '规范URL', type: 'url', placeholder: 'https://example.com' },
-    { key: 'ogTitle', label: 'Open Graph 标题', type: 'text', placeholder: '分享标题' },
-    { key: 'ogDescription', label: 'Open Graph 描述', type: 'textarea', placeholder: '分享描述' },
-    { key: 'ogImage', label: 'Open Graph 图片', type: 'url', placeholder: 'https://example.com/image.jpg' },
-    { key: 'twitterCard', label: 'Twitter 卡片类型', type: 'select', options: [
-      { value: 'summary', label: '摘要' },
-      { value: 'summary_large_image', label: '大图摘要' },
-    ]},
-    { key: 'twitterSite', label: 'Twitter 账号', type: 'text', placeholder: '@username' },
-  ],
-  integrations: [
-    { key: 'googleAnalytics', label: 'Google Analytics ID', type: 'text', placeholder: 'UA-XXXXX-X 或 G-XXXXXXX' },
-    { key: 'googleTagManager', label: 'Google Tag Manager ID', type: 'text', placeholder: 'GTM-XXXXX' },
-    { key: 'hotjar', label: 'Hotjar ID', type: 'text', placeholder: '123456' },
-    { key: 'matomo', label: 'Matomo URL', type: 'url', placeholder: 'https://analytics.example.com' },
-  ],
-  customCode: [
-    { key: 'customCSS', label: '自定义 CSS', type: 'code', language: 'css', placeholder: '/* 在此添加自定义CSS */\n.my-class {\n  color: red;\n}' },
-    { key: 'customJS', label: '自定义 JavaScript', type: 'code', language: 'javascript', placeholder: '// 在此添加自定义JavaScript\nconsole.log("Hello!");' },
-    { key: 'headCode', label: '头部代码 (<head>)', type: 'code', language: 'html', placeholder: '<!-- 在此添加头部代码 -->' },
-    { key: 'footerCode', label: '底部代码 (</body>)', type: 'code', language: 'html', placeholder: '<!-- 在此添加底部代码 -->' },
-  ],
-};
+const findTab = (id) => SETTINGS_TABS.find((tab) => tab.id === id);
 
 export default function Settings() {
   const { posts, comments } = useData();
   const { settings, updateSettings } = useSiteSettings();
   const [notifications, setNotifications] = useState([]);
-  const { confirm, alert, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
+  const { confirm, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
   const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
   
   const [activeTab, setActiveTab] = useState(() => {
     const saved = localStorage.getItem('settingsActiveTab');
     return saved || 'general';
   });
-  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState(() => filterSettings(settings));
   const [hasChanges, setHasChanges] = useState(false);
   const [smtpTestResult, setSmtpTestResult] = useState(null);
   const [isTestingSmtp, setIsTestingSmtp] = useState(false);
-  const [customCSS, setCustomCSS] = useState(formData.customCSS || '');
-  const [customJS, setCustomJS] = useState(formData.customJS || '');
-  const [headCode, setHeadCode] = useState(formData.headCode || '');
-  const [footerCode, setFooterCode] = useState(formData.footerCode || '');
   const [logFilter, setLogFilter] = useState('all');
   const [logSearch, setLogSearch] = useState('');
 
@@ -203,10 +53,6 @@ export default function Settings() {
     if (hasChanges || !settings || Object.keys(settings).length === 0) return;
     const next = filterSettings(settings);
     setFormData(next);
-    setCustomCSS(next.customCSS || '');
-    setCustomJS(next.customJS || '');
-    setHeadCode(next.headCode || '');
-    setFooterCode(next.footerCode || '');
   }, [settings, hasChanges]);
 
   const loadNotifications = async () => {
@@ -241,30 +87,32 @@ export default function Settings() {
 
   const handleSave = async () => {
     try {
-      const settingsToSave = {
-        ...filterSettings(formData),
-        customCSS,
-        customJS,
-        headCode,
-        footerCode,
-      };
-      await updateSettings(settingsToSave);
+      await updateSettings(filterSettings(formData));
       setHasChanges(false);
       showToast('设置已保存！', 'success');
     } catch (error) {
       console.error('保存设置失败:', error);
-      showToast('保存设置时发生错误', 'error');
+      showToast(error.message || '保存设置时发生错误', 'error');
     }
   };
 
   const handleReset = async () => {
     const confirmed = await confirm({
       title: '重置设置',
-      message: '确定要重置所有设置吗？这将恢复默认设置。',
+      message: '确定要把所有设置恢复为默认值吗？',
     });
-    if (confirmed) {
-      localStorage.clear();
-      window.location.reload();
+    if (!confirmed) return;
+
+    try {
+      // 原来这里是 localStorage.clear()：它不只清设置，还会把登录令牌、
+      // 主题选择、教程进度一起抹掉 —— 点一下「重置设置」就被登出了。
+      // 现在只写回字段定义里的默认值。
+      await updateSettings({ ...SETTINGS_DEFAULTS });
+      setFormData({ ...SETTINGS_DEFAULTS });
+      setHasChanges(false);
+      showToast('设置已恢复默认值', 'success');
+    } catch (error) {
+      showToast(error.message || '重置失败', 'error');
     }
   };
 
@@ -438,7 +286,7 @@ export default function Settings() {
           </div>
         );
 
-      case 'toggle':
+      case 'toggle': {
         const toggleValue = value ?? setting.defaultValue ?? false;
         return (
           <button
@@ -454,27 +302,7 @@ export default function Settings() {
             />
           </button>
         );
-
-      case 'code':
-        const codeValue = setting.key === 'customCSS' ? customCSS : 
-                         setting.key === 'customJS' ? customJS :
-                         setting.key === 'headCode' ? headCode : footerCode;
-        const setCodeValue = setting.key === 'customCSS' ? setCustomCSS :
-                            setting.key === 'customJS' ? setCustomJS :
-                            setting.key === 'headCode' ? setHeadCode : setFooterCode;
-        return (
-          <textarea
-            value={codeValue || ''}
-            onChange={(e) => {
-              setCodeValue(e.target.value);
-              setHasChanges(true);
-            }}
-            placeholder={setting.placeholder}
-            rows={10}
-            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-900 text-green-400 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-            spellCheck={false}
-          />
-        );
+      }
 
       default:
         return null;
@@ -565,38 +393,21 @@ export default function Settings() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
             {activeTab !== 'backup' && activeTab !== 'logs' && (
               <div className="space-y-6">
-                {settingCategories[activeTab]?.map(setting => (
-                  <div key={setting.key} className="flex items-start justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                    <div className="flex-1 pr-4">
+                {findTab(activeTab)?.fields.map(setting => (
+                  <div key={setting.key} className="flex items-start justify-between gap-6 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <div className="flex-1 min-w-0">
                       <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         {setting.label}
                       </label>
+                      {setting.hint && (
+                        <p className="text-xs text-muted mt-0.5">{setting.hint}</p>
+                      )}
                     </div>
                     <div className="flex-shrink-0">
                       {renderSetting(setting)}
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
-
-            {activeTab === 'appearance' && (
-              <div className="flex items-start gap-3 py-2">
-                <Palette className="w-5 h-5 text-muted mt-0.5 shrink-0" />
-                <div className="min-w-0">
-                  <h3 className="text-sm font-medium text-fg">主题与外观在独立页面里调整</h3>
-                  <p className="text-sm text-muted mt-1">
-                    预设主题、中性色系、强调色、圆角与字体统一在「主题定制」中设置，
-                    带明暗双预览，保存后全站立即生效。
-                  </p>
-                  <Link
-                    to={ADMIN_PATHS.themes}
-                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:opacity-80"
-                  >
-                    前往主题定制
-                    <ExternalLink className="w-4 h-4" />
-                  </Link>
-                </div>
               </div>
             )}
 

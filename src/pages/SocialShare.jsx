@@ -3,6 +3,19 @@ import {
   Share2, Save, RotateCcw, Check, ExternalLink, Globe, Link2, Eye, MousePointer
 } from 'lucide-react';
 import SocialShare from '../components/SocialShare';
+import { useSiteSettings } from '../state/SiteSettingsContext';
+
+/** 默认分享设置。原来初始化和重置各写了一份重复字面量，改一处必然漏另一处。 */
+const DEFAULT_SOCIAL_SHARE = {
+  enabled: true,
+  platforms: ['wechat', 'weibo', 'qq', 'qzone', 'facebook', 'twitter', 'linkedin'],
+  position: 'bottom',
+  style: 'circle',
+  size: 'medium',
+  showLabel: false,
+  customTitle: '分享这篇文章',
+  customMessage: '',
+};
 
 const platformOptions = [
   { id: 'wechat', name: '微信', icon: Share2, color: '#07c160' },
@@ -31,29 +44,21 @@ const sizeOptions = [
 ];
 
 export default function SocialShareSettings() {
-  const [settings, setSettings] = useState({
-    enabled: true,
-    platforms: ['wechat', 'weibo', 'qq', 'qzone', 'facebook', 'twitter', 'linkedin'],
-    position: 'bottom',
-    style: 'circle',
-    size: 'medium',
-    showLabel: false,
-    customTitle: '分享这篇文章',
-    customMessage: '',
-  });
+  const { settings: siteSettings, updateSettings } = useSiteSettings();
+  const [settings, setSettings] = useState({ ...DEFAULT_SOCIAL_SHARE });
+  const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  // 原来这里存的是 localStorage，而白名单里的 twitterEnabled / facebookEnabled
+  // 又是另一套（无表单、无读者）—— 两处都跟「前台真的渲染什么」没有关系：
+  // PublicPostDetail 当时把平台列表、样式、尺寸、是否显示文字全部写死在 JSX 里，
+  // 所以这一页调什么都没用。现在统一进 settings.socialShare，前台从它渲染。
   useEffect(() => {
-    const savedSettings = localStorage.getItem('happyhome_social_share_settings');
-    if (savedSettings) {
-      try {
-        setSettings(JSON.parse(savedSettings));
-      } catch (e) {
-        console.error('Failed to parse social share settings');
-      }
+    if (siteSettings?.socialShare) {
+      setSettings({ ...DEFAULT_SOCIAL_SHARE, ...siteSettings.socialShare });
     }
-  }, []);
+  }, [siteSettings?.socialShare]);
 
   const handleToggle = (key) => {
     setSettings(prev => ({ ...prev, [key]: !prev[key] }));
@@ -75,32 +80,31 @@ export default function SocialShareSettings() {
     setHasChanges(true);
   };
 
-  const handleSave = () => {
-    localStorage.setItem('happyhome_social_share_settings', JSON.stringify(settings));
-    setHasChanges(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
-
-  const handleReset = () => {
-    if (window.confirm('确定要重置所有分享设置为默认值吗？')) {
-      const defaultSettings = {
-        enabled: true,
-        platforms: ['wechat', 'weibo', 'qq', 'qzone', 'facebook', 'twitter', 'linkedin'],
-        position: 'bottom',
-        style: 'circle',
-        size: 'medium',
-        showLabel: false,
-        customTitle: '分享这篇文章',
-        customMessage: '',
-      };
-      setSettings(defaultSettings);
-      localStorage.setItem('happyhome_social_share_settings', JSON.stringify(defaultSettings));
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateSettings({ socialShare: settings });
       setHasChanges(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      console.error('保存分享设置失败:', err);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const previewUrl = `${window.location.origin}/posts/demo`;
+  const handleReset = async () => {
+    if (!window.confirm('确定要重置所有分享设置为默认值吗？')) return;
+    setSettings({ ...DEFAULT_SOCIAL_SHARE });
+    try {
+      await updateSettings({ socialShare: { ...DEFAULT_SOCIAL_SHARE } });
+      setHasChanges(false);
+    } catch (err) {
+      console.error('重置分享设置失败:', err);
+    }
+  };
+
   const previewTitle = '示例文章标题';
   const previewExcerpt = '这是文章的摘要内容';
 
@@ -121,15 +125,15 @@ export default function SocialShareSettings() {
           </button>
           <button
             onClick={handleSave}
-            disabled={!hasChanges}
+            disabled={!hasChanges || saving}
             className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-              hasChanges
+              hasChanges && !saving
                 ? 'bg-blue-500 text-white hover:bg-blue-600'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
             }`}
           >
             <Save className="w-4 h-4" />
-            {saved ? '已保存' : '保存设置'}
+            {saving ? '保存中…' : saved ? '已保存' : '保存设置'}
           </button>
         </div>
       </div>

@@ -13,10 +13,12 @@ export const STORAGE_KEYS = {
   isLoggedIn: 'isLoggedIn',
   currentUser: 'currentUser',
   theme: `${PREFIX}_theme`,
-  customCss: `${PREFIX}_custom_css`,
-  socialShare: `${PREFIX}_social_share_settings`,
   tutorial: `${PREFIX}_tutorial`,
 };
+
+// 自定义 CSS / JS / 头尾代码与社交分享设置原来也存在这里，但设置页写的是数据库 ——
+// 两套互不通气，改哪边都只生效一半，换台电脑还会丢。已统一为 settings 里的键
+// （customCSS / customJS / headCode / footerCode / socialShare），不再走 localStorage。
 
 /**
  * 读取并反序列化。解析失败或不存在时返回 fallback。

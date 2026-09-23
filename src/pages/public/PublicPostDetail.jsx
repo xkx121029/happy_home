@@ -51,6 +51,22 @@ export default function PublicPostDetail() {
   const siteUrl = settings?.siteUrl || '';
   const siteName = settings?.siteName || '';
 
+  // 「评论」页的启用开关
+  const commentsEnabled = settings?.enableComments !== false;
+
+  // 分享设置由「社交分享」页维护。那一页以前只写 localStorage，
+  // 而这里把平台列表、样式、尺寸、是否显示文字全部写死在 JSX 里 ——
+  // 于是它调什么都没用。现在由设置驱动。
+  const shareConfig = {
+    enabled: true,
+    platforms: ['wechat', 'weibo', 'qq', 'qzone', 'facebook', 'twitter', 'linkedin'],
+    position: 'bottom',
+    style: 'circle',
+    size: 'medium',
+    showLabel: false,
+    ...(settings?.socialShare || {}),
+  };
+
   // 更新页面 SEO 标签
   useEffect(() => {
     if (!post) return;
@@ -347,21 +363,24 @@ export default function PublicPostDetail() {
               />
 
               {/* Social Share Bar */}
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <div className="flex items-center gap-3 text-gray-500 mb-3">
-                  <Share2 className="w-5 h-5" />
-                  <span className="font-medium">分享这篇文章</span>
+              {shareConfig.enabled && (
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <div className="flex items-center gap-3 text-gray-500 mb-3">
+                    <Share2 className="w-5 h-5" />
+                    <span className="font-medium">分享这篇文章</span>
+                  </div>
+                  <SocialShare
+                    url={`${settings?.siteUrl || window.location.origin}/posts/${post.id}`}
+                    title={post.title}
+                    excerpt={post.excerpt}
+                    enabledPlatforms={shareConfig.platforms}
+                    style={shareConfig.style}
+                    size={shareConfig.size}
+                    showLabel={shareConfig.showLabel}
+                    position={shareConfig.position}
+                  />
                 </div>
-                <SocialShare
-                  url={`${settings?.siteUrl || window.location.origin}/posts/${post.id}`}
-                  title={post.title}
-                  excerpt={post.excerpt}
-                  enabledPlatforms={['wechat', 'weibo', 'qq', 'qzone', 'facebook', 'twitter', 'linkedin']}
-                  style="circle"
-                  size="medium"
-                  showLabel={false}
-                />
-              </div>
+              )}
 
               {/* Comments Section */}
               <div className="mt-12 pt-8 border-t border-gray-200">
@@ -371,7 +390,10 @@ export default function PublicPostDetail() {
                 </h2>
 
                 {/* Comment Form */}
-                <form onSubmit={handleCommentSubmit} className="mb-8 p-6 bg-white rounded-xl shadow-sm">
+                {/* 「评论」页关掉「启用评论」后不再渲染表单；后端也会拒绝提交。
+                    已通过的评论仍然照常显示，关评论不等于删评论。 */}
+                {commentsEnabled ? (
+                  <form onSubmit={handleCommentSubmit} className="mb-8 p-6 bg-white rounded-xl shadow-sm">
                   <h3 className="font-semibold text-gray-900 mb-4">发表评论</h3>
                   {commentSubmitted && (
                     <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg">
@@ -413,7 +435,10 @@ export default function PublicPostDetail() {
                     <Send className="w-4 h-4" />
                     提交评论
                   </button>
-                </form>
+                  </form>
+                ) : (
+                  <p className="mb-8 text-sm text-muted">本站已关闭评论。</p>
+                )}
 
                 {/* Comments List */}
                 {topLevelComments.length === 0 ? (

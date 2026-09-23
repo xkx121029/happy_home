@@ -297,7 +297,7 @@ function insertInitialData() {
     { key: 'language', value: 'zh-CN' },
     { key: 'postsPerPage', value: '10' },
     { key: 'commentsModeration', value: 'true' },
-    { key: 'registrationEnabled', value: 'false' },
+    { key: 'registrationEnabled', value: 'true' },
     { key: 'enableDarkMode', value: 'false' },
     { key: 'primaryColor', value: '#3b82f6' },
     { key: 'secondaryColor', value: '#8b5cf6' },
@@ -452,6 +452,19 @@ const MIGRATIONS = [
       database.run('CREATE INDEX IF NOT EXISTS idx_posts_publish_date ON posts(publish_date)');
       database.run('CREATE INDEX IF NOT EXISTS idx_comments_post_status ON comments(post_id, status)');
       database.run('CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read)');
+    },
+  },
+  {
+    id: 3,
+    name: 'registrationEnabled 修正为开启（该键此前从未被读取）',
+    up(database) {
+      // 这个键从建库起就存在，种子值是 'false'，但代码从未读过它 ——
+      // 也就是说注册一直是开放的。现在要把它真正接进注册接口，
+      // 若放着 'false' 不管，接线那一刻起注册会突然被禁掉，
+      // 而用户从未做过「关闭注册」这个决定。改成 'true' 才与既有行为一致。
+      database.run(
+        "UPDATE settings SET value = 'true' WHERE key = 'registrationEnabled' AND value = 'false'"
+      );
     },
   },
 ];

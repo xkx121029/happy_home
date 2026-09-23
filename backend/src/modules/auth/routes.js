@@ -5,9 +5,10 @@ const express = require('express');
 // 本模块不再 require server.js 或 db.js，避免循环依赖。
 module.exports = function createAuthRoutes(deps) {
   const {
-    getDb, saveDatabase, getSingle, uuidv4,
+    getDb, saveDatabase, getSingle, uuidv4, dbHelpers,
     jwt, mailer, authenticateToken, ok, fail, asyncHandler,
     password: passwordLib,
+    checkLoginRate, recordLoginFailure, clearLoginFailures,
   } = deps;
   const router = express.Router();
 
@@ -18,6 +19,11 @@ module.exports = function createAuthRoutes(deps) {
 
       if (!email) {
         return fail(res, 400, '请提供邮箱地址');
+      }
+
+      // 注册已关闭时不必浪费一封邮件，也不该给探测者留下「邮箱已注册」的信号
+      if (dbHelpers.getSettings().registrationEnabled === false) {
+        return fail(res, 403, '本站当前未开放注册');
       }
 
       const existingUser = getSingle(db, 'SELECT id FROM users WHERE email = ?', [email]);
@@ -77,21 +83,42 @@ module.exports = function createAuthRoutes(deps) {
         return fail(res, 400, '请输入用户名和密码');
       }
 
+      // 登录失败限流。阈值来自「安全」页的 loginLimit（0 表示不限制）。
+      // 按「来源 IP + 用户名」计数：只按 IP 会让同一局域网的人互相牵连，
+      // 只按用户名则无法阻挡轮换用户名的撞库。
+      const settings = dbHelpers.getSettings();
+      const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+      const rateKey = `login:${ip}:${String(username).toLowerCase()}`;
+
+      if (!checkLoginRate(rateKey, settings.loginLimit).allowed) {
+        return fail(res, 429, '登录尝试过于频繁，请 10 分钟后再试');
+      }
+
       const user = getSingle(db, 'SELECT * FROM users WHERE username = ? OR email = ?', [username, username]);
       if (!user) {
+        recordLoginFailure(rateKey);
         return fail(res, 401, '用户名或密码错误');
       }
 
       const isPasswordValid = passwordLib.compare(password, user.password);
       if (!isPasswordValid) {
+        recordLoginFailure(rateKey);
         return fail(res, 401, '用户名或密码错误');
       }
 
       if (user.status !== 'active') {
+        recordLoginFailure(rateKey);
         return fail(res, 401, '账户未激活');
       }
 
-      const token = jwt.sign({ id: user.id, username: user.username, role: user.role });
+      // 登录成功即清零，否则用户手滑几次之后再输对也会被锁
+      clearLoginFailures(rateKey);
+
+      // 有效期来自「安全」页的 sessionTimeout；未配置时沿用环境变量
+      const token = jwt.sign(
+        { id: user.id, username: user.username, role: user.role },
+        settings.sessionTimeout
+      );
 
       ok(res, {
         message: '登录成功',
@@ -114,9 +141,18 @@ module.exports = function createAuthRoutes(deps) {
     try {
       const { username, email, password, code } = req.body;
       const db = getDb();
+      const settings = dbHelpers.getSettings();
 
-      if (!username || !email || !password || !code) {
-        return fail(res, 400, '请填写所有字段，包括验证码');
+      // 该键此前从未被读取，注册一直是开放的；迁移 3 已把历史库里的 'false'
+      // 修正为 'true'，所以这里用 === false 判断，缺省即视为开放。
+      if (settings.registrationEnabled === false) {
+        return fail(res, 403, '本站当前未开放注册');
+      }
+
+      const requireCode = settings.emailVerification !== false;
+
+      if (!username || !email || !password || (requireCode && !code)) {
+        return fail(res, 400, requireCode ? '请填写所有字段，包括验证码' : '请填写用户名、邮箱和密码');
       }
 
       if (passwordLib.isTooShort(password)) {
@@ -128,37 +164,41 @@ module.exports = function createAuthRoutes(deps) {
         return fail(res, 400, '用户名或邮箱已存在');
       }
 
-      const registerCode = getSingle(db, 'SELECT * FROM register_codes WHERE email = ?', [email]);
-      if (!registerCode) {
-        return fail(res, 400, '请先获取验证码');
-      }
+      if (requireCode) {
+        const registerCode = getSingle(db, 'SELECT * FROM register_codes WHERE email = ?', [email]);
+        if (!registerCode) {
+          return fail(res, 400, '请先获取验证码');
+        }
 
-      if (registerCode.code !== code.toUpperCase()) {
-        return fail(res, 400, '验证码错误');
-      }
+        if (registerCode.code !== code.toUpperCase()) {
+          return fail(res, 400, '验证码错误');
+        }
 
-      if (new Date(registerCode.expires_at) < new Date()) {
-        db.run('DELETE FROM register_codes WHERE email = ?', [email]);
-        saveDatabase();
-        return fail(res, 400, '验证码已过期，请重新获取');
+        if (new Date(registerCode.expires_at) < new Date()) {
+          db.run('DELETE FROM register_codes WHERE email = ?', [email]);
+          saveDatabase();
+          return fail(res, 400, '验证码已过期，请重新获取');
+        }
       }
 
       const newUserId = uuidv4();
+      // 角色来自「用户」页的 defaultRole，原来写死 'author'
+      const role = settings.defaultRole || 'author';
 
       db.run(
         'INSERT INTO users (id, username, email, password, role, status) VALUES (?, ?, ?, ?, ?, ?)',
-        [newUserId, username, email, passwordLib.hash(password), 'author', 'active']
+        [newUserId, username, email, passwordLib.hash(password), role, 'active']
       );
 
       db.run('DELETE FROM register_codes WHERE email = ?', [email]);
       saveDatabase();
 
-      const token = jwt.sign({ id: newUserId, username, role: 'author' });
+      const token = jwt.sign({ id: newUserId, username, role }, settings.sessionTimeout);
 
       ok(res, {
         message: '注册成功！',
         token,
-        user: { id: newUserId, username, email, role: 'author', status: 'active' }
+        user: { id: newUserId, username, email, role, status: 'active' }
       });
     } catch (error) {
       console.error(error);

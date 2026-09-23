@@ -15,18 +15,46 @@ module.exports = function createPublicRoutes(deps) {
   router.get('/api/public/posts', (req, res) => {
     try {
       const db = getDb();
-      let sql = 'SELECT * FROM posts WHERE status = ?';
+      const settings = dbHelpers.getSettings();
+
+      let where = 'WHERE status = ?';
       const params = ['published'];
 
       if (req.query.search) {
-        sql += ' AND (title LIKE ? OR content LIKE ?)';
+        where += ' AND (title LIKE ? OR content LIKE ?)';
         params.push(`%${req.query.search}%`, `%${req.query.search}%`);
       }
 
-      sql += ' ORDER BY created_at DESC';
+      if (req.query.category) {
+        where += ' AND category = ?';
+        params.push(req.query.category);
+      }
 
-      const posts = execQuery(db, sql, params);
-      ok(res, { data: posts, count: posts.length });
+      // 每页条数来自「内容」页的 postsPerPage。原来这里没有分页，
+      // 文章一多前台就会把整张表一次性拉下来。
+      const page = Math.max(Number(req.query.page) || 1, 1);
+      const perPage = Math.min(
+        Math.max(Number(req.query.perPage) || Number(settings.postsPerPage) || 10, 1),
+        100
+      );
+
+      const totalRow = getSingle(db, `SELECT COUNT(*) AS total FROM posts ${where}`, params);
+      const total = totalRow?.total || 0;
+
+      const posts = execQuery(
+        db,
+        `SELECT * FROM posts ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+        [...params, perPage, (page - 1) * perPage]
+      );
+
+      ok(res, {
+        data: posts,
+        count: posts.length,
+        total,
+        page,
+        perPage,
+        totalPages: Math.max(Math.ceil(total / perPage), 1),
+      });
     } catch (error) {
       console.error(error);
       fail(res, 500, '服务器错误');
@@ -41,6 +69,22 @@ module.exports = function createPublicRoutes(deps) {
         return fail(res, 404, '文章不存在');
       }
       ok(res, { data: post });
+    } catch (error) {
+      console.error(error);
+      fail(res, 500, '服务器错误');
+    }
+  });
+
+  // 前台列表的分类下拉用。只返回已发布文章实际用到的分类，
+  // 不暴露后台分类表（那张表可能含未启用的分类）。
+  router.get('/api/public/categories', (req, res) => {
+    try {
+      const db = getDb();
+      const rows = execQuery(
+        db,
+        "SELECT DISTINCT category FROM posts WHERE status = 'published' AND category IS NOT NULL AND category != '' ORDER BY category"
+      );
+      ok(res, { data: rows.map((row) => row.category) });
     } catch (error) {
       console.error(error);
       fail(res, 500, '服务器错误');
@@ -72,15 +116,28 @@ module.exports = function createPublicRoutes(deps) {
     }
   });
 
+  // 访客能看到的设置白名单。
+  //
+  // 原来是手写的四个键，结果前台拿不到主题 —— SiteSettingsContext 对访客走这个
+  // 端点，`settings.theme` 是 undefined，于是访客永远看到默认配色，
+  // 管理员精心选的主题只有登录后自己能看到。自定义代码与统计 ID 同理，
+  // 它们本来就是给前台用的，却从来没下发过。
+  //
+  // 这里只列前台确实需要的键，SMTP 凭据之类的敏感项绝不包含在内。
+  const PUBLIC_SETTING_KEYS = [
+    'siteName', 'siteDescription', 'siteUrl', 'timezone',
+    'theme', 'seo', 'socialShare',
+    'customCSS', 'customJS', 'headCode', 'footerCode',
+    'enableComments', 'postsPerPage', 'excerptLength',
+  ];
+
   router.get('/api/public/settings', (req, res) => {
     try {
       const allSettings = dbHelpers.getSettings();
-      const publicSettings = {
-        siteName: allSettings.siteName,
-        siteDescription: allSettings.siteDescription,
-        siteUrl: allSettings.siteUrl,
-        enableDarkMode: allSettings.enableDarkMode
-      };
+      const publicSettings = {};
+      for (const key of PUBLIC_SETTING_KEYS) {
+        if (allSettings[key] !== undefined) publicSettings[key] = allSettings[key];
+      }
       ok(res, { data: publicSettings });
     } catch (error) {
       console.error(error);
@@ -92,6 +149,12 @@ module.exports = function createPublicRoutes(deps) {
     try {
       const db = getDb();
       const { postId, parentId, author, email, content } = req.body || {};
+      const settings = dbHelpers.getSettings();
+
+      // 「评论」页的启用开关。原来这个键没有任何读者，关掉它前台照样能提交。
+      if (settings.enableComments === false) {
+        return fail(res, 403, '本站已关闭评论');
+      }
 
       if (!author || !email || !content) {
         return fail(res, 400, '请填写昵称、邮箱和评论内容');
@@ -125,20 +188,37 @@ module.exports = function createPublicRoutes(deps) {
         return fail(res, 404, '文章不存在');
       }
 
-      // 访客评论一律先审核，绝不直接公开
+      // 访客评论默认先审核，绝不直接公开；「评论」页关掉「需要审核」后才直接放行。
+      const status = settings.commentsModeration === false ? 'approved' : 'pending';
       const id = uuidv4();
       db.run(
         'INSERT INTO comments (id, post_id, parent_id, author, email, content, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [id, postId, parentId || null, String(author).trim(), String(email).trim(), String(content).trim(), 'pending']
+        [id, postId, parentId || null, String(author).trim(), String(email).trim(), String(content).trim(), status]
       );
       db.run(
         'INSERT INTO notifications (id, user_id, type, title, message, link) VALUES (?, ?, ?, ?, ?, ?)',
-        [uuidv4(), null, 'comment', '新评论', `访客 ${author} 发表了新评论，待审核`, '/admin/comments']
+        [
+          uuidv4(),
+          null,
+          'comment',
+          '新评论',
+          status === 'approved'
+            ? `访客 ${author} 发表了新评论`
+            : `访客 ${author} 发表了新评论，待审核`,
+          '/admin/comments',
+        ]
       );
       saveDatabase();
 
       const created = getSingle(db, 'SELECT * FROM comments WHERE id = ?', [id]);
-      ok(res, { data: created, message: '评论已提交，审核通过后显示' }, 201);
+      ok(
+        res,
+        {
+          data: created,
+          message: status === 'approved' ? '评论已提交' : '评论已提交，审核通过后显示',
+        },
+        201
+      );
     } catch (error) {
       console.error(error);
       fail(res, 500, '服务器错误');
