@@ -159,7 +159,8 @@ app.use(API_PREFIX, require('./src/modules/media/routes')(deps));
 app.use(API_PREFIX, require('./src/modules/settings/routes')(deps));
 app.use(API_PREFIX, require('./src/modules/users/routes')(deps));
 app.use(API_PREFIX, require('./src/modules/notifications/routes')(deps));
-app.use(API_PREFIX, require('./src/modules/public/routes')(deps));
+// 原 modules/public/routes.js 已合并进各资源模块：同一个资源不再有「公开」与
+// 「后台」两套路径，差异由身份决定（匿名只看到已发布内容）。
 app.use(API_PREFIX, require('./src/modules/analytics/routes')(deps));
 app.use(API_PREFIX, require('./src/modules/smtp/routes')(deps));
 app.use(API_PREFIX, require('./src/modules/backups/routes')(deps));
