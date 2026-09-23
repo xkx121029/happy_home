@@ -115,6 +115,7 @@ module.exports = function createNotificationsRoutes(deps) {
   });
 
   // 创建通知的辅助函数（保留原实现，当前无调用点）
+  // eslint-disable-next-line no-unused-vars -- 保留给后续模块调用，删掉会丢失实现
   function createNotification(userId, type, title, message, link = null) {
     try {
       const db = getDb();

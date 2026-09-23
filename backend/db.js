@@ -14,33 +14,38 @@ let db = null;
 let SQL = null;
 
 function initDatabase() {
-  return new Promise(async (resolve, reject) => {
-    try {
-      SQL = await initSqlJs({
-        locateFile: file => `node_modules/sql.js/dist/${file}`
-      });
-      
-      const dbExists = fs.existsSync(DB_PATH);
-      
-      if (dbExists) {
-        const fileBuffer = fs.readFileSync(DB_PATH);
-        db = new SQL.Database(fileBuffer);
-        console.log('Database loaded from', DB_PATH);
-      } else {
-        db = new SQL.Database();
-        console.log('New database created');
-        
-        createTables();
-        insertInitialData();
-      }
+  // 不用 `new Promise(async (resolve, reject) => ...)`：async 执行器抛出的异常
+  // 不会走到 reject，而是变成一个没人处理的 Promise，初始化失败时
+  // 进程会静默挂住。改成先建普通 Promise，内部用 IIFE 跑 async 逻辑。
+  return new Promise((resolve, reject) => {
+    (async () => {
+      try {
+        SQL = await initSqlJs({
+          locateFile: file => `node_modules/sql.js/dist/${file}`
+        });
 
-      // 老库也要补齐新增的列与索引，否则新功能会静默失效
-      runMigrations({ isNewDatabase: !dbExists });
-      
-      resolve();
-    } catch (error) {
-      reject(error);
-    }
+        const dbExists = fs.existsSync(DB_PATH);
+
+        if (dbExists) {
+          const fileBuffer = fs.readFileSync(DB_PATH);
+          db = new SQL.Database(fileBuffer);
+          console.log('Database loaded from', DB_PATH);
+        } else {
+          db = new SQL.Database();
+          console.log('New database created');
+
+          createTables();
+          insertInitialData();
+        }
+
+        // 老库也要补齐新增的列与索引，否则新功能会静默失效
+        runMigrations({ isNewDatabase: !dbExists });
+
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    })();
   });
 }
 

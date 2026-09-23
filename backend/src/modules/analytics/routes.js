@@ -8,7 +8,6 @@ module.exports = function createAnalyticsRoutes(deps) {
   router.get('/api/analytics/stats', authenticateToken, (req, res) => {
     try {
       const now = new Date();
-      const today = now.toISOString().split('T')[0];
 
       const dailyData = [];
       for (let i = 6; i >= 0; i--) {
