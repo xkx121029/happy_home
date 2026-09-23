@@ -50,6 +50,8 @@ export function normalizeEntity(entity) {
 
 // 只规整数据载荷，不动 success/message/count 这类外层信封字段。
 // notifications 类端点用的是 notifications 而不是 data，一并处理。
+// revisions 详情会额外带一个 current（当前版本），同样要规整 ——
+// 漏掉它的话对比视图右列读到的 updated_at / publish_date 全是 undefined。
 export function normalizeResponse(payload) {
   if (!payload || typeof payload !== 'object') return payload;
   const result = { ...payload };
@@ -57,6 +59,9 @@ export function normalizeResponse(payload) {
     result.data = payload.data.map(normalizeEntity);
   } else if (payload.data && typeof payload.data === 'object') {
     result.data = normalizeEntity(payload.data);
+  }
+  if (payload.current && typeof payload.current === 'object') {
+    result.current = normalizeEntity(payload.current);
   }
   if (Array.isArray(payload.notifications)) {
     result.notifications = payload.notifications.map(normalizeEntity);
