@@ -6,6 +6,8 @@ const express = require('express');
 // 访客没有 token，永远拿到 401，评论功能实际上从未对公众开放。
 // 这里为前台单独开一组端点，并做好滥用防护（公开写接口没有限流等于开放刷库通道，
 // 所以限流与端点必须同时存在，见 src/middleware/rateLimit.js）。
+const { pickSettings } = require('../../lib/settingKeys');
+
 module.exports = function createPublicRoutes(deps) {
   const { getDb, saveDatabase, execQuery, getSingle, uuidv4, checkCommentRate, dbHelpers, ok, fail, requireAccess } = deps;
   const router = express.Router();
@@ -133,12 +135,9 @@ module.exports = function createPublicRoutes(deps) {
 
   router.get('/public/settings', (req, res) => {
     try {
-      const allSettings = dbHelpers.getSettings();
-      const publicSettings = {};
-      for (const key of PUBLIC_SETTING_KEYS) {
-        if (allSettings[key] !== undefined) publicSettings[key] = allSettings[key];
-      }
-      ok(res, { data: publicSettings });
+      // 白名单已收敛到 lib/settingKeys.js，与 /settings 端点共用同一份定义，
+      // 避免两处各写一遍、改了一处忘了另一处。
+      ok(res, { data: pickSettings(dbHelpers.getSettings(), { isPublic: true }) });
     } catch (error) {
       console.error(error);
       fail(res, 500, '服务器错误');

@@ -182,6 +182,9 @@ module.exports = function createAuthenticate({ getDb, getSingle, execQuery, save
         const user = getSingle(db, 'SELECT role FROM users WHERE id = ?', [req.user.id]);
         if (user && roles.includes(user.role)) {
           auth.level = 'full';
+          // 把实时角色留在 req.auth 上：处理函数里要按角色细分返回内容
+          // （例如设置端点对非管理员要过滤掉 SMTP 凭据）
+          auth.role = user.role;
           return next();
         }
         // 已登录但角色不够时退到匿名待遇（例如订阅者读公开文章），
