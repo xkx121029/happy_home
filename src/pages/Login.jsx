@@ -2,14 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Lock, Mail, Eye, EyeOff, LogIn, UserPlus, Zap, RefreshCw, CheckCircle } from 'lucide-react';
 import { useAuth } from '../state/AuthContext';
-import { useSiteSettings } from '../state/SiteSettingsContext';
 import { authAPI } from '../services/api';
 
 export default function Login() {
-  const { settings } = useSiteSettings();
   const { login, loginWithToken } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
-  const [showVerification, setShowVerification] = useState(false);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,12 +15,9 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
-  const [userId, setUserId] = useState('');
-  const [verificationMessage, setVerificationMessage] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
   const [codeButtonText, setCodeButtonText] = useState('获取验证码');
   const [codeButtonDisabled, setCodeButtonDisabled] = useState(false);
-  const [codeCountdown, setCodeCountdown] = useState(0);
   const navigate = useNavigate();
   const timerRef = useRef(null);
 
@@ -70,20 +64,20 @@ export default function Login() {
         setError('');
         setCodeButtonText('60秒后重新获取');
         setCodeButtonDisabled(true);
-        setCodeCountdown(60);
-        
+
+        // 倒计时只用来改按钮文案，不需要放进 state —— 之前那个
+        // codeCountdown 状态从头到尾没被读过，只是白白多一次渲染。
+        let remaining = 60;
         timerRef.current = setInterval(() => {
-          setCodeCountdown(prev => {
-            if (prev <= 1) {
-              clearInterval(timerRef.current);
-              timerRef.current = null;
-              setCodeButtonText('获取验证码');
-              setCodeButtonDisabled(false);
-              return 0;
-            }
-            setCodeButtonText(`${prev - 1}秒后重新获取`);
-            return prev - 1;
-          });
+          remaining -= 1;
+          if (remaining <= 0) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+            setCodeButtonText('获取验证码');
+            setCodeButtonDisabled(false);
+            return;
+          }
+          setCodeButtonText(`${remaining}秒后重新获取`);
         }, 1000);
       } else {
         setError(result.message);
@@ -136,48 +130,14 @@ export default function Login() {
     }
   };
 
-  const handleVerify = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!verificationCode) {
-      setError('请输入验证码');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const result = await authAPI.verify({ userId, code: verificationCode });
-      if (result.success) {
-        // 同上：验证通过后端也直接下发 token
-        await loginWithToken(result.token);
-        navigate('/admin');
-      } else {
-        setError(result.message);
-      }
-    } catch (err) {
-      setError(err.message || '验证失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendVerification = async () => {
-    setResendLoading(true);
-    try {
-      const result = await authAPI.resendVerification({ userId });
-      if (result.success) {
-        setVerificationMessage('验证邮件已重新发送，请查收邮箱');
-        setError('');
-      } else {
-        setError(result.message);
-      }
-    } catch (err) {
-      setError(err.message || '发送失败');
-    } finally {
-      setResendLoading(false);
-    }
-  };
+  /**
+   * 这里原本还有一套「注册后跳到待验证面板，再单独调 /auth/verify」的流程
+   * （handleVerify / handleResendVerification + showVerification 面板）。
+   * 但 setShowVerification 与 setUserId 在全仓从未被调用过，也就是说
+   * 那个面板永远不显示、userId 永远是空串 —— 是一段死了的旧后端遗留。
+   * 现在的注册流程是「先获取邮箱验证码，再带着 code 一次性注册」，
+   * 所以那一段直接删掉了。
+   */
 
   return (
     <div className="w-full">
@@ -357,61 +317,6 @@ export default function Login() {
             >
               <UserPlus className="w-5 h-5" />
               注册
-            </button>
-          </form>
-        )}
-
-        {showVerification && (
-          <form onSubmit={handleVerify} className="space-y-4">
-            <div className="p-4 bg-success/12 border border-success/40 rounded-lg">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-success font-medium">注册成功！</p>
-                  <p className="text-xs text-success mt-1">{verificationMessage}</p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-fg mb-2">验证码</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted" />
-                <input
-                  type="text"
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  placeholder="请输入邮箱中的验证码"
-                  className="w-full pl-10 pr-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-accent uppercase"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 bg-success text-success-fg rounded-lg font-medium hover:bg-success transition-colors flex items-center justify-center gap-2"
-            >
-              <CheckCircle className="w-5 h-5" />
-              完成验证
-            </button>
-
-            <button
-              type="button"
-              onClick={handleResendVerification}
-              disabled={resendLoading}
-              className="w-full py-3 bg-surface-2 text-muted rounded-lg font-medium hover:bg-line transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {resendLoading ? (
-                <>
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                  发送中...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-5 h-5" />
-                  重新发送验证码
-                </>
-              )}
             </button>
           </form>
         )}
