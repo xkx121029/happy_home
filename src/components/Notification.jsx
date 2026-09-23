@@ -229,7 +229,7 @@ function NotificationItem({ notification, onClose, onAction }) {
           {dismissible && (
             <button
               onClick={handleClose}
-              className={`flex-shrink-0 p-1 rounded-lg hover:bg-fg/5  transition-colors${colors.icon}`}
+              className={`flex-shrink-0 p-1 rounded-lg hover:bg-fg/5 transition-colors${colors.icon}`}
             >
               <X className="w-4 h-4" />
             </button>

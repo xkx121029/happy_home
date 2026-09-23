@@ -254,7 +254,7 @@ export default function TutorialSystem() {
               </button>
               <button
                 onClick={() => setShowTutorial(false)}
-                className="px-6 py-2 bg-fg text-bg rounded-lg font-medium hover:bg-surface-2 transition-colors"
+                className="px-6 py-2 bg-fg text-bg rounded-lg font-medium hover:opacity-90 transition-opacity"
               >
                 稍后再说
               </button>
