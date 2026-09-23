@@ -16,8 +16,10 @@ function ok(res, payload = {}, status = 200) {
 }
 
 // 错误响应：code 为 HTTP 状态码，message 为提示文案（形状固定为 { success:false, message }）
-function fail(res, code, message) {
-  return res.status(code).json({ success: false, message });
+// extra 是可选的附加字段（例如 404 时告诉调用方新路径在哪）。
+// 只在确实有额外信息时传，其余错误响应形状保持不变。
+function fail(res, code, message, extra) {
+  return res.status(code).json({ success: false, message, ...(extra || {}) });
 }
 
 module.exports = { ok, fail };
