@@ -164,6 +164,8 @@ app.use(API_PREFIX, require('./src/modules/notifications/routes')(deps));
 app.use(API_PREFIX, require('./src/modules/analytics/routes')(deps));
 app.use(API_PREFIX, require('./src/modules/smtp/routes')(deps));
 app.use(API_PREFIX, require('./src/modules/backups/routes')(deps));
+// 密钥管理只对管理员开放，且密钥本身永远进不来（见 modules/apiKeys 的说明）
+app.use(API_PREFIX, require('./src/modules/apiKeys/routes')(deps));
 
 // 不版本化：探针与订阅源
 app.use(require('./src/modules/health/routes')(deps));
@@ -232,6 +234,12 @@ async function startServer() {
     console.log(`    POST   ${API_PREFIX}/auth/reset-password`);
     console.log(`    POST   ${API_PREFIX}/smtp/test`);
     console.log(`    POST   ${API_PREFIX}/smtp/refresh`);
+    console.log('  API Keys（仅管理员，密钥不可管理密钥）:');
+    console.log(`    GET    ${API_PREFIX}/api-keys`);
+    console.log(`    POST   ${API_PREFIX}/api-keys`);
+    console.log(`    POST   ${API_PREFIX}/api-keys/:id/revoke`);
+    console.log(`    POST   ${API_PREFIX}/api-keys/:id/rotate`);
+    console.log(`    DELETE ${API_PREFIX}/api-keys/:id`);
     console.log('  Feed:');
     console.log('    GET    /feed.xml');
     console.log('    GET    /sitemap.xml');
