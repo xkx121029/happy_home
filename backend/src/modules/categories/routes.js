@@ -8,6 +8,27 @@ module.exports = function createCategoriesRoutes(deps) {
   router.get('/categories', requireAccess('categories:read', { roles: ROLE_CONTENT, anonymous: true }), (req, res) => {
     try {
       const db = getDb();
+
+      // ?usedOnly=1：只返回「已被已发布文章实际用到」的分类。
+      // 这个语义来自合并掉的 /public/categories —— 前台列表的分类下拉不该列出
+      // 后台建了但一篇文章都没挂的分类。
+      //
+      // 注意返回的仍然是分类行对象，不是分类名的字符串数组：合并前那个端点返回
+      // string[]，与这里的行对象是同一个路径上的两种形状，必须收敛成一种，
+      // 否则外部客户端没法写文档。用 name 过滤，但形状保持一致。
+      if (req.query.usedOnly === '1') {
+        const used = execQuery(
+          db,
+          `SELECT * FROM categories
+           WHERE name IN (
+             SELECT DISTINCT category FROM posts
+             WHERE status = 'published' AND category IS NOT NULL AND category != ''
+           )
+           ORDER BY created_at DESC`
+        );
+        return ok(res, { data: used, count: used.length });
+      }
+
       const categories = execQuery(db, 'SELECT * FROM categories ORDER BY created_at DESC');
       ok(res, { data: categories, count: categories.length });
     } catch (error) {

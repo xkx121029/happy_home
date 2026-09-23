@@ -42,10 +42,18 @@ module.exports = function createPagesRoutes(deps) {
   router.get('/pages/:id', requireAccess('pages:read', { roles: ROLE_CONTENT, anonymous: true }), (req, res) => {
     try {
       const db = getDb();
+      const key = req.params.id;
+      // 这个端点同时接受 id 与 slug —— 合并前 /pages/:id 走 id、/public/pages/:slug
+      // 走 slug，是两条路径。uuid 与 slug 不会互撞（slug 是用户输入的可读串），
+      // 所以一条 SQL 同时匹配两者即可。
       const page =
         req.auth.level === 'public'
-          ? getSingle(db, "SELECT * FROM pages WHERE id = ? AND status = 'published'", [req.params.id])
-          : getSingle(db, 'SELECT * FROM pages WHERE id = ?', [req.params.id]);
+          ? getSingle(
+              db,
+              "SELECT * FROM pages WHERE (id = ? OR slug = ?) AND status = 'published'",
+              [key, key]
+            )
+          : getSingle(db, 'SELECT * FROM pages WHERE id = ? OR slug = ?', [key, key]);
       if (!page) {
         return fail(res, 404, '页面不存在');
       }
