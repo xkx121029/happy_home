@@ -12,7 +12,7 @@ const path = require('path');
 // 是自我循环 —— 库没了，备份跟着一起没。所以以文件系统为唯一真源，
 // 列表直接读目录，不依赖任何数据库表。
 module.exports = function createBackupsRoutes(deps) {
-  const { authenticateToken, requireRole, ok, fail, asyncHandler, initDatabase } = deps;
+  const { ok, fail, asyncHandler, initDatabase, requireAccess, ROLE_ADMIN_ONLY } = deps;
   const router = express.Router();
 
   // 本模块位于 src/modules/backups/，向上三级回到 backend/ 根目录
@@ -60,7 +60,7 @@ module.exports = function createBackupsRoutes(deps) {
     return fs.existsSync(full) ? full : null;
   }
 
-  router.get('/backups', authenticateToken, (req, res) => {
+  router.get('/backups', requireAccess('backups:read', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
     try {
       const backups = listBackups();
       ok(res, { data: backups, count: backups.length });
@@ -70,7 +70,7 @@ module.exports = function createBackupsRoutes(deps) {
     }
   });
 
-  router.post('/backups', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.post('/backups', requireAccess('backups:write', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
     try {
       if (!fs.existsSync(DB_FILE)) {
         return fail(res, 400, '数据库文件不存在，无法备份');
@@ -88,7 +88,7 @@ module.exports = function createBackupsRoutes(deps) {
     }
   });
 
-  router.get('/backups/:id/download', authenticateToken, (req, res) => {
+  router.get('/backups/:id/download', requireAccess('backups:read', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
     const filePath = resolveBackupPath(req.params.id);
     if (!filePath) {
       return fail(res, 404, '备份不存在');
@@ -96,7 +96,7 @@ module.exports = function createBackupsRoutes(deps) {
     res.download(filePath, req.params.id);
   });
 
-  router.delete('/backups/:id', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.delete('/backups/:id', requireAccess('backups:write', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
     try {
       const filePath = resolveBackupPath(req.params.id);
       if (!filePath) {
@@ -110,7 +110,7 @@ module.exports = function createBackupsRoutes(deps) {
     }
   });
 
-  router.post('/backups/:id/restore', authenticateToken, requireRole('administrator'), asyncHandler(async (req, res) => {
+  router.post('/backups/:id/restore', requireAccess('backups:restore', { roles: ROLE_ADMIN_ONLY }), asyncHandler(async (req, res) => {
     try {
       const filePath = resolveBackupPath(req.params.id);
       if (!filePath) {

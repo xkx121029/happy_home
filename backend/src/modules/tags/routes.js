@@ -2,10 +2,10 @@ const express = require('express');
 
 // 标签（tags）CRUD
 module.exports = function createTagsRoutes(deps) {
-  const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, authenticateToken, ok, fail } = deps;
+  const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, ok, fail, requireAccess, ROLE_CONTENT } = deps;
   const router = express.Router();
 
-  router.get('/tags', authenticateToken, (req, res) => {
+  router.get('/tags', requireAccess('tags:read', { roles: ROLE_CONTENT, anonymous: true }), (req, res) => {
     try {
       const db = getDb();
       const tags = execQuery(db, 'SELECT * FROM tags ORDER BY created_at DESC');
@@ -16,7 +16,7 @@ module.exports = function createTagsRoutes(deps) {
     }
   });
 
-  router.post('/tags', authenticateToken, (req, res) => {
+  router.post('/tags', requireAccess('tags:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const { name, slug } = req.body;
       const db = getDb();
@@ -39,7 +39,7 @@ module.exports = function createTagsRoutes(deps) {
     }
   });
 
-  router.put('/tags/:id', authenticateToken, (req, res) => {
+  router.put('/tags/:id', requireAccess('tags:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const { name, slug } = req.body;
       const db = getDb();
@@ -60,7 +60,7 @@ module.exports = function createTagsRoutes(deps) {
     }
   });
 
-  router.delete('/tags/:id', authenticateToken, (req, res) => {
+  router.delete('/tags/:id', requireAccess('tags:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const db = getDb();
       const tag = getSingle(db, 'SELECT * FROM tags WHERE id = ?', [req.params.id]);

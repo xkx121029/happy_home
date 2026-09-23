@@ -4,12 +4,7 @@ const express = require('express');
 // 依赖全部通过参数注入（db 助手、jwt、密码封装、邮件、鉴权中间件），
 // 本模块不再 require server.js 或 db.js，避免循环依赖。
 module.exports = function createAuthRoutes(deps) {
-  const {
-    getDb, saveDatabase, getSingle, uuidv4, dbHelpers,
-    jwt, mailer, authenticateToken, ok, fail, asyncHandler,
-    password: passwordLib,
-    checkLoginRate, recordLoginFailure, clearLoginFailures,
-  } = deps;
+  const { getDb, saveDatabase, getSingle, uuidv4, dbHelpers, jwt, mailer, ok, fail, asyncHandler, password: passwordLib, checkLoginRate, recordLoginFailure, clearLoginFailures, requireAccess, ROLE_ANY } = deps;
   const router = express.Router();
 
   router.post('/auth/send-register-code', asyncHandler(async (req, res) => {
@@ -288,7 +283,7 @@ module.exports = function createAuthRoutes(deps) {
     }
   }));
 
-  router.get('/auth/me', authenticateToken, (req, res) => {
+  router.get('/auth/me', requireAccess('users:read', { roles: ROLE_ANY, allowKey: false }), (req, res) => {
     try {
       const db = getDb();
       const user = getSingle(db, 'SELECT * FROM users WHERE id = ?', [req.user.id]);

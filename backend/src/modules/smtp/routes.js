@@ -3,11 +3,7 @@ const express = require('express');
 // SMTP 与邮箱验证码相关端点。
 // 验证码存储在这里（内存中，生产环境应使用 Redis）。
 module.exports = function createSmtpRoutes(deps) {
-  const {
-    getDb, saveDatabase, getSingle,
-    authenticateToken, requireRole, ok, fail, asyncHandler, mailer,
-    password: passwordLib,
-  } = deps;
+  const { getDb, saveDatabase, getSingle, ok, fail, asyncHandler, mailer, password: passwordLib, requireAccess, ROLE_ADMIN_ONLY } = deps;
   const router = express.Router();
 
   // 验证码存储（内存中，生产环境应使用 Redis）
@@ -130,7 +126,7 @@ module.exports = function createSmtpRoutes(deps) {
     }
   });
 
-  router.post('/smtp/test', authenticateToken, requireRole('administrator'), asyncHandler(async (req, res) => {
+  router.post('/smtp/test', requireAccess('smtp:write', { roles: ROLE_ADMIN_ONLY }), asyncHandler(async (req, res) => {
     try {
       const { useSavedConfig = true, testConfig } = req.body;
 
@@ -147,7 +143,7 @@ module.exports = function createSmtpRoutes(deps) {
     }
   }));
 
-  router.post('/smtp/refresh', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.post('/smtp/refresh', requireAccess('smtp:write', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
     try {
       mailer.createTransporter();
       ok(res, { message: 'SMTP 配置已刷新' });

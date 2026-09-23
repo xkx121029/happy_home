@@ -2,10 +2,10 @@ const express = require('express');
 
 // 部件（widgets）CRUD。enabled 以 0/1 存库、对外转成布尔，config 以 JSON 字符串存库。
 module.exports = function createWidgetsRoutes(deps) {
-  const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, authenticateToken, ok, fail } = deps;
+  const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, ok, fail, requireAccess, ROLE_CONTENT } = deps;
   const router = express.Router();
 
-  router.get('/widgets', authenticateToken, (req, res) => {
+  router.get('/widgets', requireAccess('widgets:read', { roles: ROLE_CONTENT, anonymous: true }), (req, res) => {
     try {
       const db = getDb();
       let sql = 'SELECT * FROM widgets';
@@ -31,7 +31,7 @@ module.exports = function createWidgetsRoutes(deps) {
     }
   });
 
-  router.post('/widgets', authenticateToken, (req, res) => {
+  router.post('/widgets', requireAccess('widgets:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const { name, type, location, config } = req.body;
       const db = getDb();
@@ -62,7 +62,7 @@ module.exports = function createWidgetsRoutes(deps) {
     }
   });
 
-  router.put('/widgets/:id', authenticateToken, (req, res) => {
+  router.put('/widgets/:id', requireAccess('widgets:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const { name, enabled, config, location, order_num } = req.body;
       const db = getDb();
@@ -92,7 +92,7 @@ module.exports = function createWidgetsRoutes(deps) {
     }
   });
 
-  router.delete('/widgets/:id', authenticateToken, (req, res) => {
+  router.delete('/widgets/:id', requireAccess('widgets:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const db = getDb();
       const widget = getSingle(db, 'SELECT * FROM widgets WHERE id = ?', [req.params.id]);

@@ -11,12 +11,12 @@ const { snapshotRevision } = require('../../lib/revisionSnapshot');
  * `const postRevisions = []` 加一句 `alert('修订功能暂未实现')`。
  */
 module.exports = function createRevisionsRoutes(deps) {
-  const { getDb, saveDatabase, execQuery, getSingle, uuidv4, dbHelpers, authenticateToken, ok, fail } = deps;
+  const { getDb, saveDatabase, execQuery, getSingle, uuidv4, dbHelpers, ok, fail, requireAccess, ROLE_CONTENT } = deps;
   const router = express.Router();
 
   // 列表刻意不带 content：一篇文章可能存了几十个版本，
   // 每个版本带上完整正文会让这个响应膨胀到几百 KB，而列表根本用不到。
-  router.get('/posts/:id/revisions', authenticateToken, (req, res) => {
+  router.get('/posts/:id/revisions', requireAccess('revisions:read', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const db = getDb();
       const post = getSingle(db, 'SELECT id FROM posts WHERE id = ?', [req.params.id]);
@@ -40,7 +40,7 @@ module.exports = function createRevisionsRoutes(deps) {
     }
   });
 
-  router.get('/revisions/:id', authenticateToken, (req, res) => {
+  router.get('/revisions/:id', requireAccess('revisions:read', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const db = getDb();
       const revision = getSingle(db, 'SELECT * FROM revisions WHERE id = ?', [req.params.id]);
@@ -58,7 +58,7 @@ module.exports = function createRevisionsRoutes(deps) {
     }
   });
 
-  router.post('/revisions/:id/restore', authenticateToken, (req, res) => {
+  router.post('/revisions/:id/restore', requireAccess('revisions:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const db = getDb();
       const revision = getSingle(db, 'SELECT * FROM revisions WHERE id = ?', [req.params.id]);
@@ -94,7 +94,7 @@ module.exports = function createRevisionsRoutes(deps) {
     }
   });
 
-  router.delete('/revisions/:id', authenticateToken, (req, res) => {
+  router.delete('/revisions/:id', requireAccess('revisions:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const db = getDb();
       const revision = getSingle(db, 'SELECT * FROM revisions WHERE id = ?', [req.params.id]);

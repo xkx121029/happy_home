@@ -142,17 +142,20 @@ module.exports = function createAuthenticate({ getDb, getSingle, execQuery, save
    * 访问控制。
    *
    * @param {string} scope 这个端点要求的 scope，如 'posts:write'
-   * @param {{ roles?: string[], anonymous?: boolean }} options
+   * @param {{ roles?: string[], anonymous?: boolean, allowKey?: boolean }} options
    *        roles     允许的登录角色（语义与改造前的 requireRole 一致）
    *        anonymous 是否允许匿名访问；只有 lib/permissions 的匿名白名单里的
    *                  scope 才能真正生效，写错一个 anonymous 不会把写接口放开
+   *        allowKey  是否允许 API Key 通过，默认 true。通知这类「按用户隔离」的
+   *                  端点要设 false —— 密钥没有对应的用户身份，放它进去只能看到
+   *                  创建者的通知，语义上就是错的
    *
    * 通过时会在 req.auth.level 上留下授权来源：
    *   'full'    —— 角色或密钥命中，可以看到全部数据
    *   'public'  —— 走的是匿名白名单，调用方必须自己做行级过滤
    *                （例如文章端点要强制 status='published'）
    */
-  function requireAccess(scope, { roles = [], anonymous = false } = {}) {
+  function requireAccess(scope, { roles = [], anonymous = false, allowKey = true } = {}) {
     const anonymousOk = anonymous && permissions.isAnonymousAllowed(scope);
 
     return (req, res, next) => {
@@ -164,6 +167,9 @@ module.exports = function createAuthenticate({ getDb, getSingle, execQuery, save
       }
 
       if (auth.type === 'key') {
+        if (!allowKey) {
+          return fail(res, 403, `该端点不接受 API 密钥（${scope}）`);
+        }
         if (permissions.scopesInclude(auth.scopes, scope)) {
           auth.level = 'full';
           return next();

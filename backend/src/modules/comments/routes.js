@@ -2,10 +2,10 @@ const express = require('express');
 
 // 后台评论管理（含审核状态流转与删除）。访客提交评论在 public 模块里。
 module.exports = function createCommentsRoutes(deps) {
-  const { getDb, saveDatabase, execQuery, getSingle, uuidv4, authenticateToken, ok, fail } = deps;
+  const { getDb, saveDatabase, execQuery, getSingle, uuidv4, ok, fail, requireAccess, ROLE_CONTENT, ROLE_ANY } = deps;
   const router = express.Router();
 
-  router.post('/comments', authenticateToken, (req, res) => {
+  router.post('/comments', requireAccess('comments:write', { roles: ROLE_ANY }), (req, res) => {
     try {
       const db = getDb();
       const { postId, parentId, author, email, content } = req.body;
@@ -46,7 +46,7 @@ module.exports = function createCommentsRoutes(deps) {
     }
   });
 
-  router.get('/comments', authenticateToken, (req, res) => {
+  router.get('/comments', requireAccess('comments:read', { roles: ROLE_ANY }), (req, res) => {
     try {
       const db = getDb();
       let sql = 'SELECT * FROM comments';
@@ -77,7 +77,7 @@ module.exports = function createCommentsRoutes(deps) {
     }
   });
 
-  router.put('/comments/:id/status', authenticateToken, (req, res) => {
+  router.put('/comments/:id/status', requireAccess('comments:moderate', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const { status } = req.body;
       const db = getDb();
@@ -98,7 +98,7 @@ module.exports = function createCommentsRoutes(deps) {
     }
   });
 
-  router.delete('/comments/:id', authenticateToken, (req, res) => {
+  router.delete('/comments/:id', requireAccess('comments:moderate', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const db = getDb();
       const comment = getSingle(db, 'SELECT * FROM comments WHERE id = ?', [req.params.id]);

@@ -2,10 +2,10 @@ const express = require('express');
 
 // 菜单（menus）CRUD。items 以 JSON 字符串存在库里，出入库时序列化 / 解析。
 module.exports = function createMenusRoutes(deps) {
-  const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, authenticateToken, ok, fail } = deps;
+  const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, ok, fail, requireAccess, ROLE_CONTENT } = deps;
   const router = express.Router();
 
-  router.get('/menus', authenticateToken, (req, res) => {
+  router.get('/menus', requireAccess('menus:read', { roles: ROLE_CONTENT, anonymous: true }), (req, res) => {
     try {
       const db = getDb();
       const menus = execQuery(db, 'SELECT * FROM menus ORDER BY created_at DESC').map(menu => ({
@@ -19,7 +19,7 @@ module.exports = function createMenusRoutes(deps) {
     }
   });
 
-  router.post('/menus', authenticateToken, (req, res) => {
+  router.post('/menus', requireAccess('menus:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const { title, location, items } = req.body;
       const db = getDb();
@@ -43,7 +43,7 @@ module.exports = function createMenusRoutes(deps) {
     }
   });
 
-  router.put('/menus/:id', authenticateToken, (req, res) => {
+  router.put('/menus/:id', requireAccess('menus:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const { title, location, items } = req.body;
       const db = getDb();
@@ -69,7 +69,7 @@ module.exports = function createMenusRoutes(deps) {
     }
   });
 
-  router.delete('/menus/:id', authenticateToken, (req, res) => {
+  router.delete('/menus/:id', requireAccess('menus:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const db = getDb();
       const menu = getSingle(db, 'SELECT * FROM menus WHERE id = ?', [req.params.id]);

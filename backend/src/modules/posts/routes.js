@@ -5,7 +5,7 @@ const { snapshotRevision, hasContentChange } = require('../../lib/revisionSnapsh
 // 文章（posts）CRUD。注意 PUT 的 COALESCE 部分更新语义与 publish_date 的单独特判，
 // 这些都是冒烟测试守住的回归点，搬迁时保持逻辑逐字不变。
 module.exports = function createPostsRoutes(deps) {
-  const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, dbHelpers, authenticateToken, ok, fail } = deps;
+  const { getDb, saveDatabase, execQuery, getSingle, bindable, uuidv4, dbHelpers, ok, fail, requireAccess, ROLE_CONTENT } = deps;
   const router = express.Router();
 
   /**
@@ -23,7 +23,7 @@ module.exports = function createPostsRoutes(deps) {
     return converted || value;
   }
 
-  router.get('/posts', authenticateToken, (req, res) => {
+  router.get('/posts', requireAccess('posts:read', { roles: ROLE_CONTENT, anonymous: true }), (req, res) => {
     try {
       const db = getDb();
       let sql = 'SELECT * FROM posts';
@@ -59,7 +59,7 @@ module.exports = function createPostsRoutes(deps) {
     }
   });
 
-  router.get('/posts/:id', authenticateToken, (req, res) => {
+  router.get('/posts/:id', requireAccess('posts:read', { roles: ROLE_CONTENT, anonymous: true }), (req, res) => {
     try {
       const db = getDb();
       const post = getSingle(db, 'SELECT * FROM posts WHERE id = ?', [req.params.id]);
@@ -73,7 +73,7 @@ module.exports = function createPostsRoutes(deps) {
     }
   });
 
-  router.post('/posts', authenticateToken, (req, res) => {
+  router.post('/posts', requireAccess('posts:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const { title, content, excerpt, category, status, sticky, publishDate } = req.body;
       const db = getDb();
@@ -99,7 +99,7 @@ module.exports = function createPostsRoutes(deps) {
     }
   });
 
-  router.put('/posts/:id', authenticateToken, (req, res) => {
+  router.put('/posts/:id', requireAccess('posts:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const { title, content, excerpt, category, status, sticky, publishDate } = req.body;
       const db = getDb();
@@ -140,7 +140,7 @@ module.exports = function createPostsRoutes(deps) {
     }
   });
 
-  router.delete('/posts/:id', authenticateToken, (req, res) => {
+  router.delete('/posts/:id', requireAccess('posts:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const db = getDb();
       const post = getSingle(db, 'SELECT * FROM posts WHERE id = ?', [req.params.id]);

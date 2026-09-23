@@ -7,7 +7,7 @@ const express = require('express');
 // 这里为前台单独开一组端点，并做好滥用防护（公开写接口没有限流等于开放刷库通道，
 // 所以限流与端点必须同时存在，见 src/middleware/rateLimit.js）。
 module.exports = function createPublicRoutes(deps) {
-  const { getDb, saveDatabase, execQuery, getSingle, uuidv4, optionalAuth, checkCommentRate, dbHelpers, ok, fail } = deps;
+  const { getDb, saveDatabase, execQuery, getSingle, uuidv4, checkCommentRate, dbHelpers, ok, fail, requireAccess } = deps;
   const router = express.Router();
 
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -145,7 +145,7 @@ module.exports = function createPublicRoutes(deps) {
     }
   });
 
-  router.post('/public/comments', optionalAuth, (req, res) => {
+  router.post('/public/comments', requireAccess('comments:write', { anonymous: true }), (req, res) => {
     try {
       const db = getDb();
       const { postId, parentId, author, email, content } = req.body || {};

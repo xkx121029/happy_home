@@ -2,13 +2,10 @@ const express = require('express');
 
 // 用户管理。除「查看本人资料」外均要求管理员角色。
 module.exports = function createUsersRoutes(deps) {
-  const {
-    getDb, saveDatabase, execQuery, getSingle, uuidv4,
-    authenticateToken, requireRole, ok, fail, password: passwordLib,
-  } = deps;
+  const { getDb, saveDatabase, execQuery, getSingle, uuidv4, ok, fail, password: passwordLib, requireAccess, ROLE_ADMIN_ONLY, ROLE_ANY } = deps;
   const router = express.Router();
 
-  router.get('/users', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.get('/users', requireAccess('users:read', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
     try {
       const db = getDb();
       const users = execQuery(db, 'SELECT id, username, email, role, status, created_at, updated_at FROM users ORDER BY created_at DESC');
@@ -19,7 +16,7 @@ module.exports = function createUsersRoutes(deps) {
     }
   });
 
-  router.get('/users/:id', authenticateToken, (req, res) => {
+  router.get('/users/:id', requireAccess('users:read', { roles: ROLE_ANY }), (req, res) => {
     try {
       const db = getDb();
       // 原来只校验了登录，任何用户都能用 id 遍历出他人的资料。
@@ -39,7 +36,7 @@ module.exports = function createUsersRoutes(deps) {
     }
   });
 
-  router.post('/users', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.post('/users', requireAccess('users:write', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
     try {
       const { username, email, password, role, status } = req.body;
       const db = getDb();
@@ -72,7 +69,7 @@ module.exports = function createUsersRoutes(deps) {
     }
   });
 
-  router.put('/users/:id', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.put('/users/:id', requireAccess('users:write', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
     try {
       const { username, email, password, role, status } = req.body;
       const db = getDb();
@@ -108,7 +105,7 @@ module.exports = function createUsersRoutes(deps) {
     }
   });
 
-  router.delete('/users/:id', authenticateToken, requireRole('administrator'), (req, res) => {
+  router.delete('/users/:id', requireAccess('users:write', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
     try {
       const db = getDb();
       const user = getSingle(db, 'SELECT * FROM users WHERE id = ?', [req.params.id]);

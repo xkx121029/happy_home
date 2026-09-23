@@ -2,10 +2,10 @@ const express = require('express');
 
 // 媒体库（media）：列表、登记、删除
 module.exports = function createMediaRoutes(deps) {
-  const { getDb, saveDatabase, execQuery, getSingle, uuidv4, authenticateToken, ok, fail } = deps;
+  const { getDb, saveDatabase, execQuery, getSingle, uuidv4, ok, fail, requireAccess, ROLE_CONTENT } = deps;
   const router = express.Router();
 
-  router.get('/media', authenticateToken, (req, res) => {
+  router.get('/media', requireAccess('media:read', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const db = getDb();
       const media = execQuery(db, 'SELECT * FROM media ORDER BY uploaded_at DESC');
@@ -16,7 +16,7 @@ module.exports = function createMediaRoutes(deps) {
     }
   });
 
-  router.post('/media', authenticateToken, (req, res) => {
+  router.post('/media', requireAccess('media:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const { name, url, size, type } = req.body;
       const db = getDb();
@@ -40,7 +40,7 @@ module.exports = function createMediaRoutes(deps) {
     }
   });
 
-  router.delete('/media/:id', authenticateToken, (req, res) => {
+  router.delete('/media/:id', requireAccess('media:write', { roles: ROLE_CONTENT }), (req, res) => {
     try {
       const db = getDb();
       const media = getSingle(db, 'SELECT * FROM media WHERE id = ?', [req.params.id]);

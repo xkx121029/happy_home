@@ -2,10 +2,10 @@ const express = require('express');
 
 // 访问统计。当前 stats 返回的是演示数据（随机数），track 只记日志。
 module.exports = function createAnalyticsRoutes(deps) {
-  const { authenticateToken, ok, fail } = deps;
+  const { ok, fail, requireAccess, ROLE_ANY } = deps;
   const router = express.Router();
 
-  router.get('/analytics/stats', authenticateToken, (req, res) => {
+  router.get('/analytics/stats', requireAccess('analytics:read', { roles: ROLE_ANY }), (req, res) => {
     try {
       const now = new Date();
 
@@ -40,7 +40,7 @@ module.exports = function createAnalyticsRoutes(deps) {
     }
   });
 
-  router.post('/analytics/track', authenticateToken, (req, res) => {
+  router.post('/analytics/track', requireAccess('analytics:write', { anonymous: true }), (req, res) => {
     try {
       const { type, data } = req.body;
       console.log('Analytics track:', type, data);
