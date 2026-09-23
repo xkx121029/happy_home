@@ -4,7 +4,6 @@ import {
   Link, Image, Heading1, Heading2, Heading3, Quote, Code, Strikethrough, Minus, 
   Undo, Redo, Link2Off, Type, X, Terminal, FolderOpen
 } from 'lucide-react';
-import { useData } from '../contexts/DataContext';
 import { useNotification } from './Notification';
 
 const toolbarButtons = [

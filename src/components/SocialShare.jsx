@@ -56,8 +56,6 @@ const sharePlatforms = {
 
 export default function SocialShare({
   url,
-  title,
-  excerpt,
   enabledPlatforms = ['wechat', 'weibo', 'qq', 'qzone', 'facebook', 'twitter', 'linkedin'],
   style = 'circle',
   showLabel = false,

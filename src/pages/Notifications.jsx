@@ -36,8 +36,8 @@ const notificationTypeConfig = {
 };
 
 export default function Notifications() {
-  const { confirm, isOpen: isModalOpen, modalConfig, closeModal } = useModal();
-  const { showToast, isOpen: isToastOpen, toastConfig, closeToast } = useToast();
+  const { confirm } = useModal();
+  const { showToast } = useToast();
   const { notifications, getNotifications, markNotificationAsRead, deleteNotification } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -71,7 +71,7 @@ export default function Notifications() {
     }
   };
 
-  const handleDelete = async (id, title) => {
+  const handleDelete = async (id) => {
     const confirmed = await confirm({
       title: '确认删除',
       message: `确定要删除这条通知吗？`,
