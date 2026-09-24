@@ -1,5 +1,5 @@
 {
-  "savedAt": "2026-09-23T15:28:26.857Z",
+  "savedAt": "2026-09-24T12:41:48.037Z",
   "apiBase": "http://localhost:3002/api/v1",
   "note": "shape 字段是契约形状（叶子值只留类型）；message 仅供参考不参与 diff",
   "results": [
@@ -1113,14 +1113,14 @@
       "message": "该密钥没有 users:read 权限"
     },
     {
-      "name": "GET  /api-keys (密钥应 403)",
+      "name": "GET  /api-keys (只读密钥应 403)",
       "status": 403,
       "expect": 403,
       "shape": {
         "message": "string",
         "success": "bool:false"
       },
-      "message": "该密钥没有 apikeys:read 权限"
+      "message": "该端点不接受 API 密钥（apikeys:read）"
     },
     {
       "name": "POST /api-keys/:id/rotate",
@@ -1224,6 +1224,73 @@
       "message": "密钥已删除"
     },
     {
+      "name": "POST /api-keys (admin 通配)",
+      "status": 201,
+      "expect": 201,
+      "shape": {
+        "data": {
+          "created_at": "string",
+          "created_by": "string",
+          "expires_at": "null",
+          "id": "string",
+          "key": "string",
+          "key_prefix": "string",
+          "last_used_at": "null",
+          "name": "string",
+          "request_count": "number",
+          "revoked_at": "null",
+          "scopes": "array"
+        },
+        "message": "string",
+        "success": "bool:true"
+      },
+      "message": "密钥创建成功，请立即保存明文，此后再无法查看"
+    },
+    {
+      "name": "GET  /posts (通配密钥应 200)",
+      "status": 200,
+      "expect": 200,
+      "shape": {
+        "count": "number",
+        "data": "array",
+        "page": "number",
+        "perPage": "number",
+        "success": "bool:true",
+        "total": "number",
+        "totalPages": "number"
+      }
+    },
+    {
+      "name": "GET  /api-keys (通配密钥也应 403)",
+      "status": 403,
+      "expect": 403,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "该端点不接受 API 密钥（apikeys:read）"
+    },
+    {
+      "name": "POST /api-keys (通配密钥也应 403)",
+      "status": 403,
+      "expect": 403,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "该端点不接受 API 密钥（apikeys:write）"
+    },
+    {
+      "name": "POST /api-keys/:id/revoke (通配密钥也应 403)",
+      "status": 403,
+      "expect": 403,
+      "shape": {
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "该端点不接受 API 密钥（apikeys:write）"
+    },
+    {
       "name": "POST /posts 缺字段",
       "status": 400,
       "expect": 400,
@@ -1242,6 +1309,28 @@
         "success": "bool:false"
       },
       "message": "用户名或密码错误"
+    },
+    {
+      "name": "GET  /api/posts (旧地址应 404)",
+      "status": 404,
+      "expect": 404,
+      "shape": {
+        "hint": "string",
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "接口不存在"
+    },
+    {
+      "name": "GET  /api/public/posts (旧地址应 404)",
+      "status": 404,
+      "expect": 404,
+      "shape": {
+        "hint": "string",
+        "message": "string",
+        "success": "bool:false"
+      },
+      "message": "接口不存在"
     },
     {
       "name": "DELETE /notifications/clear",

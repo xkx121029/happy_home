@@ -18,8 +18,9 @@ export const PUBLIC_PATHS = {
 
 export const AUTH_PATHS = {
   login: '/login',
+  // 重置密码只有「忘记密码」一条流程：它发验证码、验码、改密码一气呵成。
+  // 原来还有一个独立的 /reset-password 页，是重复且伪造的一页（不调任何端点），已删除。
   forgotPassword: '/forgot-password',
-  resetPassword: '/reset-password',
   unauthorized: '/unauthorized',
 };
 

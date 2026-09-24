@@ -9,9 +9,10 @@ const permissions = require('../../lib/permissions');
  *
  *   1. 明文只在创建/轮换的响应里出现一次，之后任何端点都取不回来 ——
  *      库里存的是 bcrypt 哈希，与用户密码同一套处理。
- *   2. 密钥不能管理密钥。apikeys:* 一律要求 administrator 角色，
- *      requireAccess 的 key 分支只认 scope、不看角色，所以拿密钥来调
- *      这里必然 403（密钥的 req.user.role 固定为 'api'）。
+ *   2. 密钥不能管理密钥，**与它带什么 scope 无关**。这条不能只靠
+ *      roles: administrator 表达 —— requireAccess 的密钥分支按 scope 判断、
+ *      刻意不看 roles（管理员可以把 users:write 这类权限授予密钥）。
+ *      所以每条路由都显式写了 allowKey: false，见下面 guard() 的说明。
  *   3. 撤销是软删（revoked_at），保留「谁在什么时候用过」的审计痕迹；
  *      只有 DELETE 才是真删。
  */
@@ -83,7 +84,20 @@ module.exports = function createApiKeysRoutes(deps) {
     return { scopes, expiresAt, name };
   }
 
-  router.get('/api-keys', requireAccess('apikeys:read', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
+  /**
+   * 密钥管理的守卫。
+   *
+   * 这里必须显式写 allowKey: false，不能只靠 roles: ROLE_ADMIN_ONLY ——
+   * requireAccess 的密钥分支只按 scope 判断，**不看 roles**（这是有意的：
+   * 管理员可以把 users:write 之类的权限授予密钥）。于是 roles 对密钥是
+   * 一个静默无效的约束，一把带 admin 通配 scope 的密钥就能列出、创建、
+   * 撤销其他密钥 —— 也就是可以无限自我复制。
+   *
+   * 「凭据不得管理凭据」是硬约束，与它带什么 scope 无关，所以在这里显式拒绝。
+   */
+  const guard = (scope) => requireAccess(scope, { roles: ROLE_ADMIN_ONLY, allowKey: false });
+
+  router.get('/api-keys', guard('apikeys:read'), (req, res) => {
     try {
       const keys = listKeys();
       ok(res, { data: keys, count: keys.length });
@@ -98,7 +112,7 @@ module.exports = function createApiKeysRoutes(deps) {
    * 标签只在 lib/permissions 里写一份，前端不再抄一遍，
    * 将来加 scope 时不会出现「后端支持但界面勾不到」。
    */
-  router.get('/api-keys/scopes', requireAccess('apikeys:read', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
+  router.get('/api-keys/scopes', guard('apikeys:read'), (req, res) => {
     ok(res, {
       data: {
         groups: permissions.SCOPE_GROUPS,
@@ -109,7 +123,7 @@ module.exports = function createApiKeysRoutes(deps) {
     });
   });
 
-  router.post('/api-keys', requireAccess('apikeys:write', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
+  router.post('/api-keys', guard('apikeys:write'), (req, res) => {
     try {
       const input = validateInput(req.body);
       if (input.error) return fail(res, 400, input.error);
@@ -135,7 +149,7 @@ module.exports = function createApiKeysRoutes(deps) {
     }
   });
 
-  router.post('/api-keys/:id/revoke', requireAccess('apikeys:write', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
+  router.post('/api-keys/:id/revoke', guard('apikeys:write'), (req, res) => {
     try {
       const db = getDb();
       const existing = findKey(req.params.id);
@@ -152,7 +166,7 @@ module.exports = function createApiKeysRoutes(deps) {
     }
   });
 
-  router.post('/api-keys/:id/rotate', requireAccess('apikeys:write', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
+  router.post('/api-keys/:id/rotate', guard('apikeys:write'), (req, res) => {
     try {
       const db = getDb();
       const existing = findKey(req.params.id);
@@ -177,7 +191,7 @@ module.exports = function createApiKeysRoutes(deps) {
     }
   });
 
-  router.delete('/api-keys/:id', requireAccess('apikeys:write', { roles: ROLE_ADMIN_ONLY }), (req, res) => {
+  router.delete('/api-keys/:id', guard('apikeys:write'), (req, res) => {
     try {
       const db = getDb();
       const existing = findKey(req.params.id);

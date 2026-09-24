@@ -10,7 +10,7 @@ import AuthLayout from '../layouts/AuthLayout';
 import { RequireAuth, RequireRole } from './guards';
 import { ADMIN_PATHS, AUTH_PATHS, PUBLIC_PATHS } from './paths';
 import {
-  LoginPage, ForgotPasswordPage, ResetPasswordPage, UnauthorizedPage, NotFoundPage,
+  LoginPage, ForgotPasswordPage, UnauthorizedPage, NotFoundPage,
   DashboardPage, AnalyticsPage, PostsPage, PostEditorPage, RevisionsPage,
   PagesPage, PageEditorPage, MediaPage, CommentsPage,
   CategoriesPage, TagsPage, MenusPage, WidgetsPage,
@@ -57,7 +57,6 @@ export const router = createBrowserRouter([
         children: [
           { path: 'login', element: <LoginPage /> },
           { path: 'forgot-password', element: <ForgotPasswordPage /> },
-          { path: 'reset-password', element: <ResetPasswordPage /> },
         ],
       },
 

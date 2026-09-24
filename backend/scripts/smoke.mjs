@@ -654,7 +654,8 @@ async function main() {
     }));
     // 密钥的 req.user.role 固定为 'api'，命中不了任何按角色授权的路由 ——
     // 这条是「密钥不能管理密钥」的守门用例。
-    await record('GET  /api-keys (密钥应 403)', async () => ({
+    // 注意它只证明了「只读密钥」被拦住；真正能抓住漏洞的是下面那条通配密钥用例。
+    await record('GET  /api-keys (只读密钥应 403)', async () => ({
       res: await call('GET', '/api-keys', { headers: { 'X-API-Key': keyPlain } }),
       expect: 403,
     }));
@@ -689,6 +690,50 @@ async function main() {
     }));
   }
 
+  // 9b. 「凭据不得管理凭据」的硬约束，与 scope 无关。
+  //     这个用例是为一个真实出现过的洞加的：apikeys 路由一开始只写了
+  //     roles: administrator，而 requireAccess 的密钥分支按 scope 判断、
+  //     不看 roles（有意如此，否则管理员没法把 users:write 授予密钥）。
+  //     结果一把带 admin 通配 scope 的密钥能列出并创建新密钥 ——
+  //     可以无限自我复制。只测「只读密钥被拒」是抓不到的，必须专门用
+  //     通配密钥测一次。
+  const wildcardKey = await record('POST /api-keys (admin 通配)', async () => ({
+    res: await call('POST', '/api-keys', {
+      token,
+      body: { name: `${MARK} 通配密钥`, scopes: ['admin'] },
+    }),
+    expect: 201,
+  }));
+  const wildcardId = wildcardKey.body?.data?.id;
+  const wildcardPlain = wildcardKey.body?.data?.key;
+
+  if (wildcardId && wildcardPlain) {
+    cleanup.push(['delete', `/api-keys/${wildcardId}`, token]);
+
+    // 通配密钥在别处确实有效（否则下面的 403 就没意义，可能只是密钥本身坏了）
+    await record('GET  /posts (通配密钥应 200)', async () => ({
+      res: await call('GET', '/posts', { headers: { 'X-API-Key': wildcardPlain } }),
+      expect: 200,
+    }));
+    await record('GET  /api-keys (通配密钥也应 403)', async () => ({
+      res: await call('GET', '/api-keys', { headers: { 'X-API-Key': wildcardPlain } }),
+      expect: 403,
+    }));
+    await record('POST /api-keys (通配密钥也应 403)', async () => ({
+      res: await call('POST', '/api-keys', {
+        headers: { 'X-API-Key': wildcardPlain },
+        body: { name: `${MARK} 自我复制`, scopes: ['admin'] },
+      }),
+      expect: 403,
+    }));
+    await record('POST /api-keys/:id/revoke (通配密钥也应 403)', async () => ({
+      res: await call('POST', `/api-keys/${wildcardId}/revoke`, {
+        headers: { 'X-API-Key': wildcardPlain },
+      }),
+      expect: 403,
+    }));
+  }
+
   // 10. 校验失败路径
   await record('POST /posts 缺字段', async () => ({
     res: await call('POST', '/posts', { token, body: { title: '' } }),
@@ -698,6 +743,27 @@ async function main() {
     res: await call('POST', '/auth/login', { body: { username: ADMIN_USER, password: 'definitely-wrong' } }),
     expect: 401,
   }));
+
+  // 10b. 迁移前的旧地址必须 404，并带上能自解的提示。
+  //      这是「不做兼容层」这个决定的一部分：旧地址不能悄悄还能用，
+  //      否则调用方永远不会去改，并存期就变成永久。
+  const legacyRoot = await record('GET  /api/posts (旧地址应 404)', async () => ({
+    res: await call('GET', '/posts', { unversioned: true }),
+    expect: 404,
+  }));
+  assertLast(
+    typeof legacyRoot.body?.hint === 'string' && legacyRoot.body.hint.includes('/api/v1'),
+    '旧地址 404 没有给出迁移提示'
+  );
+
+  const legacyPublic = await record('GET  /api/public/posts (旧地址应 404)', async () => ({
+    res: await call('GET', '/public/posts', { unversioned: true }),
+    expect: 404,
+  }));
+  assertLast(
+    typeof legacyPublic.body?.hint === 'string',
+    '旧公开地址 404 没有给出迁移提示'
+  );
 
   // 11. 清理，放在最后（评论等资源要在用户之前删掉）
   for (const [method, path, tk] of cleanup) {

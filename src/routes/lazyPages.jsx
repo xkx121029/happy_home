@@ -24,7 +24,6 @@ const wrap = (loader) => {
 // ---------------------------------------------------------------- 认证相关
 export const LoginPage = wrap(() => import('../pages/Login'));
 export const ForgotPasswordPage = wrap(() => import('../pages/ForgotPassword'));
-export const ResetPasswordPage = wrap(() => import('../pages/ResetPassword'));
 export const UnauthorizedPage = wrap(() => import('../pages/UnauthorizedPage'));
 export const NotFoundPage = wrap(() => import('../pages/NotFoundPage'));
 
